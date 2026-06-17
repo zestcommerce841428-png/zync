@@ -3,9 +3,9 @@
 
 export const brand = {
   name: 'Zync',
-  tagline: 'Peer-to-peer file transfers, beamed securely in your browser.',
+  tagline: 'Unlimited peer-to-peer file transfers, beamed securely in your browser.',
   shortDescription:
-    'Zync is a free, private, peer-to-peer file transfer tool. Files stream directly between browsers over encrypted WebRTC — never stored on a server.',
+    'Zync is a free, private, peer-to-peer file transfer tool with no file-size caps and no upload or download limits. Files stream directly between browsers over encrypted WebRTC — never stored on a server.',
   domain: 'zync.app',
   url: process.env.NEXT_PUBLIC_SITE_URL || 'https://zync.app',
   themeColor: '#6366f1',

@@ -33,7 +33,35 @@ export async function uploadAvatar(
   const ext = file.type.split('/')[1] || 'png'
   const path = `${userId}/${Date.now()}.${ext}`
 
-  // 1) Supabase Storage
+  // 1) Hostinger (or any) PHP upload endpoint — preferred when configured, so
+  //    photos can live on your own shared hosting even while Supabase handles
+  //    authentication.
+  const endpoint = process.env.HOSTINGER_UPLOAD_URL
+  if (endpoint) {
+    try {
+      const form = new FormData()
+      form.append('file', file, path)
+      form.append('path', path)
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: process.env.HOSTINGER_API_TOKEN
+          ? { Authorization: `Bearer ${process.env.HOSTINGER_API_TOKEN}` }
+          : undefined,
+        body: form,
+      })
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string }
+        return { ok: false, error: data.error || `Upload failed (${res.status}).` }
+      }
+      const data = (await res.json().catch(() => ({}))) as { url?: string }
+      if (!data.url) return { ok: false, error: 'Upload endpoint returned no URL.' }
+      return { ok: true, url: data.url }
+    } catch {
+      return { ok: false, error: 'Could not reach the upload endpoint.' }
+    }
+  }
+
+  // 2) Supabase Storage fallback
   if (supabase) {
     const { error } = await supabase.storage
       .from(AVATAR_BUCKET)
@@ -41,25 +69,6 @@ export async function uploadAvatar(
     if (error) return { ok: false, error: error.message }
     const { data } = supabase.storage.from(AVATAR_BUCKET).getPublicUrl(path)
     return { ok: true, url: data.publicUrl }
-  }
-
-  // 2) Hostinger (or any) upload endpoint fallback
-  const endpoint = process.env.HOSTINGER_UPLOAD_URL
-  if (endpoint) {
-    const form = new FormData()
-    form.append('file', file, path)
-    form.append('path', path)
-    const res = await fetch(endpoint, {
-      method: 'POST',
-      headers: process.env.HOSTINGER_API_TOKEN
-        ? { Authorization: `Bearer ${process.env.HOSTINGER_API_TOKEN}` }
-        : undefined,
-      body: form,
-    })
-    if (!res.ok) return { ok: false, error: 'Upload failed.' }
-    const data = (await res.json().catch(() => ({}))) as { url?: string }
-    if (!data.url) return { ok: false, error: 'Upload endpoint returned no URL.' }
-    return { ok: true, url: data.url }
   }
 
   return { ok: false, error: 'No storage backend configured.' }

@@ -235,6 +235,15 @@ export function useUploaderConnections(
               )
               const file = validateOffset(files, fileName, offset)
 
+              // Backpressure: cap how much data we let pile up in the WebRTC
+              // send buffer. Combined with lazy file.slice() reads and the
+              // receiver streaming straight to disk, this keeps memory flat no
+              // matter how large the file is — enabling unlimited-size sends.
+              const dc = (conn as unknown as { dataChannel?: RTCDataChannel })
+                .dataChannel
+              const HIGH_WATER_MARK = 8 * 1024 * 1024 // 8 MB ceiling
+              if (dc) dc.bufferedAmountLowThreshold = 1 * 1024 * 1024 // 1 MB
+
               let chunkCount = 0
               const sendNextChunkAsync = () => {
                 sendChunkTimeout = setTimeout(() => {
@@ -272,7 +281,7 @@ export function useUploaderConnections(
                         currentFileProgress: 0,
                       }
                     } else {
-                      sendNextChunkAsync()
+                      scheduleNextChunk()
                       return {
                         ...draft,
                         uploadingOffset: end,
@@ -283,6 +292,20 @@ export function useUploaderConnections(
                 }, 0)
               }
 
+              // Queue the next chunk immediately, unless the send buffer is
+              // full — in which case wait for it to drain first.
+              const scheduleNextChunk = () => {
+                if (dc && dc.bufferedAmount > HIGH_WATER_MARK) {
+                  const onLow = () => {
+                    dc.removeEventListener('bufferedamountlow', onLow)
+                    if (conn.open) sendNextChunkAsync()
+                  }
+                  dc.addEventListener('bufferedamountlow', onLow)
+                } else {
+                  sendNextChunkAsync()
+                }
+              }
+
               updateConnection((draft) => {
                 if (
                   draft.status !== UploaderConnectionStatus.Ready &&
@@ -291,7 +314,7 @@ export function useUploaderConnections(
                   return draft
                 }
 
-                sendNextChunkAsync()
+                scheduleNextChunk()
 
                 return {
                   ...draft,
