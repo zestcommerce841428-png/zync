@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import SendApp from '../../components/SendApp'
+import { requireUserOrRedirect } from '../../supabase/server'
 import { brand } from '../../brand'
 
 export const metadata: Metadata = {
@@ -8,6 +9,8 @@ export const metadata: Metadata = {
   alternates: { canonical: '/send' },
 }
 
-export default function SendPage(): React.ReactElement {
+export default async function SendPage(): Promise<React.ReactElement> {
+  // Protected tool: requires a signed-in account when auth is configured.
+  await requireUserOrRedirect('/send')
   return <SendApp />
 }

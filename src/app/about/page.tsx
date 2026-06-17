@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
 const VALUES = [
   { title: 'Privacy first', body: 'We can’t lose what we never hold. Files travel directly between browsers, so your data is never parked on our servers.' },
-  { title: 'Radically simple', body: 'No accounts, no installs, no dark patterns. Open the page, drop a file, share a link. That’s the whole product.' },
+  { title: 'Radically simple', body: 'One free account, no installs, no dark patterns. Sign in once, drop a file, share a link. That’s the whole product.' },
   { title: 'Open & honest', body: 'Transparent about how transfers work, what we store (almost nothing), and how we keep the service safe.' },
 ]
 

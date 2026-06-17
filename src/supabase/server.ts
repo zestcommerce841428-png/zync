@@ -1,5 +1,6 @@
 import 'server-only'
 import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 import { createServerClient } from '@supabase/ssr'
 import type { SupabaseClient, User } from '@supabase/supabase-js'
 import { SUPABASE_URL, SUPABASE_ANON_KEY, isSupabaseConfigured } from './config'
@@ -35,5 +36,17 @@ export async function getCurrentUser(): Promise<User | null> {
   const {
     data: { user },
   } = await supabase.auth.getUser()
+  return user
+}
+
+// Gate a protected tool/page. When Supabase auth is configured, an
+// unauthenticated visitor is redirected to /login?next=<path>. When auth is not
+// configured the page renders (nothing to enforce against yet).
+export async function requireUserOrRedirect(next: string): Promise<User | null> {
+  if (!isSupabaseConfigured()) return null
+  const user = await getCurrentUser()
+  if (!user) {
+    redirect(`/login?next=${encodeURIComponent(next)}`)
+  }
   return user
 }

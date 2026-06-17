@@ -1,0 +1,14 @@
+Require accounts and add full auth, profile and security suite
+
+- Gate tools (/send, /stats, /account, /admin) behind login via proxy and
+  server guard; redirect to /login?next= when unauthenticated
+- Copy updated from no-signup to one-time free sign-up across the site
+- AuthHub: email+password sign in/up, email one-time-code (OTP), Google,
+  forgot-password, and profile photo upload during signup
+- Password reset flow (/reset-password) via recovery link
+- Account page rebuilt with 27+ editable profile fields (grouped) and an
+  avatar manager (upload / change / remove)
+- Security panel: change password, backup recovery email, TOTP 2FA, delete
+- Service-role admin client + /api/account/delete
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>

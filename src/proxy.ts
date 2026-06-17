@@ -2,8 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase/config'
 
-// Refreshes the Supabase auth session on navigation so Server Components see a
-// current user. No-ops entirely when Supabase isn't configured.
+// Paths that require a signed-in account (when auth is configured).
+const PROTECTED = ['/send', '/stats', '/account', '/admin']
+
+// Refreshes the Supabase auth session on navigation and gates protected tools.
+// No-ops entirely when Supabase isn't configured.
+// (Next.js 16 "proxy" convention — replaces the deprecated "middleware" file.)
 export default async function proxy(request: NextRequest): Promise<NextResponse> {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     return NextResponse.next()
@@ -28,10 +32,25 @@ export default async function proxy(request: NextRequest): Promise<NextResponse>
     },
   })
 
-  await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const path = request.nextUrl.pathname
+  const needsAuth = PROTECTED.some(
+    (p) => path === p || path.startsWith(`${p}/`),
+  )
+
+  if (needsAuth && !user) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    url.searchParams.set('next', path)
+    return NextResponse.redirect(url)
+  }
+
   return response
 }
 
 export const config = {
-  matcher: ['/account/:path*', '/admin/:path*', '/auth/:path*'],
+  matcher: ['/send/:path*', '/stats/:path*', '/account/:path*', '/admin/:path*', '/auth/:path*'],
 }

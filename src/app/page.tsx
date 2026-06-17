@@ -49,7 +49,7 @@ const FEATURES = [
   {
     icon: DevicesIcon,
     title: 'Any device, any size',
-    body: 'Works in any modern browser on desktop or mobile. No app install, no account, no arbitrary file-size caps.',
+    body: 'Works in any modern browser on desktop or mobile. No app install and no arbitrary file-size caps — just one free account.',
   },
   {
     icon: PublicIcon,
@@ -87,7 +87,7 @@ const HIGHLIGHTS: Array<{ stat: string; label: string }> = [
   { stat: '∞', label: 'Unlimited file size' },
   { stat: '0', label: 'Bytes stored on a server' },
   { stat: 'E2E', label: 'Encrypted by default' },
-  { stat: 'No', label: 'Sign-up required' },
+  { stat: '1×', label: 'One-time free sign-up' },
 ]
 
 const TECH: Array<{ name: string; role: string }> = [
@@ -182,7 +182,7 @@ export default function LandingPage(): React.ReactElement {
             <ZyncIcon size={72} />
             <Chip
               icon={<AllInclusiveIcon />}
-              label="Unlimited size • Free • Private • No sign-up"
+              label="Unlimited size • Free • Private • One-time sign-up"
               color="primary"
               variant="outlined"
               sx={{ fontWeight: 600 }}
@@ -383,8 +383,8 @@ export default function LandingPage(): React.ReactElement {
           Ready to share something?
         </Typography>
         <Typography variant="body1" color="text.secondary" sx={{ mb: 4, maxWidth: 560, mx: 'auto' }}>
-          No account, no install, no catch. Drop a file and get a link in
-          seconds.
+          Create your free account once, then send unlimited files in seconds —
+          no installs, no catch.
         </Typography>
         <Button
           component={ViewTransitionLink}
