@@ -23,7 +23,21 @@ const cleanErrorMessage = (errorMessage: string): string =>
 
 const getZipFilename = (): string => `filepizza-download-${Date.now()}.zip`
 
-export function useDownloader(uploaderPeerID: string): {
+function getViewerId(): string {
+  if (typeof window === 'undefined') return 'ssr'
+  const KEY = 'fp_viewer_id'
+  let id = sessionStorage.getItem(KEY)
+  if (!id) {
+    id = crypto.randomUUID()
+    sessionStorage.setItem(KEY, id)
+  }
+  return id
+}
+
+export function useDownloader(
+  uploaderPeerID: string,
+  slug?: string,
+): {
   filesInfo: Array<{ fileName: string; size: number; type: string }> | null
   isConnected: boolean
   isPasswordRequired: boolean
@@ -161,6 +175,26 @@ export function useDownloader(uploaderPeerID: string): {
   const startDownload = useCallback(() => {
     if (!filesInfo || !dataConnection) return
     console.log('[Downloader] starting download')
+
+    // Record the download start (enforces room download caps + live stats).
+    if (slug) {
+      fetch(`/api/channel/${encodeURIComponent(slug)}/view`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ viewerId: getViewerId(), action: 'download' }),
+      })
+        .then(async (res) => {
+          if (res.status === 423) {
+            const data = await res.json().catch(() => ({}))
+            setErrorMessage(
+              data.error || 'This room has reached its download limit.',
+            )
+            setIsDownloading(false)
+          }
+        })
+        .catch(() => {})
+    }
+
     setIsDownloading(true)
 
     const fileStreamByPath: Record<
@@ -234,6 +268,22 @@ export function useDownloader(uploaderPeerID: string): {
         `[Downloader] sent ack for chunk ${chunkCountByFile[message.fileName]} (${message.offset}, ${chunkSize} bytes)`,
       )
 
+      // Persist resume offset (best-effort) so a reconnecting downloader can
+      // ask the uploader to resume from the last received byte.
+      if (slug) {
+        const nextOffset = message.offset + chunkSize
+        fetch(`/api/channel/${encodeURIComponent(slug)}/progress`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            downloaderId: getViewerId(),
+            fileName: message.fileName,
+            offset: nextOffset,
+          }),
+          keepalive: true,
+        }).catch(() => {})
+      }
+
       if (message.final) {
         console.log(
           `[Downloader] finished receiving ${message.fileName} after ${chunkCountByFile[message.fileName]} chunks`,
@@ -265,7 +315,7 @@ export function useDownloader(uploaderPeerID: string): {
       .catch((err) => console.error('[Downloader] download error:', err))
 
     startNextFileOrFinish()
-  }, [dataConnection, filesInfo])
+  }, [dataConnection, filesInfo, slug])
 
   const stopDownload = useCallback(() => {
     // TODO(@kern): Continue here with stop / pause logic

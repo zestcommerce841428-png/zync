@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getOrCreateChannelRepo } from '../../../channel'
+import { heartbeatUploader } from '../../../presence'
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const { slug, secret } = await request.json()
@@ -13,5 +14,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const success = await getOrCreateChannelRepo().renewChannel(slug, secret)
+
+  // A successful renew doubles as an uploader heartbeat for live presence.
+  if (success) {
+    await heartbeatUploader(slug)
+  }
+
   return NextResponse.json({ success })
 }

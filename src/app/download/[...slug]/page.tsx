@@ -1,11 +1,12 @@
 import { JSX } from 'react'
+import Stack from '@mui/material/Stack'
 import { notFound } from 'next/navigation'
 import { getOrCreateChannelRepo } from '../../../channel'
-import Spinner from '../../../components/Spinner'
-import Wordmark from '../../../components/Wordmark'
+import TransferSpinner from '../../../components/TransferSpinner'
 import Downloader from '../../../components/Downloader'
 import WebRTCPeerProvider from '../../../components/WebRTCProvider'
 import ReportTermsViolationButton from '../../../components/ReportTermsViolationButton'
+import ChannelPresenceBadge from '../../../components/ChannelPresenceBadge'
 
 const normalizeSlug = (rawSlug: string | string[]): string => {
   if (typeof rawSlug === 'string') {
@@ -29,16 +30,22 @@ export default async function DownloadPage({
   }
 
   return (
-    <div className="flex flex-col items-center space-y-5 py-10 max-w-2xl mx-auto">
-      <Spinner direction="down" />
-      <Wordmark />
+    <Stack
+      spacing={2.5}
+      sx={{ alignItems: 'center', py: 5, px: 2, maxWidth: 672, mx: 'auto', width: '100%' }}
+    >
+      <TransferSpinner direction="down" />
+      <ChannelPresenceBadge slug={channel.shortSlug} />
       <WebRTCPeerProvider>
-        <Downloader uploaderPeerID={channel.uploaderPeerID} />
+        <Downloader
+          uploaderPeerID={channel.uploaderPeerID}
+          slug={channel.shortSlug}
+        />
         <ReportTermsViolationButton
           uploaderPeerID={channel.uploaderPeerID}
           slug={slug}
         />
       </WebRTCPeerProvider>
-    </div>
+    </Stack>
   )
 }

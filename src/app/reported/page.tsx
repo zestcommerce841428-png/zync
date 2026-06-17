@@ -1,32 +1,46 @@
 import { JSX } from 'react'
-import Spinner from '../../components/Spinner'
-import Wordmark from '../../components/Wordmark'
+import Stack from '@mui/material/Stack'
+import Paper from '@mui/material/Paper'
+import Typography from '@mui/material/Typography'
+import Button from '@mui/material/Button'
+import { Link as ViewTransitionLink } from 'next-view-transitions'
+import TransferSpinner from '../../components/TransferSpinner'
 import TitleText from '../../components/TitleText'
-import ReturnHome from '../../components/ReturnHome'
+import { brand } from '../../brand'
+
+export const metadata = {
+  title: 'Transfer halted',
+  description: 'This transfer has been halted pending review.',
+}
 
 export default function ReportedPage(): JSX.Element {
   return (
-    <div className="flex flex-col items-center space-y-5 py-10 max-w-md mx-auto">
-      <Spinner direction="down" />
-      <Wordmark />
-
-      <TitleText>This delivery has been halted.</TitleText>
-      <div className="px-8 py-6 bg-stone-100 dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700">
-        <h3 className="text-lg font-medium text-stone-800 dark:text-stone-200 mb-4">
-          Message from the management
-        </h3>
-        <p className="text-sm text-stone-600 dark:text-stone-300 leading-relaxed mb-6">
-          Just like a pizza with questionable toppings, we've had to put this
-          delivery on hold for potential violations of our terms of service. Our
-          delivery quality team is looking into it to ensure we maintain our
-          high standards.
-        </p>
-        <div className="text-sm text-stone-500 dark:text-stone-400 italic">
-          - The FilePizza Team
-        </div>
-      </div>
-
-      <ReturnHome />
-    </div>
+    <Stack
+      spacing={2.5}
+      sx={{ alignItems: 'center', py: 8, px: 2, maxWidth: 480, mx: 'auto', width: '100%' }}
+    >
+      <TransferSpinner direction="down" />
+      <TitleText>This transfer has been halted.</TitleText>
+      <Paper variant="outlined" sx={{ px: 4, py: 3 }}>
+        <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+          Message from the team
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          This transfer has been paused for a potential violation of our
+          Acceptable Use Policy. Our team is reviewing it to keep {brand.name}{' '}
+          safe for everyone.
+        </Typography>
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{ fontStyle: 'italic' }}
+        >
+          — The {brand.name} Team
+        </Typography>
+      </Paper>
+      <Button component={ViewTransitionLink} href="/" variant="contained">
+        Back to home
+      </Button>
+    </Stack>
   )
 }

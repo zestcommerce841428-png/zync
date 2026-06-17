@@ -1,4 +1,5 @@
 import React, { useRef, useCallback, JSX } from 'react'
+import Link from '@mui/material/Link'
 import { UploadedFile } from '../types'
 
 export default function AddFilesButton({
@@ -28,18 +29,21 @@ export default function AddFilesButton({
         id="add-files-input"
         type="file"
         ref={fileInputRef}
-        className="hidden"
+        hidden
         multiple
         onChange={handleChange}
       />
-      <button
+      <Link
         id="add-files-button"
+        component="button"
         type="button"
         onClick={handleClick}
-        className="underline text-stone-700 dark:text-stone-300 hover:text-stone-900 dark:hover:text-stone-100 transition-colors duration-200"
+        underline="always"
+        color="inherit"
+        sx={{ fontSize: 'inherit' }}
       >
         Add more files
-      </button>
+      </Link>
     </>
   )
 }

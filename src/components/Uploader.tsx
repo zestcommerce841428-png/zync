@@ -1,6 +1,10 @@
 'use client'
 
 import React, { JSX, useCallback, useEffect } from 'react'
+import Box from '@mui/material/Box'
+import Stack from '@mui/material/Stack'
+import Divider from '@mui/material/Divider'
+import Typography from '@mui/material/Typography'
 import { UploadedFile, UploaderConnectionStatus } from '../types'
 import { useWebRTCPeer } from './WebRTCProvider'
 import QRCode from 'react-qr-code'
@@ -51,27 +55,32 @@ export default function Uploader({
   }
 
   return (
-    <>
-      <div className="flex w-full items-center">
-        <div className="flex-none mr-4 bg-white p-2">
+    <Box sx={{ width: '100%' }}>
+      <Stack direction="row" spacing={2} sx={{ alignItems: 'center', width: '100%' }}>
+        <Box sx={{ flex: 'none', bgcolor: '#fff', p: 1, borderRadius: 1 }}>
           <QRCode value={shortURL ?? ''} size={QR_CODE_SIZE} />
-        </div>
-        <div className="flex-auto flex flex-col justify-center space-y-2">
+        </Box>
+        <Stack spacing={1} sx={{ justifyContent: 'center', flex: 'auto' }}>
           <CopyableInput label="Long URL" value={longURL ?? ''} />
           <CopyableInput label="Short URL" value={shortURL ?? ''} />
-        </div>
-      </div>
-      <div className="mt-6 pt-4 border-t border-stone-200 dark:border-stone-700 w-full">
-        <div className="flex justify-between items-center mb-2">
-          <h2 className="text-lg font-semibold text-stone-400 dark:text-stone-200">
-            {activeDownloaders} Downloading, {connections.length} Total
-          </h2>
-          <StopButton onClick={handleStop} />
-        </div>
-        {connections.map((conn, i) => (
-          <ConnectionListItem key={i} conn={conn} />
-        ))}
-      </div>
-    </>
+        </Stack>
+      </Stack>
+
+      <Divider sx={{ mt: 3, mb: 2 }} />
+
+      <Stack
+        direction="row"
+        sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 1 }}
+      >
+        <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+          {activeDownloaders} Downloading, {connections.length} Total
+        </Typography>
+        <StopButton onClick={handleStop} />
+      </Stack>
+
+      {connections.map((conn, i) => (
+        <ConnectionListItem key={i} conn={conn} />
+      ))}
+    </Box>
   )
 }

@@ -1,15 +1,19 @@
-import { Link } from 'next-view-transitions'
+import { Link as ViewTransitionLink } from 'next-view-transitions'
 import { JSX } from 'react'
+import Box from '@mui/material/Box'
+import Link from '@mui/material/Link'
 
 export default function ReturnHome(): JSX.Element {
   return (
-    <div className="flex justify-center">
+    <Box sx={{ display: 'flex', justifyContent: 'center' }}>
       <Link
+        component={ViewTransitionLink}
         href="/"
-        className="text-stone-500 dark:text-stone-200 hover:underline"
+        underline="hover"
+        sx={{ color: 'text.secondary' }}
       >
-        Serve up a fresh slice &raquo;
+        Back to home &raquo;
       </Link>
-    </div>
+    </Box>
   )
 }

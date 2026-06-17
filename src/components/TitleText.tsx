@@ -1,4 +1,5 @@
 import React, { JSX } from 'react'
+import Typography from '@mui/material/Typography'
 
 export default function TitleText({
   children,
@@ -6,8 +7,13 @@ export default function TitleText({
   children: React.ReactNode
 }): JSX.Element {
   return (
-    <p className="text-lg text-center text-stone-800 dark:text-stone-200 max-w-md">
+    <Typography
+      variant="h6"
+      component="p"
+      align="center"
+      sx={{ maxWidth: 448, fontWeight: 500, color: 'text.primary' }}
+    >
       {children}
-    </p>
+    </Typography>
   )
 }

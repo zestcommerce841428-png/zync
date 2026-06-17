@@ -1,4 +1,6 @@
 import React, { JSX } from 'react'
+import Button from '@mui/material/Button'
+import LockOpenIcon from '@mui/icons-material/LockOpen'
 
 export default function UnlockButton({
   onClick,
@@ -6,11 +8,14 @@ export default function UnlockButton({
   onClick?: React.MouseEventHandler<HTMLButtonElement>
 }): JSX.Element {
   return (
-    <button
+    <Button
+      type="submit"
       onClick={onClick}
-      className="px-4 py-2 bg-linear-to-b from-green-500 to-green-600 text-white rounded-md hover:from-green-500 hover:to-green-700 transition-all duration-200 border border-green-600 shadow-sm hover:shadow-md text-shadow"
+      variant="contained"
+      color="success"
+      startIcon={<LockOpenIcon />}
     >
       Unlock
-    </button>
+    </Button>
   )
 }

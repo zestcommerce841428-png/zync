@@ -1,4 +1,6 @@
 import React, { JSX } from 'react'
+import Button from '@mui/material/Button'
+import DownloadIcon from '@mui/icons-material/Download'
 
 export default function DownloadButton({
   onClick,
@@ -6,12 +8,16 @@ export default function DownloadButton({
   onClick?: React.MouseEventHandler
 }): JSX.Element {
   return (
-    <button
+    <Button
       id="download-button"
       onClick={onClick}
-      className="h-12 px-4 bg-linear-to-b from-green-500 to-green-600 text-white rounded-md hover:from-green-500 hover:to-green-700 transition-all duration-200 border border-green-600 shadow-sm hover:shadow-md text-shadow"
+      variant="contained"
+      color="success"
+      size="large"
+      startIcon={<DownloadIcon />}
+      sx={{ height: 48 }}
     >
       Download
-    </button>
+    </Button>
   )
 }

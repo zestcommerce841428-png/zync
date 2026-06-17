@@ -1,6 +1,14 @@
 'use client'
 
 import React, { JSX, useState, useCallback, useEffect } from 'react'
+import Box from '@mui/material/Box'
+import Stack from '@mui/material/Stack'
+import Paper from '@mui/material/Paper'
+import Typography from '@mui/material/Typography'
+import List from '@mui/material/List'
+import ListItem from '@mui/material/ListItem'
+import ListItemIcon from '@mui/material/ListItemIcon'
+import ListItemText from '@mui/material/ListItemText'
 import { useDownloader } from '../hooks/useDownloader'
 import PasswordField from './PasswordField'
 import UnlockButton from './UnlockButton'
@@ -19,6 +27,21 @@ interface FileInfo {
   size: number
   type: string
 }
+
+const TROUBLESHOOTING: Array<{ icon: string; text: string }> = [
+  {
+    icon: '🚪',
+    text: 'The uploader may have closed their browser, lost connectivity, or stopped the upload. Zync requires the uploader to stay online continuously because files are transferred directly between browsers.',
+  },
+  {
+    icon: '🔒',
+    text: 'Your network might have strict firewalls or NAT settings, such as having UPnP disabled.',
+  },
+  {
+    icon: '🌐',
+    text: 'Some corporate or school networks block peer-to-peer connections.',
+  },
+]
 
 export function ConnectingToUploader({
   showTroubleshootingAfter = 3000,
@@ -41,45 +64,30 @@ export function ConnectingToUploader({
   return (
     <>
       <Loading text="Connecting to uploader..." />
-
-      <div className="bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-lg p-8 max-w-md w-full">
-        <h2 className="text-xl font-bold mb-4 text-stone-900 dark:text-stone-50">
+      <Paper variant="outlined" sx={{ p: 4, maxWidth: 448, width: '100%' }}>
+        <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
           Having trouble connecting?
-        </h2>
-
-        <div className="space-y-4 text-stone-700 dark:text-stone-300">
-          <p>
-            FilePizza uses direct peer-to-peer connections, but sometimes the
-            connection can get stuck. Here are some possible reasons this can
-            happen:
-          </p>
-
-          <ul className="list-none space-y-3">
-            <li className="flex items-start gap-3 px-4 py-2 rounded-lg bg-stone-100 dark:bg-stone-800">
-              <span className="text-base">🚪</span>
-              <span className="text-sm">
-                The uploader may have closed their browser, lost connectivity,
-                or stopped the upload. FilePizza requires the uploader to stay
-                online continuously because files are transferred directly
-                between browsers.
-              </span>
-            </li>
-            <li className="flex items-start gap-3 px-4 py-2 rounded-lg bg-stone-100 dark:bg-stone-800">
-              <span className="text-base">🔒</span>
-              <span className="text-sm">
-                Your network might have strict firewalls or NAT settings, such
-                as having UPnP disabled
-              </span>
-            </li>
-            <li className="flex items-start gap-3 px-4 py-2 rounded-lg bg-stone-100 dark:bg-stone-800">
-              <span className="text-base">🌐</span>
-              <span className="text-sm">
-                Some corporate or school networks block peer-to-peer connections
-              </span>
-            </li>
-          </ul>
-        </div>
-      </div>
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+          Zync uses direct peer-to-peer connections, but sometimes the
+          connection can get stuck. Here are some possible reasons:
+        </Typography>
+        <List>
+          {TROUBLESHOOTING.map((t) => (
+            <ListItem
+              key={t.icon}
+              alignItems="flex-start"
+              sx={{ bgcolor: 'action.hover', borderRadius: 2, mb: 1 }}
+            >
+              <ListItemIcon sx={{ minWidth: 36 }}>{t.icon}</ListItemIcon>
+              <ListItemText
+                primary={t.text}
+                slotProps={{ primary: { variant: 'body2' } }}
+              />
+            </ListItem>
+          ))}
+        </List>
+      </Paper>
       <ReturnHome />
     </>
   )
@@ -99,13 +107,13 @@ export function DownloadComplete({
       <TitleText>
         You downloaded {pluralize(filesInfo.length, 'file', 'files')}.
       </TitleText>
-      <div className="flex flex-col space-y-5 w-full">
+      <Stack spacing={2.5} sx={{ width: '100%' }}>
         <UploadFileList files={filesInfo} />
-        <div className="w-full">
+        <Box sx={{ width: '100%' }}>
           <ProgressBar value={bytesDownloaded} max={totalSize} />
-        </div>
+        </Box>
         <ReturnHome />
-      </div>
+      </Stack>
     </>
   )
 }
@@ -126,15 +134,15 @@ export function DownloadInProgress({
       <TitleText>
         You are downloading {pluralize(filesInfo.length, 'file', 'files')}.
       </TitleText>
-      <div className="flex flex-col space-y-5 w-full">
+      <Stack spacing={2.5} sx={{ width: '100%' }}>
         <UploadFileList files={filesInfo} />
-        <div className="w-full">
+        <Box sx={{ width: '100%' }}>
           <ProgressBar value={bytesDownloaded} max={totalSize} />
-        </div>
-        <div className="flex justify-center w-full">
+        </Box>
+        <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
           <StopButton onClick={onStop} isDownloading />
-        </div>
-      </div>
+        </Box>
+      </Stack>
     </>
   )
 }
@@ -152,10 +160,10 @@ export function ReadyToDownload({
         You are about to start downloading{' '}
         {pluralize(filesInfo.length, 'file', 'files')}.
       </TitleText>
-      <div className="flex flex-col space-y-5 w-full">
+      <Stack spacing={2.5} sx={{ alignItems: 'center', width: '100%' }}>
         <UploadFileList files={filesInfo} />
         <DownloadButton onClick={onStart} />
-      </div>
+      </Stack>
     </>
   )
 }
@@ -179,24 +187,17 @@ export function PasswordEntry({
   return (
     <>
       <TitleText>This download requires a password.</TitleText>
-      <div className="flex flex-col space-y-5 w-full">
-        <form
-          action="#"
-          method="post"
-          onSubmit={handleSubmit}
-          className="w-full"
-        >
-          <div className="flex flex-col space-y-5 w-full">
-            <PasswordField
-              value={password}
-              onChange={setPassword}
-              isRequired
-              isInvalid={Boolean(errorMessage)}
-            />
-            <UnlockButton />
-          </div>
-        </form>
-      </div>
+      <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
+        <Stack spacing={2.5} sx={{ width: '100%' }}>
+          <PasswordField
+            value={password}
+            onChange={setPassword}
+            isRequired
+            isInvalid={Boolean(errorMessage)}
+          />
+          <UnlockButton />
+        </Stack>
+      </Box>
       {errorMessage && <ErrorMessage message={errorMessage} />}
     </>
   )
@@ -204,8 +205,10 @@ export function PasswordEntry({
 
 export default function Downloader({
   uploaderPeerID,
+  slug,
 }: {
   uploaderPeerID: string
+  slug?: string
 }): JSX.Element {
   const {
     filesInfo,
@@ -219,7 +222,7 @@ export default function Downloader({
     stopDownload,
     totalSize,
     bytesDownloaded,
-  } = useDownloader(uploaderPeerID)
+  } = useDownloader(uploaderPeerID, slug)
 
   if (isDone && filesInfo) {
     return (

@@ -1,21 +1,27 @@
 import { JSX } from 'react'
-import Spinner from '../components/Spinner'
-import Wordmark from '../components/Wordmark'
-import ReturnHome from '../components/ReturnHome'
+import Stack from '@mui/material/Stack'
+import Button from '@mui/material/Button'
+import { Link as ViewTransitionLink } from 'next-view-transitions'
+import TransferSpinner from '../components/TransferSpinner'
 import TitleText from '../components/TitleText'
+import { brand } from '../brand'
 
 export const metadata = {
-  title: 'FilePizza - 404: Slice Not Found',
-  description: 'Oops! This slice of FilePizza seems to be missing.',
+  title: '404 — Not found',
+  description: `The page you are looking for could not be found on ${brand.name}.`,
 }
 
-export default async function NotFound(): Promise<JSX.Element> {
+export default function NotFound(): JSX.Element {
   return (
-    <div className="flex flex-col items-center space-y-5 py-10 max-w-2xl mx-auto">
-      <Spinner direction="down" />
-      <Wordmark />
-      <TitleText>404: Looks like this slice of FilePizza got eaten!</TitleText>
-      <ReturnHome />
-    </div>
+    <Stack
+      spacing={2.5}
+      sx={{ alignItems: 'center', py: 8, px: 2, maxWidth: 672, mx: 'auto', width: '100%' }}
+    >
+      <TransferSpinner direction="down" />
+      <TitleText>404 — this link has expired or never existed.</TitleText>
+      <Button component={ViewTransitionLink} href="/" variant="contained">
+        Back to home
+      </Button>
+    </Stack>
   )
 }

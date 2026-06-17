@@ -1,70 +1,173 @@
 'use client'
 
-import React, { JSX, useCallback } from 'react'
+import * as React from 'react'
+import Box from '@mui/material/Box'
+import Container from '@mui/material/Container'
+import Grid from '@mui/material/Grid'
+import Stack from '@mui/material/Stack'
+import Typography from '@mui/material/Typography'
+import Link from '@mui/material/Link'
+import Divider from '@mui/material/Divider'
+import IconButton from '@mui/material/IconButton'
+import WhatsAppIcon from '@mui/icons-material/WhatsApp'
+import EmailIcon from '@mui/icons-material/Email'
+import GitHubIcon from '@mui/icons-material/GitHub'
+import { Link as ViewTransitionLink } from 'next-view-transitions'
+import Logo from './Logo'
+import { brand } from '../brand'
 
-const DONATE_HREF =
-  'https://commerce.coinbase.com/checkout/247b6ffe-fb4e-47a8-9a76-e6b7ef83ea22'
+const COLUMNS: Array<{ title: string; links: Array<{ label: string; href: string }> }> = [
+  {
+    title: 'Product',
+    links: [
+      { label: 'Send a file', href: '/send' },
+      { label: 'Features', href: '/#features' },
+      { label: 'How it works', href: '/#how-it-works' },
+      { label: 'Live stats', href: '/stats' },
+    ],
+  },
+  {
+    title: 'Company',
+    links: [
+      { label: 'About', href: '/about' },
+      { label: 'Blog', href: '/blog' },
+      { label: 'Contact', href: '/contact' },
+    ],
+  },
+  {
+    title: 'Legal',
+    links: [
+      { label: 'Privacy Policy', href: '/privacy' },
+      { label: 'Terms of Service', href: '/terms' },
+      { label: 'Cookie Policy', href: '/cookies' },
+      { label: 'Acceptable Use', href: '/acceptable-use' },
+      { label: 'DMCA', href: '/dmca' },
+    ],
+  },
+]
 
-function FooterLink({
-  href,
-  children,
-}: {
-  href: string
-  children: React.ReactNode
-}): JSX.Element {
+export default function Footer(): React.ReactElement {
+  const year = new Date().getFullYear()
   return (
-    <a
-      className="text-stone-600 dark:text-stone-400 underline hover:text-stone-800 dark:hover:text-stone-200"
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
+    <Box
+      component="footer"
+      sx={{
+        mt: 'auto',
+        borderTop: '1px solid',
+        borderColor: 'divider',
+        bgcolor: 'background.paper',
+      }}
     >
-      {children}
-    </a>
-  )
-}
-
-export function Footer(): JSX.Element {
-  const handleDonate = useCallback(() => {
-    window.location.href = DONATE_HREF
-  }, [])
-
-  return (
-    <>
-      <div className="h-[100px]" /> {/* Spacer to account for footer height */}
-      <footer className="fixed bottom-0 left-0 right-0 text-center py-2.5 pb-4 text-xs border-t border-stone-200 dark:border-stone-700 shadow-[0_-1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_-1px_2px_rgba(255,255,255,0.04)] bg-white dark:bg-stone-900">
-        <div className="flex flex-col items-center space-y-1 px-4 sm:px-6 md:px-8">
-          <div className="flex items-center space-x-2">
-            <p className="text-stone-600 dark:text-stone-400">
-              <strong>Like FilePizza v2?</strong> Support its development!{' '}
-            </p>
-            <button
-              className="px-1.5 py-0.5 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors duration-200 font-medium text-[10px]"
-              onClick={handleDonate}
+      <Container maxWidth="lg" sx={{ py: 6 }}>
+        <Grid container spacing={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
+            <Logo size={32} />
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ mt: 2, maxWidth: 320 }}
             >
-              Donate
-            </button>
-          </div>
+              {brand.shortDescription}
+            </Typography>
+            <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+              <IconButton
+                component="a"
+                href={brand.contact.whatsappLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Chat on WhatsApp"
+                color="success"
+              >
+                <WhatsAppIcon />
+              </IconButton>
+              <IconButton
+                component="a"
+                href={`mailto:${brand.contact.email}`}
+                aria-label="Email us"
+                color="primary"
+              >
+                <EmailIcon />
+              </IconButton>
+              <IconButton
+                component="a"
+                href={brand.social.github}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="GitHub"
+              >
+                <GitHubIcon />
+              </IconButton>
+            </Stack>
+          </Grid>
 
-          <p className="text-stone-600 dark:text-stone-400">
-            Cooked up by{' '}
-            <FooterLink href="http://kern.io">Alex Kern</FooterLink> &amp;{' '}
-            <FooterLink href="https://github.com/neerajbaid">
-              Neeraj Baid
-            </FooterLink>{' '}
-            while eating <strong>Sliver</strong> @ UC Berkeley &middot;{' '}
-            <FooterLink href="https://github.com/kern/filepizza#faq">
-              FAQ
-            </FooterLink>{' '}
-            &middot;{' '}
-            <FooterLink href="https://github.com/kern/filepizza">
-              Fork us
-            </FooterLink>
-          </p>
-        </div>
-      </footer>
-    </>
+          {COLUMNS.map((col) => (
+            <Grid size={{ xs: 6, sm: 4, md: 2 }} key={col.title}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1.5 }}>
+                {col.title}
+              </Typography>
+              <Stack spacing={1}>
+                {col.links.map((l) => (
+                  <Link
+                    key={l.href}
+                    component={ViewTransitionLink}
+                    href={l.href}
+                    underline="hover"
+                    color="text.secondary"
+                    variant="body2"
+                  >
+                    {l.label}
+                  </Link>
+                ))}
+              </Stack>
+            </Grid>
+          ))}
+
+          <Grid size={{ xs: 6, sm: 4, md: 2 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1.5 }}>
+              Get in touch
+            </Typography>
+            <Stack spacing={1}>
+              <Link
+                href={`mailto:${brand.contact.email}`}
+                underline="hover"
+                color="text.secondary"
+                variant="body2"
+              >
+                {brand.contact.email}
+              </Link>
+              <Link
+                href={brand.contact.whatsappLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                underline="hover"
+                color="text.secondary"
+                variant="body2"
+              >
+                WhatsApp: +91 {brand.contact.whatsapp}
+              </Link>
+            </Stack>
+          </Grid>
+        </Grid>
+
+        <Divider sx={{ my: 4 }} />
+
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={1}
+          sx={{ justifyContent: 'space-between', alignItems: 'center' }}
+        >
+          <Typography variant="body2" color="text.secondary">
+            © {year} {brand.name} by {brand.org.legalName}. All rights reserved.
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Crafted by{' '}
+            <Box component="span" sx={{ fontWeight: 700 }}>
+              {brand.credits.author}
+            </Box>{' '}
+            · built with {brand.credits.builtWith}
+          </Typography>
+        </Stack>
+      </Container>
+    </Box>
   )
 }
-
-export default Footer

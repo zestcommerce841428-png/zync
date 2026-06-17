@@ -45,14 +45,22 @@ pnpm dev
 
 ## Tech Stack
 
-- **Framework**: Next.js 15 with App Router
-- **UI**: React 19 + Tailwind CSS v4
+- **Framework**: Next.js 16 with App Router (Turbopack)
+- **UI**: React 19 + Material UI (MUI) with Emotion
 - **Language**: TypeScript
 - **Testing**: Vitest (unit) + Playwright (E2E)
 - **WebRTC**: PeerJS
 - **State Management**: TanStack Query
-- **Themes**: next-themes with View Transitions
-- **Storage**: Redis (optional)
+- **Themes**: MUI color schemes (light/dark CSS variables) with View Transitions
+- **Storage**: Redis (optional; in-memory fallback shared via globalThis)
+
+## Backend Features
+
+- **Stats**: aggregate transfer counters + live dashboard at `/stats` (`src/stats.ts`, `/api/stats`)
+- **Presence**: real-time uploader/viewer/download state via SSE (`src/presence.ts`, `/api/channel/[slug]/events`)
+- **Rooms**: optional channel `title` + `maxDownloads` cap enforced in `/api/channel/[slug]/view`
+- **Resumable**: per-downloader offset persistence (`src/progress.ts`, `/api/channel/[slug]/progress`)
+- **Auth & rate limiting**: signed anonymous sessions (`src/auth.ts`) + per-IP limiter (`src/rateLimit.ts`)
 
 ## Project Structure
 
@@ -106,11 +114,11 @@ This starts Redis and COTURN containers for testing peer connections behind NAT.
 
 ## Key Dependencies
 
-- `next` - React framework
-- `tailwindcss` - CSS framework
+- `next` - React framework (v16)
+- `@mui/material` / `@emotion/react` - UI component library + styling
+- `@mui/material-nextjs` - App Router SSR cache provider
 - `@tanstack/react-query` - Server state management
 - `peerjs` - WebRTC abstraction
-- `next-themes` - Theme switching
 - `zod` - Schema validation
 - `vitest` - Testing framework
 - `playwright` - E2E testing

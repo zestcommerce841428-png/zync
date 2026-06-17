@@ -19,7 +19,7 @@ export async function setTurnCredentials(
     return
   }
 
-  const realm = process.env.TURN_REALM || 'file.pizza'
+  const realm = process.env.TURN_REALM || 'zync.app'
 
   if (!realm) {
     throw new Error('TURN_REALM environment variable not set')

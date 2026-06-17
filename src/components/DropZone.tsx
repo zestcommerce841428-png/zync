@@ -1,4 +1,9 @@
 import React, { JSX, useState, useCallback, useEffect, useRef } from 'react'
+import Backdrop from '@mui/material/Backdrop'
+import Button from '@mui/material/Button'
+import Stack from '@mui/material/Stack'
+import Typography from '@mui/material/Typography'
+import CloudUploadIcon from '@mui/icons-material/CloudUpload'
 import { extractFileList } from '../fs'
 
 export default function DropZone({
@@ -18,7 +23,6 @@ export default function DropZone({
 
   const handleDragLeave = useCallback((e: DragEvent) => {
     e.preventDefault()
-
     const currentTarget =
       e.currentTarget === window ? window.document : e.currentTarget
     if (
@@ -28,7 +32,6 @@ export default function DropZone({
     ) {
       return
     }
-
     setIsDragging(false)
   }, [])
 
@@ -43,7 +46,6 @@ export default function DropZone({
     async (e: DragEvent) => {
       e.preventDefault()
       setIsDragging(false)
-
       if (e.dataTransfer) {
         const files = await extractFileList(e)
         onDrop(files)
@@ -59,8 +61,7 @@ export default function DropZone({
   const handleFileInputChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.files) {
-        const files = Array.from(e.target.files)
-        onDrop(files)
+        onDrop(Array.from(e.target.files))
       }
     },
     [onDrop],
@@ -71,7 +72,6 @@ export default function DropZone({
     window.addEventListener('dragleave', handleDragLeave)
     window.addEventListener('dragover', handleDragOver)
     window.addEventListener('drop', handleDrop)
-
     return () => {
       window.removeEventListener('dragenter', handleDragEnter)
       window.removeEventListener('dragleave', handleDragLeave)
@@ -82,29 +82,47 @@ export default function DropZone({
 
   return (
     <>
-      <div
-        className={`fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center text-2xl text-white transition-opacity duration-300 backdrop-blur-sm z-50 ${
-          isDragging ? 'opacity-100 visible' : 'opacity-0 invisible'
-        }`}
+      <Backdrop
+        open={isDragging}
+        sx={{
+          zIndex: (t) => t.zIndex.modal + 1,
+          color: '#fff',
+          backdropFilter: 'blur(4px)',
+          backgroundColor: 'rgba(0,0,0,0.55)',
+        }}
       >
-        Drop to select {fileCount} file{fileCount !== 1 ? 's' : ''}
-      </div>
+        <Stack spacing={2} sx={{ alignItems: 'center' }}>
+          <CloudUploadIcon sx={{ fontSize: 64 }} />
+          <Typography variant="h5">
+            Drop to select {fileCount} file{fileCount !== 1 ? 's' : ''}
+          </Typography>
+        </Stack>
+      </Backdrop>
+
       <input
         type="file"
         ref={fileInputRef}
-        className="hidden"
+        hidden
         onChange={handleFileInputChange}
         multiple
       />
-      <button
+
+      <Button
         id="drop-zone-button"
-        className="block cursor-pointer relative py-3 px-6 text-base font-bold text-stone-700 dark:text-stone-200 bg-white dark:bg-stone-800 border-2 border-stone-700 dark:border-stone-700 rounded-lg transition-all duration-300 ease-in-out outline-none hover:shadow-md active:shadow-inner focus:shadow-outline"
         onClick={handleClick}
+        variant="outlined"
+        startIcon={<CloudUploadIcon />}
+        sx={{
+          py: 1.5,
+          px: 4,
+          borderWidth: 2,
+          borderStyle: 'dashed',
+          fontWeight: 700,
+          '&:hover': { borderWidth: 2 },
+        }}
       >
-        <span className="text-center text-stone-700 dark:text-stone-200">
-          Drop a file to get started
-        </span>
-      </button>
+        Drop a file to get started
+      </Button>
     </>
   )
 }

@@ -1,4 +1,6 @@
 import React from 'react'
+import Button from '@mui/material/Button'
+import PlayArrowIcon from '@mui/icons-material/PlayArrow'
 
 export default function StartButton({
   onClick,
@@ -6,12 +8,14 @@ export default function StartButton({
   onClick: React.MouseEventHandler<HTMLButtonElement>
 }): React.ReactElement {
   return (
-    <button
+    <Button
       id="start-button"
       onClick={onClick}
-      className="px-4 py-2 bg-linear-to-b from-green-500 to-green-600 text-white rounded-md hover:from-green-500 hover:to-green-700 transition-all duration-200 border border-green-600 shadow-sm hover:shadow-md text-shadow"
+      variant="contained"
+      color="success"
+      startIcon={<PlayArrowIcon />}
     >
       Start
-    </button>
+    </Button>
   )
 }

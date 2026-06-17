@@ -10,6 +10,18 @@ export type Channel = {
   longSlug: string
   shortSlug: string
   uploaderPeerID: string
+  // Room metadata (optional, for multi-recipient "rooms")
+  title?: string
+  maxDownloads?: number
+  createdAt?: number
+  ownerSessionId?: string
+}
+
+export type CreateChannelOptions = {
+  ttl?: number
+  title?: string
+  maxDownloads?: number
+  ownerSessionId?: string
 }
 
 const ChannelSchema = z.object({
@@ -17,10 +29,17 @@ const ChannelSchema = z.object({
   longSlug: z.string(),
   shortSlug: z.string(),
   uploaderPeerID: z.string(),
+  title: z.string().max(120).optional(),
+  maxDownloads: z.number().int().positive().optional(),
+  createdAt: z.number().optional(),
+  ownerSessionId: z.string().optional(),
 })
 
 export interface ChannelRepo {
-  createChannel(uploaderPeerID: string, ttl?: number): Promise<Channel>
+  createChannel(
+    uploaderPeerID: string,
+    options?: CreateChannelOptions,
+  ): Promise<Channel>
   fetchChannel(slug: string): Promise<Channel | null>
   renewChannel(slug: string, secret: string, ttl?: number): Promise<boolean>
   destroyChannel(slug: string): Promise<void>
@@ -102,8 +121,9 @@ export class MemoryChannelRepo implements ChannelRepo {
 
   async createChannel(
     uploaderPeerID: string,
-    ttl: number = config.channel.ttl,
+    options: CreateChannelOptions = {},
   ): Promise<Channel> {
+    const ttl = options.ttl ?? config.channel.ttl
     const shortSlug = await generateShortSlugUntilUnique(async (key) =>
       this.channels.has(key),
     )
@@ -116,6 +136,10 @@ export class MemoryChannelRepo implements ChannelRepo {
       longSlug,
       shortSlug,
       uploaderPeerID,
+      title: options.title,
+      maxDownloads: options.maxDownloads,
+      ownerSessionId: options.ownerSessionId,
+      createdAt: Date.now(),
     }
 
     const expiresAt = Date.now() + ttl * 1000
@@ -217,8 +241,9 @@ export class RedisChannelRepo implements ChannelRepo {
 
   async createChannel(
     uploaderPeerID: string,
-    ttl: number = config.channel.ttl,
+    options: CreateChannelOptions = {},
   ): Promise<Channel> {
+    const ttl = options.ttl ?? config.channel.ttl
     const shortSlug = await generateShortSlugUntilUnique(
       async (key) => (await this.client.get(key)) !== null,
     )
@@ -231,6 +256,10 @@ export class RedisChannelRepo implements ChannelRepo {
       longSlug,
       shortSlug,
       uploaderPeerID,
+      title: options.title,
+      maxDownloads: options.maxDownloads,
+      ownerSessionId: options.ownerSessionId,
+      createdAt: Date.now(),
     }
     const channelStr = serializeChannel(channel)
 
@@ -284,17 +313,22 @@ export class RedisChannelRepo implements ChannelRepo {
   }
 }
 
-let _channelRepo: ChannelRepo | null = null
+// Anchor the singleton on globalThis. In Next.js dev (and across route-handler
+// bundles) module scope is not always shared, which would give each route its
+// own in-memory store. globalThis guarantees a single shared instance.
+const globalForChannel = globalThis as unknown as {
+  __filepizzaChannelRepo?: ChannelRepo
+}
 
 export function getOrCreateChannelRepo(): ChannelRepo {
-  if (!_channelRepo) {
+  if (!globalForChannel.__filepizzaChannelRepo) {
     if (process.env.REDIS_URL) {
-      _channelRepo = new RedisChannelRepo()
+      globalForChannel.__filepizzaChannelRepo = new RedisChannelRepo()
       console.log('[ChannelRepo] Using Redis storage')
     } else {
-      _channelRepo = new MemoryChannelRepo()
+      globalForChannel.__filepizzaChannelRepo = new MemoryChannelRepo()
       console.log('[ChannelRepo] Using in-memory storage')
     }
   }
-  return _channelRepo
+  return globalForChannel.__filepizzaChannelRepo
 }

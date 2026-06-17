@@ -1,4 +1,7 @@
 import React, { JSX } from 'react'
+import Box from '@mui/material/Box'
+import LinearProgress from '@mui/material/LinearProgress'
+import Typography from '@mui/material/Typography'
 
 export default function ProgressBar({
   value,
@@ -7,34 +10,49 @@ export default function ProgressBar({
   value: number
   max: number
 }): JSX.Element {
-  const percentage = (value / max) * 100
-  const isComplete = value === max
+  const percentage = max > 0 ? (value / max) * 100 : 0
+  const isComplete = value >= max && max > 0
 
   return (
-    <div
+    <Box
       id="progress-bar"
-      className="w-full h-12 bg-stone-200 dark:bg-stone-700 rounded-md overflow-hidden relative shadow-sm"
+      sx={{ position: 'relative', width: '100%', height: 48 }}
     >
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-black font-bold">{Math.round(percentage)}%</span>
-      </div>
-      <div
-        id="progress-bar-fill"
-        className={`h-full ${
-          isComplete
-            ? 'bg-linear-to-b from-green-500 to-green-600'
-            : 'bg-linear-to-b from-blue-500 to-blue-600'
-        } transition-all duration-300 ease-in-out`}
-        style={{ width: `${percentage}%` }}
+      <LinearProgress
+        variant="determinate"
+        value={Math.min(100, Math.max(0, percentage))}
+        color={isComplete ? 'success' : 'primary'}
+        sx={{
+          height: '100%',
+          borderRadius: 1.5,
+          bgcolor: 'action.hover',
+          '& .MuiLinearProgress-bar': {
+            borderRadius: 1.5,
+            transition: 'transform .3s ease-in-out',
+          },
+        }}
       />
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span
+      <Box
+        sx={{
+          position: 'absolute',
+          inset: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          pointerEvents: 'none',
+        }}
+      >
+        <Typography
           id="progress-percentage"
-          className="text-white font-bold text-shadow"
+          sx={{
+            fontWeight: 700,
+            color: '#fff',
+            textShadow: '0 1px 2px rgba(0,0,0,.45)',
+          }}
         >
           {Math.round(percentage)}%
-        </span>
-      </div>
-    </div>
+        </Typography>
+      </Box>
+    </Box>
   )
 }

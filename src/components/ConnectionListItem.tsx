@@ -1,64 +1,79 @@
 import React, { JSX } from 'react'
+import Box from '@mui/material/Box'
+import Stack from '@mui/material/Stack'
+import Chip from '@mui/material/Chip'
+import Typography from '@mui/material/Typography'
 import { UploaderConnection, UploaderConnectionStatus } from '../types'
 import ProgressBar from './ProgressBar'
+
+type ChipColor =
+  | 'default'
+  | 'primary'
+  | 'info'
+  | 'success'
+  | 'warning'
+  | 'error'
+
+function getStatusColor(status: UploaderConnectionStatus): ChipColor {
+  switch (status) {
+    case UploaderConnectionStatus.Uploading:
+      return 'info'
+    case UploaderConnectionStatus.Paused:
+      return 'warning'
+    case UploaderConnectionStatus.Done:
+      return 'success'
+    case UploaderConnectionStatus.Closed:
+    case UploaderConnectionStatus.InvalidPassword:
+      return 'error'
+    default:
+      return 'default'
+  }
+}
 
 export function ConnectionListItem({
   conn,
 }: {
   conn: UploaderConnection
 }): JSX.Element {
-  const getStatusColor = (status: UploaderConnectionStatus) => {
-    switch (status) {
-      case UploaderConnectionStatus.Uploading:
-        return 'bg-blue-500 dark:bg-blue-600'
-      case UploaderConnectionStatus.Paused:
-        return 'bg-yellow-500 dark:bg-yellow-600'
-      case UploaderConnectionStatus.Done:
-        return 'bg-green-500 dark:bg-green-600'
-      case UploaderConnectionStatus.Closed:
-        return 'bg-red-500 dark:bg-red-600'
-      case UploaderConnectionStatus.InvalidPassword:
-        return 'bg-red-500 dark:bg-red-600'
-      default:
-        return 'bg-stone-500 dark:bg-stone-600'
-    }
-  }
-
   return (
-    <div className="w-full mt-4">
-      <div className="flex justify-between items-center mb-2">
-        <div className="flex items-center space-x-2">
-          <span className="text-sm font-medium">
+    <Box sx={{ width: '100%', mt: 2 }}>
+      <Stack
+        direction="row"
+        sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 1 }}
+      >
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+          <Typography variant="body2" sx={{ fontWeight: 500 }}>
             {conn.browserName && conn.browserVersion ? (
               <>
                 {conn.browserName}{' '}
-                <span className="text-stone-400">v{conn.browserVersion}</span>
+                <Typography component="span" color="text.secondary">
+                  v{conn.browserVersion}
+                </Typography>
               </>
             ) : (
               'Downloader'
             )}
-          </span>
-          <span
-            className={`px-1.5 py-0.5 text-white rounded-md transition-colors duration-200 font-medium text-[10px] ${getStatusColor(
-              conn.status,
-            )}`}
-          >
-            {conn.status.replace(/_/g, ' ')}
-          </span>
-        </div>
+          </Typography>
+          <Chip
+            label={conn.status.replace(/_/g, ' ')}
+            color={getStatusColor(conn.status)}
+            size="small"
+            sx={{ fontSize: 10, height: 20, fontWeight: 600 }}
+          />
+        </Stack>
 
-        <div className="text-sm text-stone-500 dark:text-stone-400">
-          <div>
+        <Box sx={{ textAlign: 'right' }}>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
             Completed: {conn.completedFiles} / {conn.totalFiles} files
-          </div>
+          </Typography>
           {conn.uploadingFileName &&
             conn.status === UploaderConnectionStatus.Uploading && (
-              <div>
+              <Typography variant="caption" color="text.secondary">
                 Current file: {Math.round(conn.currentFileProgress * 100)}%
-              </div>
+              </Typography>
             )}
-        </div>
-      </div>
+        </Box>
+      </Stack>
       <ProgressBar
         value={
           conn.completedFiles === conn.totalFiles
@@ -67,6 +82,6 @@ export function ConnectionListItem({
         }
         max={1}
       />
-    </div>
+    </Box>
   )
 }
