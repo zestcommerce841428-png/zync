@@ -63,6 +63,21 @@ function a11yGlobalStyles() {
       wordSpacing: '0.16em',
       lineHeight: 1.8,
     },
+    'html[data-invert="true"]': { filter: 'invert(1) hue-rotate(180deg)' },
+    'html[data-invert="true"] img, html[data-invert="true"] video': {
+      filter: 'invert(1) hue-rotate(180deg)',
+    },
+    'html[data-bigger-targets="true"] :is(button, a, [role="button"], .MuiIconButton-root)': {
+      minHeight: '44px',
+      minWidth: '44px',
+    },
+    'html[data-highlight-hover="true"] :is(a, button, [role="button"]):hover': {
+      outline: '2px solid #6366f1',
+      outlineOffset: '2px',
+    },
+    'html[data-hide-backgrounds="true"] *': {
+      backgroundImage: 'none !important',
+    },
   }
 }
 

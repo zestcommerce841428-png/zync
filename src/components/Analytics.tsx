@@ -2,12 +2,15 @@
 
 import * as React from 'react'
 import Script from 'next/script'
+import { useConsent } from './consent/ConsentContext'
 
-// Google Analytics 4 loader. Renders nothing unless NEXT_PUBLIC_GA_ID is set,
-// so the app runs cleanly in development / before keys are provided.
+// Google Analytics 4 loader. Renders nothing unless NEXT_PUBLIC_GA_ID is set
+// AND the visitor has granted analytics consent — so the app runs cleanly in
+// development and respects the cookie banner.
 export default function Analytics(): React.ReactElement | null {
+  const { analyticsAllowed } = useConsent()
   const gaId = process.env.NEXT_PUBLIC_GA_ID
-  if (!gaId) return null
+  if (!gaId || !analyticsAllowed) return null
 
   return (
     <>

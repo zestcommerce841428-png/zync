@@ -1,4 +1,15 @@
 /** @type {import('next').NextConfig} */
+const { execSync } = require('child_process')
+
+function gitSha() {
+  if (process.env.NEXT_PUBLIC_COMMIT_SHA) return process.env.NEXT_PUBLIC_COMMIT_SHA
+  try {
+    return execSync('git rev-parse --short HEAD').toString().trim()
+  } catch {
+    return 'dev'
+  }
+}
+
 const securityHeaders = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
@@ -20,6 +31,11 @@ const nextConfig = {
   reactStrictMode: false,
   output: 'standalone',
   poweredByHeader: false,
+  env: {
+    NEXT_PUBLIC_APP_VERSION: require('./package.json').version,
+    NEXT_PUBLIC_BUILD_TIME: new Date().toISOString(),
+    NEXT_PUBLIC_COMMIT_SHA: gitSha(),
+  },
   async headers() {
     return [
       {

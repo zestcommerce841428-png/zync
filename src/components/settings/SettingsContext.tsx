@@ -59,6 +59,26 @@ export type Settings = {
   dyslexiaSpacing: boolean
   pauseAnimations: boolean
   direction: 'ltr' | 'rtl'
+  // Advanced accessibility
+  invert: boolean
+  biggerTargets: boolean
+  highlightHover: boolean
+  hideBackgrounds: boolean
+}
+
+// Curated theme presets — one click applies a coherent accent + shape + font.
+export const THEME_PRESETS: Record<
+  string,
+  { label: string; primary: keyof typeof PRIMARY_PRESETS; radius: number; fontFamily: keyof typeof FONT_FAMILIES }
+> = {
+  indigo: { label: 'Indigo', primary: 'indigo', radius: 12, fontFamily: 'system' },
+  midnight: { label: 'Midnight', primary: 'violet', radius: 16, fontFamily: 'system' },
+  ocean: { label: 'Ocean', primary: 'cyan', radius: 14, fontFamily: 'system' },
+  emerald: { label: 'Emerald', primary: 'emerald', radius: 10, fontFamily: 'system' },
+  sunset: { label: 'Sunset', primary: 'orange', radius: 18, fontFamily: 'rounded' },
+  rose: { label: 'Rose', primary: 'rose', radius: 20, fontFamily: 'system' },
+  slate: { label: 'Slate', primary: 'slate', radius: 8, fontFamily: 'system' },
+  mono: { label: 'Mono', primary: 'slate', radius: 4, fontFamily: 'mono' },
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -85,6 +105,10 @@ export const DEFAULT_SETTINGS: Settings = {
   dyslexiaSpacing: false,
   pauseAnimations: false,
   direction: 'ltr',
+  invert: false,
+  biggerTargets: false,
+  highlightHover: false,
+  hideBackgrounds: false,
 }
 
 const STORAGE_KEY = 'zync.settings.v1'
@@ -140,6 +164,10 @@ export function SettingsProvider({
     el.dataset.hideImages = String(settings.hideImages)
     el.dataset.textAlign = settings.textAlign
     el.dataset.dyslexiaSpacing = String(settings.dyslexiaSpacing)
+    el.dataset.invert = String(settings.invert)
+    el.dataset.biggerTargets = String(settings.biggerTargets)
+    el.dataset.highlightHover = String(settings.highlightHover)
+    el.dataset.hideBackgrounds = String(settings.hideBackgrounds)
     el.setAttribute('dir', settings.direction)
 
     el.style.setProperty('--zync-letter-spacing', `${settings.letterSpacing}em`)

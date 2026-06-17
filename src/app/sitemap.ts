@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { getAllPostMeta } from '../blog'
+import { TOOLS } from '../tools/meta'
 import { brand } from '../brand'
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -8,6 +9,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const staticRoutes = [
     '',
     '/send',
+    '/welcome',
+    '/tools',
     '/blog',
     '/about',
     '/contact',
@@ -32,5 +35,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }))
 
-  return [...staticRoutes, ...posts]
+  const tools = TOOLS.map((t) => ({
+    url: `${base}/tools/${t.slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'monthly' as const,
+    priority: 0.6,
+  }))
+
+  return [...staticRoutes, ...posts, ...tools]
 }

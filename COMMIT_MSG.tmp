@@ -1,14 +1,19 @@
-Require accounts and add full auth, profile and security suite
+Add tools suite, consent, build status, animated landing and more
 
-- Gate tools (/send, /stats, /account, /admin) behind login via proxy and
-  server guard; redirect to /login?next= when unauthenticated
-- Copy updated from no-signup to one-time free sign-up across the site
-- AuthHub: email+password sign in/up, email one-time-code (OTP), Google,
-  forgot-password, and profile photo upload during signup
-- Password reset flow (/reset-password) via recovery link
-- Account page rebuilt with 27+ editable profile fields (grouped) and an
-  avatar manager (upload / change / remove)
-- Security panel: change password, backup recovery email, TOTP 2FA, delete
-- Service-role admin client + /api/account/delete
+- 15 free browser tools at /tools (password gen, QR, hashing, Base64, URL,
+  UUID, JSON, word counter, case, lorem, color, timestamp, slug, markdown,
+  diff) with index, dynamic pages, JSON-LD and sitemap entries
+- Cookie consent banner (Accept / Reject / Customize) gating Google Analytics
+- Professional floating WhatsApp button + scroll-to-top button
+- Dynamic build-info status strip in the footer (version, commit, build age,
+  live operational pulse) injected via next.config
+- Professional /welcome onboarding page
+- Animated tech background + auto-rotating feature slider on the landing page
+- Theme presets (Indigo, Midnight, Ocean, Emerald, Sunset, Rose, Slate, Mono)
+- More accessibility options: invert colors, bigger targets, highlight on
+  hover, hide backgrounds
+- Copy: "no sign-up" updated to "one-time free sign-up"
+- docs/CONFIGURATION.md documenting all env vars (REDIS, COTURN, TURN, STUN,
+  PEERJS, Supabase, SMTP, analytics)
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>

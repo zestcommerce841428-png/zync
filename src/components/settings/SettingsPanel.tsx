@@ -24,10 +24,12 @@ import TuneIcon from '@mui/icons-material/Tune'
 import AccessibilityNewIcon from '@mui/icons-material/AccessibilityNew'
 import RestartAltIcon from '@mui/icons-material/RestartAlt'
 import { useColorScheme } from '@mui/material/styles'
+import Chip from '@mui/material/Chip'
 import {
   useSettings,
   PRIMARY_PRESETS,
   FONT_FAMILIES,
+  THEME_PRESETS,
 } from './SettingsContext'
 
 function Section({
@@ -159,6 +161,25 @@ export default function SettingsPanel(): React.ReactElement {
               <>
                 <Section title="Color mode">
                   <ModeControl />
+                </Section>
+
+                <Section title="Theme presets">
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    {Object.entries(THEME_PRESETS).map(([key, p]) => (
+                      <Chip
+                        key={key}
+                        label={p.label}
+                        onClick={() => {
+                          update('primary', p.primary)
+                          update('radius', p.radius)
+                          update('fontFamily', p.fontFamily)
+                        }}
+                        variant={settings.primary === p.primary ? 'filled' : 'outlined'}
+                        color={settings.primary === p.primary ? 'primary' : 'default'}
+                        sx={{ fontWeight: 600 }}
+                      />
+                    ))}
+                  </Box>
                 </Section>
 
                 <Section title="Accent color">
@@ -330,10 +351,14 @@ export default function SettingsPanel(): React.ReactElement {
                       ['underlineLinks', 'Underline links'],
                       ['highlightLinks', 'Highlight links'],
                       ['highlightHeadings', 'Highlight headings'],
+                      ['highlightHover', 'Highlight on hover'],
                       ['bigCursor', 'Large cursor'],
+                      ['biggerTargets', 'Bigger click targets'],
                       ['focusRing', 'Enhanced focus outline'],
                       ['readingGuide', 'Reading guide'],
                       ['hideImages', 'Hide images'],
+                      ['hideBackgrounds', 'Hide background graphics'],
+                      ['invert', 'Invert colors'],
                       ['dyslexiaSpacing', 'Dyslexia-friendly spacing'],
                       ['motion', 'Reduce motion'],
                       ['pauseAnimations', 'Pause all animations'],

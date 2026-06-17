@@ -14,6 +14,7 @@ import EmailIcon from '@mui/icons-material/Email'
 import GitHubIcon from '@mui/icons-material/GitHub'
 import { Link as ViewTransitionLink } from 'next-view-transitions'
 import Logo from './Logo'
+import BuildInfo from './BuildInfo'
 import { brand } from '../brand'
 
 const COLUMNS: Array<{ title: string; links: Array<{ label: string; href: string }> }> = [
@@ -21,8 +22,9 @@ const COLUMNS: Array<{ title: string; links: Array<{ label: string; href: string
     title: 'Product',
     links: [
       { label: 'Send a file', href: '/send' },
+      { label: 'Free tools', href: '/tools' },
       { label: 'Features', href: '/#features' },
-      { label: 'How it works', href: '/#how-it-works' },
+      { label: 'Welcome', href: '/welcome' },
       { label: 'Live stats', href: '/stats' },
     ],
   },
@@ -150,6 +152,10 @@ export default function Footer(): React.ReactElement {
         </Grid>
 
         <Divider sx={{ my: 4 }} />
+
+        <Box sx={{ mb: 2 }}>
+          <BuildInfo />
+        </Box>
 
         <Stack
           direction={{ xs: 'column', sm: 'row' }}

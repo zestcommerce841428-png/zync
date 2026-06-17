@@ -10,6 +10,10 @@ import { ViewTransitions } from 'next-view-transitions'
 import { brand } from '../brand'
 import Analytics from '../components/Analytics'
 import SettingsPanel from '../components/settings/SettingsPanel'
+import BackToTop from '../components/BackToTop'
+import WhatsAppFab from '../components/WhatsAppFab'
+import CookieConsent from '../components/consent/CookieConsent'
+import { ConsentProvider } from '../components/consent/ConsentContext'
 
 export const metadata: Metadata = {
   metadataBase: new URL(brand.url),
@@ -68,23 +72,28 @@ export default function RootLayout({
         <body>
           <InitColorSchemeScript attribute="class" defaultMode="system" />
           <ThemeRegistry>
-            <FilePizzaQueryClientProvider>
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  minHeight: '100dvh',
-                }}
-              >
-                <Header />
-                <Box component="main" sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                  {children}
+            <ConsentProvider>
+              <FilePizzaQueryClientProvider>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    minHeight: '100dvh',
+                  }}
+                >
+                  <Header />
+                  <Box component="main" sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                    {children}
+                  </Box>
+                  <Footer />
                 </Box>
-                <Footer />
-              </Box>
-              <SettingsPanel />
-            </FilePizzaQueryClientProvider>
-            <Analytics />
+                <SettingsPanel />
+                <WhatsAppFab />
+                <BackToTop />
+                <CookieConsent />
+              </FilePizzaQueryClientProvider>
+              <Analytics />
+            </ConsentProvider>
           </ThemeRegistry>
         </body>
       </html>

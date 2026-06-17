@@ -22,6 +22,8 @@ import ReplayIcon from '@mui/icons-material/Replay'
 import SensorsIcon from '@mui/icons-material/Sensors'
 import { Link as ViewTransitionLink } from 'next-view-transitions'
 import { ZyncIcon } from '../components/Logo'
+import AnimatedBackground from '../components/AnimatedBackground'
+import FeatureSlider from '../components/FeatureSlider'
 import { brand } from '../brand'
 
 export const metadata: Metadata = {
@@ -169,15 +171,12 @@ export default function LandingPage(): React.ReactElement {
       <JsonLd />
 
       {/* Hero */}
-      <Box
-        sx={{
-          position: 'relative',
-          overflow: 'hidden',
-          background:
-            'radial-gradient(1200px 500px at 50% -10%, rgba(99,102,241,0.18), transparent), radial-gradient(900px 500px at 90% 10%, rgba(168,85,247,0.14), transparent)',
-        }}
-      >
-        <Container maxWidth="md" sx={{ py: { xs: 8, md: 12 }, textAlign: 'center' }}>
+      <Box sx={{ position: 'relative', overflow: 'hidden' }}>
+        <AnimatedBackground />
+        <Container
+          maxWidth="md"
+          sx={{ py: { xs: 8, md: 12 }, textAlign: 'center', position: 'relative', zIndex: 1 }}
+        >
           <Stack spacing={3} sx={{ alignItems: 'center' }}>
             <ZyncIcon size={72} />
             <Chip
@@ -311,6 +310,11 @@ export default function LandingPage(): React.ReactElement {
             </Grid>
           ))}
         </Grid>
+      </Container>
+
+      {/* Rotating highlight slider */}
+      <Container maxWidth="lg" sx={{ pb: { xs: 6, md: 8 } }}>
+        <FeatureSlider />
       </Container>
 
       {/* How it works */}
