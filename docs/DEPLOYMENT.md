@@ -184,6 +184,20 @@ instead of Vercel.
 
 ---
 
+## Enabling ALL optionals for free (self-hosted TURN + PeerJS)
+
+Serverless hosts (Vercel, **Cloudflare Workers**) **cannot** run self-hosted
+coturn (TURN) or the PeerJS WebSocket server — those need a VM with a public IP
+and open UDP ports. For a single-box, 100%-free, all-features deploy use
+**Oracle Cloud Always Free** (ARM Ampere VM): see
+**[deploy/oracle/README.md](../deploy/oracle/README.md)** with ready-made
+`turnserver.conf`, `Caddyfile`, `systemd` units and a `setup.sh`.
+
+> Cloudflare Workers note: Zync uses `ioredis` (raw TCP) for Redis/stats/
+> presence/TURN credentials, which Workers don't support. Cloudflare is still
+> useful for free DNS/CDN and its managed **Realtime TURN** (a small change to
+> `src/app/api/ice/route.ts` to return its `iceServers`).
+
 ## Alternative all-in-one free hosts
 
 If you'd rather not split services, **Render** or **Railway** can run the
