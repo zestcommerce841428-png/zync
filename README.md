@@ -59,6 +59,13 @@ Regenerate the blog content (already committed):
 node scripts/generate-blog.mjs
 ```
 
+## 🚢 Deploy for free
+
+See **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** for a complete, 100%-free-tier
+deployment guide (Vercel + Upstash Redis + Supabase + Hostinger SMTP/PHP + GA +
+reCAPTCHA), and **[docs/CONFIGURATION.md](docs/CONFIGURATION.md)** for every
+environment variable.
+
 ## ⚙️ Configuration
 
 Copy `.env.local.example` to `.env.local` and fill in only what you need:
