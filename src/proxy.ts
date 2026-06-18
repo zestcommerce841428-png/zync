@@ -42,8 +42,14 @@ export default async function proxy(request: NextRequest): Promise<NextResponse>
   )
 
   if (needsAuth && !user) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
+    // Behind a reverse proxy the request origin is the internal container host;
+    // build the redirect from the public site URL (or forwarded headers).
+    const fwdHost = request.headers.get('x-forwarded-host')
+    const fwdProto = request.headers.get('x-forwarded-proto') || 'https'
+    const base =
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      (fwdHost ? `${fwdProto}://${fwdHost}` : request.nextUrl.origin)
+    const url = new URL('/login', base)
     url.searchParams.set('next', path)
     return NextResponse.redirect(url)
   }
