@@ -70,22 +70,36 @@ nano deploy/vps/.env     # set FILEPIZZA_SECRET + any optional keys
 Required values are already pre-filled for `videodownloaders.cloud`. At minimum
 set `FILEPIZZA_SECRET`. Supabase / SMTP / analytics are optional.
 
-## Step 7 — Build & launch
+## Step 7 — Build & launch (pick a web server)
+
+**Option A — NGINX (recommended):** Nginx serves the site via `nginx-proxy`,
+with `acme-companion` issuing/renewing Let's Encrypt certs automatically.
+
+```bash
+docker compose --env-file deploy/vps/.env -f deploy/vps/docker-compose.nginx.yml up -d --build
+```
+
+**Option B — Caddy:**
 
 ```bash
 docker compose --env-file deploy/vps/.env -f deploy/vps/docker-compose.yml up -d --build
 ```
 
-First build takes a few minutes. Caddy automatically obtains a Let's Encrypt
-certificate for your domain. Then visit:
+**Option C — Host-installed Nginx (run nginx directly, not in a container):**
+start only the app + peerjs + redis, then use the classic server block at
+[`deploy/vps/nginx/videodownloaders.cloud.conf`](../deploy/vps/nginx/videodownloaders.cloud.conf)
+with `certbot` (instructions in that file's header).
+
+First build takes a few minutes; the certificate is issued automatically once
+DNS resolves and ports 80/443 are open. Then visit:
 
 **https://videodownloaders.cloud** 🎉
 
-Check logs / status:
+Check logs / status (swap the `-f` file for the compose you launched):
 
 ```bash
-docker compose -f deploy/vps/docker-compose.yml ps
-docker compose -f deploy/vps/docker-compose.yml logs -f caddy   # watch cert issuance
+docker compose -f deploy/vps/docker-compose.nginx.yml ps
+docker compose -f deploy/vps/docker-compose.nginx.yml logs -f nginx-proxy acme
 ```
 
 ---
