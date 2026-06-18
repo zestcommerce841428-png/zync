@@ -7,6 +7,7 @@ WebRTC connection. Files are never uploaded to or stored on a server — when th
 sender closes the tab, the transfer is gone. No installs, no size limits.
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/zestcommerce841428-png/zync)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/zestcommerce841428-png/zync)
 
 ![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
 ![React](https://img.shields.io/badge/React-19-149eca?logo=react)
@@ -149,7 +150,17 @@ The included **[`render.yaml`](render.yaml)** deploys the app *and* a
 self-hosted PeerJS server on free tiers. Render → New → **Blueprint** → pick
 this repo. Free `*.onrender.com` subdomains, no card.
 
-> Full guides: **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** (every free service,
+### Option C — Major clouds (AWS, GCP, Azure, DigitalOcean)
+
+Zync ships a production [`Dockerfile`](Dockerfile) plus ready specs
+([`.do/app.yaml`](.do/app.yaml), [`apprunner.yaml`](apprunner.yaml)). Copy-paste
+commands for **AWS App Runner / ECS / Beanstalk**, **Google Cloud Run**, **Azure
+Container Apps / App Service**, and **DigitalOcean App Platform / Droplet** are
+in **[docs/CLOUD.md](docs/CLOUD.md)**.
+
+> Full guides: **[docs/CLOUD.md](docs/CLOUD.md)** (AWS · GCP · Azure · DO),
+> **[docs/RENDER.md](docs/RENDER.md)** (Render Blueprint),
+> **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** (every free service,
 > with/without credit card) and **[docs/CONFIGURATION.md](docs/CONFIGURATION.md)**
 > (every environment variable).
 
