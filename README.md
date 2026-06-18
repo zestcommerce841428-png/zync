@@ -1,14 +1,43 @@
-# Zync — private, peer-to-peer file transfer
+<div align="center">
+
+# ⚡ Zync — private, peer-to-peer file transfer
 
 **Zync** beams files directly from one browser to another over an encrypted
 WebRTC connection. Files are never uploaded to or stored on a server — when the
-sender closes the tab, the transfer is gone. No accounts, no installs, no size
-limits.
+sender closes the tab, the transfer is gone. No installs, no size limits.
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/zestcommerce841428-png/zync)
+
+![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
+![React](https://img.shields.io/badge/React-19-149eca?logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript)
+![Material UI](https://img.shields.io/badge/MUI-v9-007fff?logo=mui)
+![WebRTC](https://img.shields.io/badge/WebRTC-P2P-333?logo=webrtc)
+![License](https://img.shields.io/badge/license-BSD--3--Clause-blue)
 
 > Built by **Naushad Alam** · engineered with **Claude** · operated under ZestCommerce.
 
-Live transfer tool, a marketing site, a 140-article blog, optional accounts,
-and a full accessibility suite — all in one production-ready Next.js app.
+Live transfer tool, a marketing site, a 140-article blog, 15 in-browser tools,
+optional accounts, and a full accessibility suite — all in one production-ready
+Next.js app.
+
+</div>
+
+---
+
+## 📑 Table of contents
+
+- [Features](#-features)
+- [How it works](#-how-it-works)
+- [Architecture](#-architecture)
+- [Screenshots](#-screenshots)
+- [Quick start](#-quick-start)
+- [Deploy free](#-deploy-free-in-3-minutes-no-domain-no-credit-card)
+- [Configuration](#️-configuration)
+- [Tech stack](#-tech-stack)
+- [Scripts](#-scripts)
+- [Contact](#-contact)
+- [License](#-license)
 
 ---
 
@@ -43,6 +72,46 @@ and a full accessibility suite — all in one production-ready Next.js app.
 
 Every integration is **optional** — the app runs fully without any keys and
 lights features up as you add them.
+
+---
+
+## 🔄 How it works
+
+1. The **sender** drops a file. The browser slices it and waits — nothing is
+   uploaded yet.
+2. Zync mints a short link. The **receiver** opens it.
+3. Both browsers exchange connection info through a lightweight **PeerJS
+   signaling** server and punch through NAT using **STUN/TURN**.
+4. A direct, **DTLS-encrypted WebRTC DataChannel** opens between the two
+   browsers and the file streams across — chunk by chunk, with backpressure so
+   there's **no size limit**.
+5. Close the tab and it's gone. The server never sees a byte of the file.
+
+## 🏗 Architecture
+
+```mermaid
+flowchart LR
+    A[Sender browser] -- "1. offer / ICE" --> S[(PeerJS signaling)]
+    B[Receiver browser] -- "2. answer / ICE" --> S
+    A <-- "3. encrypted WebRTC DataChannel (file bytes)" --> B
+    A -. "STUN/TURN NAT traversal" .-> T{{STUN · TURN}}
+    B -. "STUN/TURN NAT traversal" .-> T
+    A -- "presence / stats (SSE)" --> N[Next.js API]
+    B -- "presence / stats (SSE)" --> N
+    N -. "optional" .-> R[(Redis)]
+    N -. "optional" .-> SB[(Supabase auth)]
+```
+
+> The Next.js server only handles **signaling, presence, stats and accounts** —
+> **file bytes flow peer-to-peer and never touch it.**
+
+## 📸 Screenshots
+
+> _Drop your own screenshots into `docs/screenshots/` and they'll render here._
+
+| Landing | Send a file | Tools |
+| --- | --- | --- |
+| ![Landing page](docs/screenshots/landing.png) | ![Send a file](docs/screenshots/send.png) | ![Tools](docs/screenshots/tools.png) |
 
 ---
 
