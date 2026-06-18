@@ -190,13 +190,40 @@ That's it — no coturn, no VM, no Redis needed for TURN. The ICE route
 - [ ] Redeploy on Vercel after adding env vars.
 - [ ] Test: sign up → upload avatar → send a file → check `/stats` and `/admin`.
 
-### A note on serverless + SSE
+## Reliability on Vercel
 
-Vercel Hobby functions are short-lived, so the live-presence SSE stream may
-periodically reconnect (the browser's `EventSource` does this automatically).
-With Upstash Redis configured, presence/stats stay consistent across
-reconnects. For always-on SSE, host on Render/Railway/Fly (also free tiers)
-instead of Vercel.
+Zync is fully compatible with Vercel, and the part that matters most — the file
+transfer — is **rock-solid** there. File bytes travel **browser-to-browser over
+WebRTC and never pass through Vercel**, so serverless cold starts, function
+timeouts and instance scaling have **zero effect** on transfer speed or size.
+
+Two features depend on shared server state and behave differently on Vercel's
+multi-instance serverless runtime. Both degrade gracefully:
+
+| Area | On Vercel | How to make it production-reliable |
+| --- | --- | --- |
+| **File transfer** | ✅ unaffected (pure P2P) | nothing needed |
+| **ICE / create / destroy / stats APIs** | ✅ fine (short requests) | nothing needed |
+| **Live presence + stats counters** | counts read from Redis are correct; the *instant* SSE push is best-effort across instances (the browser `EventSource` reconnects ~every minute and re-pulls a fresh snapshot) | **set `REDIS_URL`** (Upstash, free). Without it, in-memory state isn't shared across instances and stats can read stale/0. |
+| **PeerJS signaling** | defaults to the public `0.peerjs.com` broker — works, but is a third-party free service (handshake only, not the transfer) | **self-host PeerJS** (e.g. on Render via [`render.yaml`](../render.yaml)) and set `PEERJS_HOST` / `PEERJS_PATH` |
+
+**Why:** the authoritative presence/stats state lives in Redis with TTLs
+([`src/presence.ts`](../src/presence.ts)), so it's correct across instances. The
+*real-time push* uses an in-process `EventEmitter`, which only reaches SSE
+clients on the same serverless instance — hence the reconnect-based refresh.
+
+### Recommended Vercel setup
+1. `NEXT_PUBLIC_SITE_URL` + `FILEPIZZA_SECRET` (required).
+2. **`REDIS_URL`** from Upstash → accurate stats/presence across instances.
+3. *(Optional, better)* self-hosted PeerJS + `PEERJS_HOST` so signaling isn't on
+   the public broker.
+
+### Want instant, always-on presence instead?
+Host the whole app on **Render / Railway / Fly / a VPS** — long-running
+processes keep the SSE stream connected and let you self-host PeerJS in the same
+deploy. See [RENDER.md](RENDER.md) and [CLOUD.md](CLOUD.md). The trade-off is
+manual scaling vs. Vercel's auto-scale; for the transfer engine itself, both are
+equally reliable.
 
 ---
 
