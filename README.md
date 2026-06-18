@@ -159,6 +159,7 @@ Container Apps / App Service**, and **DigitalOcean App Platform / Droplet** are
 in **[docs/CLOUD.md](docs/CLOUD.md)**.
 
 > Full guides: **[docs/CLOUD.md](docs/CLOUD.md)** (AWS · GCP · Azure · DO),
+> **[docs/HOSTINGER-VPS.md](docs/HOSTINGER-VPS.md)** (single VPS, Docker + Caddy HTTPS),
 > **[docs/RENDER.md](docs/RENDER.md)** (Render Blueprint),
 > **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** (every free service,
 > with/without credit card) and **[docs/CONFIGURATION.md](docs/CONFIGURATION.md)**

@@ -1,0 +1,17 @@
+# Automatic HTTPS (Let's Encrypt) for the whole app on one domain.
+# Caddy obtains and renews certificates itself — just point DNS at this VPS.
+{$SITE_DOMAIN} {
+	encode gzip zstd
+
+	# PeerJS signaling — proxy /peerjs/* to the peerjs container.
+	@peerjs path /peerjs/*
+	reverse_proxy @peerjs peerjs:9000
+
+	# Everything else -> the Next.js app.
+	reverse_proxy app:3000
+}
+
+# Redirect the bare apex <-> www (optional). Uncomment and set if you use www:
+# www.{$SITE_DOMAIN} {
+# 	redir https://{$SITE_DOMAIN}{uri}
+# }
