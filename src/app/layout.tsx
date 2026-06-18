@@ -1,6 +1,5 @@
 import React from 'react'
 import type { Metadata, Viewport } from 'next'
-import Script from 'next/script'
 import Box from '@mui/material/Box'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
@@ -72,13 +71,11 @@ export default function RootLayout({
         <body>
           {/*
             Pre-hydration color-scheme init (prevents a flash of the wrong
-            theme). Injected via next/script so it lands in the initial HTML
-            without React 19's "script inside a component" client-render
-            warning. Mirrors MUI's class-based color scheme (key: mui-mode).
+            theme). Loaded as an EXTERNAL script (public/theme-init.js) so React
+            never renders an inline <script> — avoiding React 19's "scripts
+            inside React components are never executed on the client" warning.
           */}
-          <Script id="zync-color-scheme" strategy="beforeInteractive">
-            {`(function(){try{var m=localStorage.getItem('mui-mode')||'system';var d=m==='system'?(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):m;var c=document.documentElement.classList;c.remove('light','dark');c.add(d);}catch(e){}})();`}
-          </Script>
+          <script src="/theme-init.js" />
           <ThemeRegistry>
             <ConsentProvider>
               <FilePizzaQueryClientProvider>

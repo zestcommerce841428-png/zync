@@ -150,19 +150,35 @@ These control how peers connect. The defaults work for most users for free.
 | `PEERJS_HOST` | `0.peerjs.com` | Host of the (self-hosted) PeerJS signaling server. |
 | `PEERJS_PATH` | `/` | Path of the PeerJS server. |
 
-### Free recommendations
+### No credit card? Enable everything anyway ✅
 
-- **STUN only (simplest, free):** leave everything default. Google's STUN
-  handles the majority of connections at no cost.
-- **Free TURN for strict networks:** sign up for **Metered Open Relay** (free
-  50 GB/month). Their TURN uses static credentials, so point `STUN_SERVER` at a
-  relay URL or extend `src/app/api/ice/route.ts` to return the Open Relay
-  `iceServers` array (host, username, credential). TURN is only used as a
-  fallback when a direct path fails.
-- **PeerJS:** the public `0.peerjs.com` is free but shared/rate-limited. For
-  reliability, self-host the PeerJS server (this repo ships `bin/peerjs.js`) on
-  a **free Render/Railway** web service, then set `PEERJS_HOST` to that host and
-  `PEERJS_PATH` to `/`.
+You do **not** need Oracle or any card to turn on every optional:
+
+| Optional | Free service (no card) | How |
+| --- | --- | --- |
+| Redis | **Upstash** | Free DB, no card. Set `REDIS_URL`. |
+| TURN relay | **Metered Open Relay** | Free 50 GB/mo, **no card**. See below. |
+| PeerJS server | **Render** free web service _or_ public default | No card on Render. |
+| App hosting | **Vercel** / **Netlify** / **Cloudflare Pages** | No card. |
+
+**Static TURN (built in — the easy way):** Zync now supports a static TURN
+provider directly. Create a free Open Relay key at metered.ca, then set:
+
+```bash
+TURN_URLS=turn:openrelay.metered.ca:80,turn:openrelay.metered.ca:443,turns:openrelay.metered.ca:443
+TURN_USERNAME=your-open-relay-username
+TURN_CREDENTIAL=your-open-relay-credential
+```
+
+That's it — no coturn, no VM, no Redis needed for TURN. The ICE route
+(`src/app/api/ice/route.ts`) returns these servers automatically. Leave
+`COTURN_ENABLED` unset (that mode is only for self-hosted coturn).
+
+- **STUN only (simplest):** leave the TURN vars unset — Google's STUN handles
+  most connections for free.
+- **PeerJS:** the public `0.peerjs.com` works out of the box. For reliability,
+  deploy this repo's `bin/peerjs.js` to a **free Render web service** (no card),
+  then set `PEERJS_HOST=your-peer.onrender.com` and `PEERJS_PATH=/peerjs/filepizza`.
 
 ---
 

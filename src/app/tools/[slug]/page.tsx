@@ -41,12 +41,24 @@ export default async function ToolPage({
 
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'SoftwareApplication',
-    name: `${tool.name} — ${brand.name}`,
-    applicationCategory: 'UtilitiesApplication',
-    operatingSystem: 'Any (web browser)',
-    description: tool.description,
-    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+    '@graph': [
+      {
+        '@type': 'SoftwareApplication',
+        name: `${tool.name} — ${brand.name}`,
+        applicationCategory: 'UtilitiesApplication',
+        operatingSystem: 'Any (web browser)',
+        description: tool.description,
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: brand.url },
+          { '@type': 'ListItem', position: 2, name: 'Tools', item: `${brand.url}/tools` },
+          { '@type': 'ListItem', position: 3, name: tool.name, item: `${brand.url}/tools/${tool.slug}` },
+        ],
+      },
+    ],
   }
 
   return (

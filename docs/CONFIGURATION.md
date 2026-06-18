@@ -16,10 +16,13 @@ variables. Copy `.env.local.example` to `.env.local` and set what you need.
 
 | Variable | Default | Description |
 | --- | --- | --- |
-| `COTURN_ENABLED` | _(unset)_ | When set to `true`, enables TURN support for connecting peers behind NAT. |
-| `TURN_HOST` | `127.0.0.1` | Hostname or IP address of the TURN server. |
-| `TURN_REALM` | `zync.app` | Realm used when generating TURN credentials. |
-| `STUN_SERVER` | `stun:stun.l.google.com:19302` | STUN server URL to use when `COTURN_ENABLED` is disabled. |
+| `STUN_SERVER` | `stun:stun.l.google.com:19302` | STUN server URL (always used). |
+| `TURN_URLS` | _(unset)_ | **Static TURN** (no VM/card): comma-separated TURN/TURNS URLs from a provider like Metered Open Relay. When set, used directly. |
+| `TURN_USERNAME` | _(unset)_ | Username for static TURN. |
+| `TURN_CREDENTIAL` | _(unset)_ | Credential for static TURN. |
+| `COTURN_ENABLED` | _(unset)_ | **Self-hosted TURN.** When `true`, generates ephemeral coturn credentials in Redis. Use only if running your own coturn. |
+| `TURN_HOST` | `127.0.0.1` | Hostname/IP of the self-hosted TURN server. |
+| `TURN_REALM` | `zync.app` | Realm used when generating coturn credentials. |
 
 ## WebRTC: PeerJS signaling
 

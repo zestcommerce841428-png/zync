@@ -50,14 +50,32 @@ export default async function PostPage({
 
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'BlogPosting',
-    headline: post.title,
-    description: post.excerpt,
-    datePublished: post.date,
-    author: { '@type': 'Person', name: post.author },
-    publisher: { '@type': 'Organization', name: brand.org.legalName },
-    mainEntityOfPage: `${brand.url}/blog/${post.slug}`,
-    keywords: post.tags.join(', '),
+    '@graph': [
+      {
+        '@type': 'BlogPosting',
+        headline: post.title,
+        description: post.excerpt,
+        datePublished: post.date,
+        dateModified: post.date,
+        author: { '@type': 'Person', name: post.author },
+        publisher: {
+          '@type': 'Organization',
+          name: brand.org.legalName,
+          logo: { '@type': 'ImageObject', url: `${brand.url}/icon.svg` },
+        },
+        mainEntityOfPage: `${brand.url}/blog/${post.slug}`,
+        keywords: post.tags.join(', '),
+        articleSection: post.category,
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: brand.url },
+          { '@type': 'ListItem', position: 2, name: 'Blog', item: `${brand.url}/blog` },
+          { '@type': 'ListItem', position: 3, name: post.title, item: `${brand.url}/blog/${post.slug}` },
+        ],
+      },
+    ],
   }
 
   return (
