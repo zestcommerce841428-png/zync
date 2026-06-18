@@ -13,12 +13,26 @@ type IceServer = {
   credential?: string
 }
 
-export async function POST(): Promise<NextResponse> {
-  const iceServers: IceServer[] = [{ urls: stunServer }]
+// A few reliable public STUN servers for redundancy.
+const PUBLIC_STUN: IceServer[] = [
+  { urls: stunServer },
+  { urls: 'stun:stun1.l.google.com:19302' },
+  { urls: 'stun:stun.cloudflare.com:3478' },
+]
 
-  // Mode 1 — Static TURN (e.g. Metered Open Relay, Twilio, Cloudflare).
-  // Set TURN_URLS (comma-separated) + TURN_USERNAME + TURN_CREDENTIAL.
-  // No coturn or Redis required — ideal for free hosting without a VM.
+// Metered "Open Relay" free public TURN (published for free use). Gives working
+// NAT traversal out of the box with no account/credit card. Disable with
+// DISABLE_FREE_TURN=true, or override with your own TURN_URLS.
+const FREE_OPEN_RELAY: IceServer[] = [
+  { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+  { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
+  { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' },
+]
+
+export async function POST(): Promise<NextResponse> {
+  const iceServers: IceServer[] = [...PUBLIC_STUN]
+
+  // Mode 1 — Custom static TURN (e.g. your own Metered key, Twilio, Cloudflare).
   const staticUrls = process.env.TURN_URLS
   if (staticUrls) {
     iceServers.push({
@@ -43,6 +57,9 @@ export async function POST(): Promise<NextResponse> {
     return NextResponse.json({ host: peerjsHost, path: peerjsPath, iceServers })
   }
 
-  // Mode 3 — STUN only (default; works for the majority of networks).
+  // Mode 3 — Default: free public TURN (Open Relay) + STUN. Works with no setup.
+  if (process.env.DISABLE_FREE_TURN !== 'true') {
+    iceServers.push(...FREE_OPEN_RELAY)
+  }
   return NextResponse.json({ host: peerjsHost, path: peerjsPath, iceServers })
 }

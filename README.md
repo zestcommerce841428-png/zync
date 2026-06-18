@@ -59,12 +59,30 @@ Regenerate the blog content (already committed):
 node scripts/generate-blog.mjs
 ```
 
-## 🚢 Deploy for free
+## 🚢 Deploy free in ~3 minutes (no domain, no credit card)
 
-See **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** for a complete, 100%-free-tier
-deployment guide (Vercel + Upstash Redis + Supabase + Hostinger SMTP/PHP + GA +
-reCAPTCHA), and **[docs/CONFIGURATION.md](docs/CONFIGURATION.md)** for every
-environment variable.
+You get a free `*.vercel.app` (or `*.onrender.com`) subdomain. Transfers,
+blog, 15 tools, themes, accessibility and **free TURN/STUN work with zero
+config** — peers connect out of the box via public STUN + Metered Open Relay.
+
+### Option A — Vercel (recommended)
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/zestcommerce841428-png/zync)
+
+1. Click the button → import → **Deploy**. Live at `https://zync-xxx.vercel.app`.
+2. Add one env var `NEXT_PUBLIC_SITE_URL = https://your-app.vercel.app`, redeploy.
+3. (Optional) add Supabase / Upstash / SMTP keys to unlock accounts, scaling
+   and email — see below. **None are required to launch.**
+
+### Option B — Render Blueprint (app + PeerJS together)
+
+The included **[`render.yaml`](render.yaml)** deploys the app *and* a
+self-hosted PeerJS server on free tiers. Render → New → **Blueprint** → pick
+this repo. Free `*.onrender.com` subdomains, no card.
+
+> Full guides: **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** (every free service,
+> with/without credit card) and **[docs/CONFIGURATION.md](docs/CONFIGURATION.md)**
+> (every environment variable).
 
 ## ⚙️ Configuration
 
