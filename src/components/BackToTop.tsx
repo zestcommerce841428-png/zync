@@ -26,7 +26,7 @@ export default function BackToTop(): React.ReactElement {
           onClick={scrollUp}
           sx={{
             position: 'fixed',
-            left: 16,
+            right: 16,
             bottom: 88,
             zIndex: (t) => t.zIndex.speedDial,
           }}

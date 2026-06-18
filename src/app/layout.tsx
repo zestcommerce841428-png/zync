@@ -14,6 +14,11 @@ import WhatsAppFab from '../components/WhatsAppFab'
 import CookieConsent from '../components/consent/CookieConsent'
 import { ConsentProvider } from '../components/consent/ConsentContext'
 
+// Pre-hydration color-scheme init. Mirrors MUI's class-based color scheme
+// (storage key: mui-mode; classes: light / dark) and runs before paint to
+// prevent a flash of the wrong theme.
+const THEME_INIT = `(function(){try{var m=localStorage.getItem('mui-mode')||'system';var d=m==='system'?(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):m;var c=document.documentElement.classList;c.remove('light','dark');c.add(d);}catch(e){}})();`
+
 export const metadata: Metadata = {
   metadataBase: new URL(brand.url),
   title: {
@@ -68,14 +73,20 @@ export default function RootLayout({
   return (
     <ViewTransitions>
       <html lang="en" suppressHydrationWarning>
-        <body>
+        <head>
           {/*
             Pre-hydration color-scheme init (prevents a flash of the wrong
-            theme). Loaded as an EXTERNAL script (public/theme-init.js) so React
-            never renders an inline <script> — avoiding React 19's "scripts
-            inside React components are never executed on the client" warning.
+            theme). Inlined via dangerouslySetInnerHTML in <head> — the
+            next-themes pattern. React 19 only warns about EXTERNAL `<script
+            src>` rendered in a component; an inline script is injected into the
+            initial HTML and runs before hydration with no warning.
           */}
-          <script src="/theme-init.js" />
+          <script
+            // eslint-disable-next-line react/no-danger
+            dangerouslySetInnerHTML={{ __html: THEME_INIT }}
+          />
+        </head>
+        <body>
           <ThemeRegistry>
             <ConsentProvider>
               <FilePizzaQueryClientProvider>
