@@ -1,14 +1,16 @@
 # Stage 1: Dependencies
-FROM node:lts-alpine AS deps
-RUN apk add --no-cache pnpm
+FROM node:22-alpine AS deps
+# pnpm-lock.yaml is lockfileVersion 9.0 -> needs pnpm 9. Use corepack with a
+# pinned pnpm 9 (the Alpine `pnpm` package is too old and breaks --frozen-lockfile).
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 # Need all dependencies for build
 RUN pnpm install --frozen-lockfile
 
 # Stage 2: Builder
-FROM node:lts-alpine AS builder
-RUN apk add --no-cache pnpm
+FROM node:22-alpine AS builder
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -28,7 +30,7 @@ ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL \
 RUN pnpm build
 
 # Stage 3: Runner
-FROM node:lts-alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV production
