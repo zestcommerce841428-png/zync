@@ -164,6 +164,25 @@ in **[docs/CLOUD.md](docs/CLOUD.md)**.
 > with/without credit card) and **[docs/CONFIGURATION.md](docs/CONFIGURATION.md)**
 > (every environment variable).
 
+### Pre-built container image (GHCR)
+
+Every push to `main` publishes a ready-to-run image via
+[GitHub Actions](.github/workflows/docker.yml):
+
+![Docker build](https://github.com/zestcommerce841428-png/zync/actions/workflows/docker.yml/badge.svg)
+
+```bash
+# Pull and run the latest image (port 3000)
+docker run -p 3000:3000 \
+  -e NEXT_PUBLIC_SITE_URL=http://localhost:3000 \
+  -e FILEPIZZA_SECRET=$(openssl rand -hex 32) \
+  ghcr.io/zestcommerce841428-png/zync:latest
+```
+
+Tags: `latest`, `main`, the short commit SHA, and semver (e.g. `1.2.0`) on
+`v*` tags. Point AWS App Runner / Cloud Run / Azure Container Apps at
+`ghcr.io/zestcommerce841428-png/zync:latest` for image-based auto-redeploy.
+
 ## ⚙️ Configuration
 
 Copy `.env.local.example` to `.env.local` and fill in only what you need:
