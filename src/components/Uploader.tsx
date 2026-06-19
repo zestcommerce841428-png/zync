@@ -47,6 +47,25 @@ export default function Uploader({
     setRotating(activeDownloaders > 0)
   }, [activeDownloaders])
 
+  // Record this transfer to the signed-in user's history (best-effort, once).
+  const recorded = React.useRef(false)
+  useEffect(() => {
+    if (recorded.current || !longSlug) return
+    recorded.current = true
+    const names = files.map((f) => f.name)
+    const totalBytes = files.reduce((sum, f) => sum + (f.size || 0), 0)
+    fetch('/api/transfers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        slug: longSlug,
+        title: names[0] || 'Transfer',
+        files: names,
+        totalBytes,
+      }),
+    }).catch(() => {})
+  }, [longSlug, files])
+
   if (isLoading || !longSlug || !shortSlug) {
     return <Loading text="Creating channel..." />
   }

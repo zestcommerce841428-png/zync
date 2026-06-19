@@ -13,6 +13,7 @@ import LogoutIcon from '@mui/icons-material/Logout'
 import AvatarManager from './AvatarManager'
 import ProfileForm from './ProfileForm'
 import SecurityPanel from './SecurityPanel'
+import TransferHistory from './TransferHistory'
 import { getSupabaseBrowserClient } from '../../supabase/client'
 
 export default function AccountTabs({
@@ -57,6 +58,7 @@ export default function AccountTabs({
 
       <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
         <Tab label="Profile" />
+        <Tab label="History" />
         <Tab label="Security" />
       </Tabs>
 
@@ -70,7 +72,9 @@ export default function AccountTabs({
         </Box>
       )}
 
-      {tab === 1 && (
+      {tab === 1 && <TransferHistory />}
+
+      {tab === 2 && (
         <SecurityPanel email={email} initialBackupEmail={metadata.backup_email || ''} />
       )}
     </Box>
