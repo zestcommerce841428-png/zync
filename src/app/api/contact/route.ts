@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { rateLimit, getClientIp, rateLimitHeaders } from '../../../rateLimit'
 import { verifyRecaptcha } from '../../../recaptcha'
-import { sendMail } from '../../../email'
+import { sendMail, sendMailBg } from '../../../email'
+import { tplContactAdmin, tplContactReceipt } from '../../../emailTemplates'
 import { brand } from '../../../brand'
 
 const ContactSchema = z.object({
@@ -46,13 +47,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     )
   }
 
+  const adminTpl = tplContactAdmin({ name, email, message, ip })
   const result = await sendMail({
     to: brand.contact.email,
-    subject: `[${brand.name} Contact] ${subject || 'New message'} — from ${name}`,
+    subject: subject ? `${adminTpl.subject} — ${subject}` : adminTpl.subject,
     replyTo: email,
-    text: `From: ${name} <${email}>\nIP: ${ip}\n\n${message}`,
-    html: `<p><strong>From:</strong> ${name} &lt;${email}&gt;</p><p><strong>IP:</strong> ${ip}</p><hr/><p>${message.replace(/\n/g, '<br/>')}</p>`,
+    text: adminTpl.text,
+    html: adminTpl.html,
   })
+
+  // Auto-reply receipt to the sender (best-effort, non-blocking).
+  sendMailBg({ to: email, ...tplContactReceipt(name) })
 
   // Even if SMTP isn't configured yet, accept the message so the UX works.
   return NextResponse.json(

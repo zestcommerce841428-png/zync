@@ -1,6 +1,7 @@
 import 'server-only'
 import nodemailer from 'nodemailer'
 import { brand } from './brand'
+import { getAdminEmails } from './supabase/config'
 
 // Email delivery via Hostinger SMTP (or any SMTP provider). Configured purely
 // through environment variables; if SMTP isn't configured the helper logs the
@@ -75,3 +76,22 @@ export async function sendMail({
     return { success: false, reason: 'send_failed' }
   }
 }
+
+// Fan out an operational/critical notification to every admin in ADMIN_EMAILS.
+export async function notifyAdmins(msg: {
+  subject: string
+  text: string
+  html?: string
+}): Promise<void> {
+  const admins = getAdminEmails()
+  if (admins.length === 0) return
+  await Promise.allSettled(
+    admins.map((to) => sendMail({ to, ...msg })),
+  )
+}
+
+// Best-effort fire-and-forget send (won't block or throw in request handlers).
+export function sendMailBg(args: Parameters<typeof sendMail>[0]): void {
+  sendMail(args).catch((e) => console.error('[email] bg send failed:', e))
+}
+

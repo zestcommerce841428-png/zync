@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '../../../supabase/server'
+import { sendMailBg, notifyAdmins } from '../../../email'
+import { tplWelcome, tplSignInAlert, tplCriticalAlert } from '../../../emailTemplates'
 
 // OAuth callback — exchanges the auth code for a session cookie, then redirects.
 export async function GET(request: NextRequest): Promise<NextResponse> {
@@ -20,8 +22,35 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   if (code) {
     const supabase = await getSupabaseServerClient()
     if (supabase) {
-      const { error } = await supabase.auth.exchangeCodeForSession(code)
+      const { data, error } = await supabase.auth.exchangeCodeForSession(code)
       if (!error) {
+        // Fire-and-forget operational emails (never block the redirect).
+        try {
+          const user = data?.user
+          if (user?.email) {
+            const meta = (user.user_metadata || {}) as { full_name?: string; name?: string }
+            const name = meta.full_name || meta.name || user.email.split('@')[0]
+            const createdAt = user.created_at ? new Date(user.created_at).getTime() : 0
+            const isNew = createdAt > 0 && Date.now() - createdAt < 120_000
+            const when = new Date().toLocaleString('en-US', { timeZone: 'UTC' }) + ' UTC'
+            const ip =
+              request.headers.get('cf-connecting-ip') ||
+              request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+              'unknown'
+            const agent = request.headers.get('user-agent') || 'unknown'
+
+            if (isNew) {
+              sendMailBg({ to: user.email, ...tplWelcome(name) })
+              notifyAdmins(
+                tplCriticalAlert({ event: 'New user signup', detail: `${name} <${user.email}>\nIP: ${ip}` }),
+              ).catch(() => {})
+            } else {
+              sendMailBg({ to: user.email, ...tplSignInAlert(name, { time: when, ip, agent }) })
+            }
+          }
+        } catch {
+          /* email best-effort only */
+        }
         return NextResponse.redirect(`${baseUrl}${next}`)
       }
     }
