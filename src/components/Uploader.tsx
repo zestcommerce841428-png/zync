@@ -13,6 +13,7 @@ import StopButton from './StopButton'
 import { useUploaderChannel } from '../hooks/useUploaderChannel'
 import { useUploaderConnections } from '../hooks/useUploaderConnections'
 import { CopyableInput } from './CopyableInput'
+import ShareButtons from './ShareButtons'
 import { ConnectionListItem } from './ConnectionListItem'
 import { ErrorMessage } from './ErrorMessage'
 import { setRotating } from '../hooks/useRotatingSpinner'
@@ -63,6 +64,7 @@ export default function Uploader({
         <Stack spacing={1} sx={{ justifyContent: 'center', flex: 'auto' }}>
           <CopyableInput label="Long URL" value={longURL ?? ''} />
           <CopyableInput label="Short URL" value={shortURL ?? ''} />
+          <ShareButtons url={shortURL ?? longURL ?? ''} />
         </Stack>
       </Stack>
 
