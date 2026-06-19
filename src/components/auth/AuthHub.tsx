@@ -303,7 +303,7 @@ function SignInForm({ next }: { next: string }): React.ReactElement {
 
         <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
           <Link component="button" type="button" variant="body2" onClick={() => { setUseOtp(!useOtp); setOtpSent(false); setError(null); setInfo(null) }}>
-            {useOtp ? 'Use password instead' : 'Use a one-time code'}
+            {useOtp ? 'Use password instead' : 'Use a one-time link'}
           </Link>
           {!useOtp && (
             <Link component="button" type="button" variant="body2" onClick={forgot}>
