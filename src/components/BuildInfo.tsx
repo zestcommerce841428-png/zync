@@ -26,12 +26,50 @@ function relativeBuild(iso: string): string {
 
 // Dynamic build/status strip for the footer. Shows a live operational pulse,
 // app version, commit, build age and runtime, with details on hover.
+type Health = {
+  status: 'ok' | 'degraded'
+  redis: 'ok' | 'down' | 'off'
+  serverUptimeSec: number
+}
+
 export default function BuildInfo(): React.ReactElement {
   const [uptime, setUptime] = React.useState(0)
+  const [health, setHealth] = React.useState<Health | null>(null)
+  const [online, setOnline] = React.useState(true)
+
   React.useEffect(() => {
     const id = setInterval(() => setUptime((u) => u + 1), 1000)
     return () => clearInterval(id)
   }, [])
+
+  // Poll the live health endpoint so the status reflects the real server.
+  React.useEffect(() => {
+    let active = true
+    const poll = async () => {
+      try {
+        const res = await fetch('/api/health', { cache: 'no-store' })
+        const data = (await res.json()) as Health
+        if (active) {
+          setHealth(data)
+          setOnline(res.ok)
+        }
+      } catch {
+        if (active) setOnline(false)
+      }
+    }
+    poll()
+    const id = setInterval(poll, 20000)
+    return () => {
+      active = false
+      clearInterval(id)
+    }
+  }, [])
+
+  const state = !online
+    ? { color: 'error.main', rgba: '239,68,68', label: 'Reconnecting…', chip: 'error' as const }
+    : health?.status === 'degraded'
+      ? { color: 'warning.main', rgba: '245,158,11', label: 'Degraded performance', chip: 'warning' as const }
+      : { color: 'success.main', rgba: '34,197,94', label: 'All systems operational', chip: 'success' as const }
 
   const dot = (
     <Box
@@ -40,13 +78,13 @@ export default function BuildInfo(): React.ReactElement {
         width: 8,
         height: 8,
         borderRadius: '50%',
-        bgcolor: 'success.main',
-        boxShadow: '0 0 0 0 rgba(34,197,94,0.6)',
+        bgcolor: state.color,
+        boxShadow: `0 0 0 0 rgba(${state.rgba},0.6)`,
         animation: 'zync-pulse 2s infinite',
         '@keyframes zync-pulse': {
-          '0%': { boxShadow: '0 0 0 0 rgba(34,197,94,0.5)' },
-          '70%': { boxShadow: '0 0 0 8px rgba(34,197,94,0)' },
-          '100%': { boxShadow: '0 0 0 0 rgba(34,197,94,0)' },
+          '0%': { boxShadow: `0 0 0 0 rgba(${state.rgba},0.5)` },
+          '70%': { boxShadow: `0 0 0 8px rgba(${state.rgba},0)` },
+          '100%': { boxShadow: `0 0 0 0 rgba(${state.rgba},0)` },
         },
       }}
     />
@@ -64,6 +102,9 @@ export default function BuildInfo(): React.ReactElement {
           </Typography>
           <Typography variant="caption" sx={{ display: 'block' }}>Session: {uptime}s</Typography>
           <Typography variant="caption" sx={{ display: 'block' }}>
+            Server: {online ? `up ${health?.serverUptimeSec ?? 0}s` : 'unreachable'} · Redis: {health?.redis ?? '—'}
+          </Typography>
+          <Typography variant="caption" sx={{ display: 'block' }}>
             Runtime: Next.js 16 · React 19 · WebRTC
           </Typography>
         </Box>
@@ -77,9 +118,9 @@ export default function BuildInfo(): React.ReactElement {
         <Chip
           size="small"
           variant="outlined"
-          color="success"
+          color={state.chip}
           icon={<Box sx={{ ml: 1, display: 'flex' }}>{dot}</Box>}
-          label="All systems operational"
+          label={state.label}
           sx={{ fontWeight: 600 }}
         />
         <Typography variant="caption" color="text.secondary">

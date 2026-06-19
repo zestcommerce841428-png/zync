@@ -55,6 +55,19 @@ export default function WhatsAppFab(): React.ReactElement | null {
         }}
       >
         <WhatsAppIcon />
+        {/* Live "online" status dot */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 2,
+            right: 2,
+            width: 12,
+            height: 12,
+            borderRadius: '50%',
+            bgcolor: '#22c55e',
+            border: '2px solid #fff',
+          }}
+        />
       </Fab>
       <Box
         sx={{
