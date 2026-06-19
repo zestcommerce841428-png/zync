@@ -108,9 +108,25 @@ export default function SettingsPanel(): React.ReactElement {
     <>
       {mounted && (
         <Stack
-          spacing={1}
-          sx={{ position: 'fixed', right: 16, bottom: 16, zIndex: (t) => t.zIndex.speedDial }}
+          spacing={1.25}
+          sx={{
+            position: 'fixed',
+            right: 16,
+            bottom: 16,
+            alignItems: 'center',
+            zIndex: (t) => t.zIndex.speedDial,
+          }}
         >
+          <Tooltip title="Appearance & themes" placement="left">
+            <Fab
+              size="medium"
+              color="default"
+              aria-label="Open appearance settings"
+              onClick={() => openTo(0)}
+            >
+              <TuneIcon />
+            </Fab>
+          </Tooltip>
           <Tooltip title="Accessibility" placement="left">
             <Fab
               size="medium"
@@ -119,15 +135,6 @@ export default function SettingsPanel(): React.ReactElement {
               onClick={() => openTo(1)}
             >
               <AccessibilityNewIcon />
-            </Fab>
-          </Tooltip>
-          <Tooltip title="Appearance" placement="left">
-            <Fab
-              size="small"
-              aria-label="Open appearance settings"
-              onClick={() => openTo(0)}
-            >
-              <TuneIcon />
             </Fab>
           </Tooltip>
         </Stack>
@@ -343,9 +350,12 @@ export default function SettingsPanel(): React.ReactElement {
                   />
                 </Section>
 
-                <Divider sx={{ mb: 2 }} />
+                <Divider sx={{ mb: 1.5 }} />
+                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5 }}>
+                  Toggles
+                </Typography>
 
-                <Stack>
+                <Stack divider={<Divider flexItem />}>
                   {(
                     [
                       ['underlineLinks', 'Underline links'],
@@ -371,6 +381,8 @@ export default function SettingsPanel(): React.ReactElement {
                     return (
                       <FormControlLabel
                         key={key}
+                        labelPlacement="start"
+                        sx={{ ml: 0, mr: 0, justifyContent: 'space-between', width: '100%', py: 0.25 }}
                         control={
                           <Switch
                             checked={checked}
@@ -383,7 +395,7 @@ export default function SettingsPanel(): React.ReactElement {
                             }}
                           />
                         }
-                        label={label}
+                        label={<Typography variant="body2">{label}</Typography>}
                       />
                     )
                   })}

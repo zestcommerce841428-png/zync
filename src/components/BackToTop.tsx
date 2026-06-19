@@ -52,14 +52,14 @@ export default function BackToTop(): React.ReactElement | null {
     <Zoom in={visible}>
       <Tooltip title={label} placement="left">
         <Fab
-          size="small"
+          size="medium"
           color="primary"
           aria-label={label}
           onClick={action}
           sx={{
             position: 'fixed',
             right: 16,
-            bottom: 88,
+            bottom: 140,
             zIndex: (t) => t.zIndex.tooltip + 1,
             boxShadow: 4,
           }}

@@ -2,9 +2,7 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 
 import * as React from 'react'
-import Container from '@mui/material/Container'
 import Card from '@mui/material/Card'
-import CardContent from '@mui/material/CardContent'
 import Tabs from '@mui/material/Tabs'
 import Tab from '@mui/material/Tab'
 import Stack from '@mui/material/Stack'
@@ -17,14 +15,28 @@ import Divider from '@mui/material/Divider'
 import Link from '@mui/material/Link'
 import Avatar from '@mui/material/Avatar'
 import IconButton from '@mui/material/IconButton'
+import InputAdornment from '@mui/material/InputAdornment'
+import LinearProgress from '@mui/material/LinearProgress'
 import CircularProgress from '@mui/material/CircularProgress'
 import GoogleIcon from '@mui/icons-material/Google'
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera'
+import Visibility from '@mui/icons-material/Visibility'
+import VisibilityOff from '@mui/icons-material/VisibilityOff'
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined'
+import BoltOutlinedIcon from '@mui/icons-material/BoltOutlined'
+import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined'
+import VerifiedUserOutlinedIcon from '@mui/icons-material/VerifiedUserOutlined'
 import { ZyncIcon } from '../Logo'
 import { getSupabaseBrowserClient } from '../../supabase/client'
 import { brand } from '../../brand'
 
 type Mode = 'signin' | 'signup'
+
+const FEATURES = [
+  { icon: <LockOutlinedIcon />, title: 'End-to-end encrypted', text: 'Files stream peer-to-peer over WebRTC DTLS — never stored on a server.' },
+  { icon: <BoltOutlinedIcon />, title: 'No size limits', text: 'Send files of any size, straight from your browser.' },
+  { icon: <VisibilityOffOutlinedIcon />, title: 'Private by design', text: 'No file scanning, no tracking, nothing retained after a transfer.' },
+]
 
 export default function AuthHub(): React.ReactElement {
   const supabase = getSupabaseBrowserClient()
@@ -39,49 +51,94 @@ export default function AuthHub(): React.ReactElement {
   }, [])
 
   return (
-    <Container maxWidth="sm" sx={{ py: { xs: 6, md: 10 } }}>
-      <Card variant="outlined">
-        <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
-          <Stack spacing={2} sx={{ alignItems: 'center', textAlign: 'center', mb: 2 }}>
-            <ZyncIcon size={52} />
+    <Box sx={{ display: 'flex', justifyContent: 'center', px: 2, py: { xs: 4, md: 8 } }}>
+      <Card
+        variant="outlined"
+        sx={{
+          width: '100%',
+          maxWidth: 940,
+          overflow: 'hidden',
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+          borderRadius: 4,
+        }}
+      >
+        {/* Brand / value panel */}
+        <Box
+          sx={{
+            display: { xs: 'none', md: 'flex' },
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            p: 5,
+            color: '#fff',
+            background:
+              'linear-gradient(160deg, #4f46e5 0%, #7c3aed 55%, #9333ea 100%)',
+          }}
+        >
+          <Stack spacing={1.5}>
+            <ZyncIcon size={44} />
             <Typography variant="h5" sx={{ fontWeight: 800 }}>
-              {mode === 'signin' ? `Sign in to ${brand.name}` : `Create your ${brand.name} account`}
+              {brand.name}
+            </Typography>
+            <Typography variant="body2" sx={{ opacity: 0.9 }}>
+              {brand.tagline}
+            </Typography>
+          </Stack>
+
+          <Stack spacing={2.5} sx={{ my: 4 }}>
+            {FEATURES.map((f) => (
+              <Stack key={f.title} direction="row" spacing={1.5} sx={{ alignItems: 'flex-start' }}>
+                <Box sx={{ mt: 0.3, opacity: 0.95 }}>{f.icon}</Box>
+                <Box>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{f.title}</Typography>
+                  <Typography variant="caption" sx={{ opacity: 0.85 }}>{f.text}</Typography>
+                </Box>
+              </Stack>
+            ))}
+          </Stack>
+
+          <Stack direction="row" spacing={1} sx={{ alignItems: 'center', opacity: 0.9 }}>
+            <VerifiedUserOutlinedIcon fontSize="small" />
+            <Typography variant="caption">Trusted, encrypted, and ad-free.</Typography>
+          </Stack>
+        </Box>
+
+        {/* Auth panel */}
+        <Box sx={{ p: { xs: 3, sm: 5 } }}>
+          <Stack spacing={1} sx={{ mb: 3 }}>
+            <Box sx={{ display: { xs: 'flex', md: 'none' }, justifyContent: 'center', mb: 1 }}>
+              <ZyncIcon size={44} />
+            </Box>
+            <Typography variant="h5" sx={{ fontWeight: 800 }}>
+              {mode === 'signin' ? 'Welcome back' : `Create your account`}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              A free account unlocks unlimited, private file transfers.
+              {mode === 'signin'
+                ? `Sign in to continue to ${brand.name}.`
+                : 'Free forever — unlock unlimited private transfers.'}
             </Typography>
           </Stack>
 
           {!supabase ? (
             <Alert severity="info">
-              Authentication isn’t configured yet. Add your Supabase keys to
-              enable sign-in.
+              Authentication isn’t configured yet. Add your Supabase keys to enable sign-in.
             </Alert>
           ) : (
             <>
-              <Tabs
-                value={mode}
-                onChange={(_, v) => setMode(v)}
-                variant="fullWidth"
-                sx={{ mb: 3 }}
-              >
+              <Tabs value={mode} onChange={(_, v) => setMode(v)} variant="fullWidth" sx={{ mb: 3 }}>
                 <Tab value="signin" label="Sign in" />
                 <Tab value="signup" label="Create account" />
               </Tabs>
 
-              {mode === 'signin' ? (
-                <SignInForm next={next} />
-              ) : (
-                <SignUpForm next={next} />
-              )}
+              {mode === 'signin' ? <SignInForm next={next} /> : <SignUpForm next={next} />}
 
               <Divider sx={{ my: 3 }}>or</Divider>
               <GoogleButton next={next} />
             </>
           )}
-        </CardContent>
+        </Box>
       </Card>
-    </Container>
+    </Box>
   )
 }
 
@@ -104,6 +161,60 @@ function GoogleButton({ next }: { next: string }): React.ReactElement {
     >
       Continue with Google
     </Button>
+  )
+}
+
+function passwordScore(pw: string): { score: number; label: string; color: 'error' | 'warning' | 'info' | 'success' } {
+  let s = 0
+  if (pw.length >= 8) s++
+  if (pw.length >= 12) s++
+  if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) s++
+  if (/\d/.test(pw)) s++
+  if (/[^A-Za-z0-9]/.test(pw)) s++
+  const score = Math.min(s, 4)
+  const map = {
+    0: { label: 'Too weak', color: 'error' as const },
+    1: { label: 'Weak', color: 'error' as const },
+    2: { label: 'Fair', color: 'warning' as const },
+    3: { label: 'Good', color: 'info' as const },
+    4: { label: 'Strong', color: 'success' as const },
+  }
+  return { score, ...map[score as 0 | 1 | 2 | 3 | 4] }
+}
+
+function PasswordField({
+  label,
+  value,
+  onChange,
+  helperText,
+}: {
+  label: string
+  value: string
+  onChange: (v: string) => void
+  helperText?: string
+}): React.ReactElement {
+  const [show, setShow] = React.useState(false)
+  return (
+    <TextField
+      label={label}
+      type={show ? 'text' : 'password'}
+      required
+      fullWidth
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      helperText={helperText}
+      slotProps={{
+        input: {
+          endAdornment: (
+            <InputAdornment position="end">
+              <IconButton onClick={() => setShow((s) => !s)} edge="end" aria-label="Toggle password visibility">
+                {show ? <VisibilityOff /> : <Visibility />}
+              </IconButton>
+            </InputAdornment>
+          ),
+        },
+      }}
+    />
   )
 }
 
@@ -131,10 +242,7 @@ function SignInForm({ next }: { next: string }): React.ReactElement {
 
   const sendOtp = async () => {
     setBusy(true); setError(null)
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { shouldCreateUser: false },
-    })
+    const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: false } })
     setBusy(false)
     if (error) setError(error.message)
     else { setOtpSent(true); setInfo('We emailed you a 6-digit code.') }
@@ -165,25 +273,9 @@ function SignInForm({ next }: { next: string }): React.ReactElement {
         {error && <Alert severity="error">{error}</Alert>}
         {info && <Alert severity="success">{info}</Alert>}
 
-        <TextField
-          label="Email"
-          type="email"
-          required
-          fullWidth
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+        <TextField label="Email" type="email" required fullWidth value={email} onChange={(e) => setEmail(e.target.value)} />
 
-        {!useOtp && (
-          <TextField
-            label="Password"
-            type="password"
-            required
-            fullWidth
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        )}
+        {!useOtp && <PasswordField label="Password" value={password} onChange={setPassword} />}
 
         {useOtp && otpSent && (
           <TextField
@@ -236,6 +328,7 @@ function SignUpForm({ next }: { next: string }): React.ReactElement {
   const [error, setError] = React.useState<string | null>(null)
   const [info, setInfo] = React.useState<string | null>(null)
   const fileRef = React.useRef<HTMLInputElement>(null)
+  const strength = passwordScore(password)
 
   const onPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]
@@ -260,7 +353,6 @@ function SignUpForm({ next }: { next: string }): React.ReactElement {
     })
     if (error) { setBusy(false); setError(error.message); return }
 
-    // If a session exists (auto-confirm), upload the photo now and continue.
     if (data.session) {
       if (photo) {
         const form = new FormData()
@@ -287,12 +379,7 @@ function SignUpForm({ next }: { next: string }): React.ReactElement {
           </Avatar>
           <Box>
             <input ref={fileRef} type="file" accept="image/*" hidden onChange={onPhoto} />
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={<PhotoCameraIcon />}
-              onClick={() => fileRef.current?.click()}
-            >
+            <Button size="small" variant="outlined" startIcon={<PhotoCameraIcon />} onClick={() => fileRef.current?.click()}>
               {photo ? 'Change photo' : 'Add photo'}
             </Button>
             {photo && (
@@ -305,15 +392,29 @@ function SignUpForm({ next }: { next: string }): React.ReactElement {
 
         <TextField label="Full name" required fullWidth value={fullName} onChange={(e) => setFullName(e.target.value)} />
         <TextField label="Email" type="email" required fullWidth value={email} onChange={(e) => setEmail(e.target.value)} />
-        <TextField label="Password" type="password" required fullWidth value={password} onChange={(e) => setPassword(e.target.value)} helperText="At least 8 characters" />
-        <TextField label="Confirm password" type="password" required fullWidth value={confirm} onChange={(e) => setConfirm(e.target.value)} />
+        <Box>
+          <PasswordField label="Password" value={password} onChange={setPassword} helperText="At least 8 characters" />
+          {password.length > 0 && (
+            <Box sx={{ mt: 1 }}>
+              <LinearProgress
+                variant="determinate"
+                value={(strength.score / 4) * 100}
+                color={strength.color}
+                sx={{ height: 6, borderRadius: 3 }}
+              />
+              <Typography variant="caption" color={`${strength.color}.main`} sx={{ fontWeight: 600 }}>
+                {strength.label}
+              </Typography>
+            </Box>
+          )}
+        </Box>
+        <PasswordField label="Confirm password" value={confirm} onChange={setConfirm} />
 
         <Button type="submit" variant="contained" size="large" disabled={busy}>
           {busy ? <CircularProgress size={22} /> : 'Create account'}
         </Button>
         <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center' }}>
-          By creating an account you agree to our{' '}
-          <Link href="/terms">Terms</Link> and <Link href="/privacy">Privacy Policy</Link>.
+          By creating an account you agree to our <Link href="/terms">Terms</Link> and <Link href="/privacy">Privacy Policy</Link>.
         </Typography>
       </Stack>
     </Box>
