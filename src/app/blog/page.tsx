@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Container from '@mui/material/Container'
 import PageShell from '../../components/PageShell'
 import BlogIndex from '../../components/BlogIndex'
-import { getAllPostMeta, getCategories } from '../../blog'
+import { getAllPostMetaAsync, getCategoriesAsync } from '../../blogDb'
 import { brand } from '../../brand'
 
 export const metadata: Metadata = {
@@ -11,9 +11,12 @@ export const metadata: Metadata = {
   alternates: { canonical: '/blog' },
 }
 
-export default function BlogPage(): React.ReactElement {
-  const posts = getAllPostMeta()
-  const categories = getCategories()
+// DB-backed (editable) — render on demand so new/edited posts appear instantly.
+export const dynamic = 'force-dynamic'
+
+export default async function BlogPage(): Promise<React.ReactElement> {
+  const posts = await getAllPostMetaAsync()
+  const categories = await getCategoriesAsync()
   return (
     <>
       <PageShell

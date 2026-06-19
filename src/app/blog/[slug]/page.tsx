@@ -9,13 +9,12 @@ import Divider from '@mui/material/Divider'
 import Button from '@mui/material/Button'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import { Link as ViewTransitionLink } from 'next-view-transitions'
-import { getAllSlugs, getPostBySlug } from '../../../blog'
+import { getPostBySlugAsync } from '../../../blogDb'
 import Markdown from '../../../components/Markdown'
 import { brand } from '../../../brand'
 
-export function generateStaticParams(): Array<{ slug: string }> {
-  return getAllSlugs().map((slug) => ({ slug }))
-}
+// DB-backed (editable) — render on demand so edits/new posts appear instantly.
+export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({
   params,
@@ -23,7 +22,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>
 }): Promise<Metadata> {
   const { slug } = await params
-  const post = getPostBySlug(slug)
+  const post = await getPostBySlugAsync(slug)
   if (!post) return { title: 'Article not found' }
   return {
     title: post.title,
@@ -45,7 +44,7 @@ export default async function PostPage({
   params: Promise<{ slug: string }>
 }): Promise<React.ReactElement> {
   const { slug } = await params
-  const post = getPostBySlug(slug)
+  const post = await getPostBySlugAsync(slug)
   if (!post) notFound()
 
   const jsonLd = {

@@ -16,7 +16,8 @@ require __DIR__ . '/config.php';
 
 header('Content-Type: application/json; charset=utf-8');
 // Server-to-server normally, but allow CORS so a browser can call it too.
-header('Access-Control-Allow-Origin: *');
+// Lock to the app origin (override per deployment as needed).
+header('Access-Control-Allow-Origin: https://videodownloaders.cloud');
 header('Access-Control-Allow-Headers: Authorization, Content-Type');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 

@@ -12,6 +12,7 @@ import { getCurrentUser } from '../../supabase/server'
 import { isSupabaseConfigured, isAdminEmail } from '../../supabase/config'
 import { getStatsStore } from '../../stats'
 import AdminTools from '../../components/AdminTools'
+import BlogManager from '../../components/admin/BlogManager'
 
 export const metadata: Metadata = {
   title: 'Admin',
@@ -65,8 +66,12 @@ export default async function AdminPage(): Promise<React.ReactElement> {
         ))}
       </Grid>
 
-      <Box sx={{ maxWidth: 640 }}>
+      <Box sx={{ maxWidth: 640, mb: 5 }}>
         <AdminTools />
+      </Box>
+
+      <Box sx={{ mt: 2 }}>
+        <BlogManager />
       </Box>
     </Container>
   )
