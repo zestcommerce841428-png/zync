@@ -51,9 +51,8 @@ function RecentTransfers(): JSX.Element | null {
     try {
       const data = JSON.parse(localStorage.getItem('zync_recent_transfers') ?? '[]') as RecentEntry[]
       setRecent(data)
-    } catch (_) {
-      // ignore parse errors
-    }
+    // eslint-disable-next-line no-empty
+    } catch {}
   }, [])
 
   if (!recent.length) return null

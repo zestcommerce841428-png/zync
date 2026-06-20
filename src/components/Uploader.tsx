@@ -114,9 +114,8 @@ export default function Uploader({
       const existing = JSON.parse(localStorage.getItem(key) ?? '[]') as Array<{url: string; files: string[]; date: string}>
       const entry = { url: shortURL, files: files.map(f => f.name), date: new Date().toISOString() }
       localStorage.setItem(key, JSON.stringify([entry, ...existing].slice(0, 5)))
-    } catch (_) {
-      // ignore storage errors
-    }
+    // eslint-disable-next-line no-empty
+    } catch {}
   }, [shortURL, longSlug, files])
 
   // Record this transfer to the signed-in user's history (best-effort, once).
