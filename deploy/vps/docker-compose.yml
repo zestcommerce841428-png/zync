@@ -47,6 +47,17 @@ services:
       - PORT=9000
     networks: [zync]
 
+  cron:
+    image: alpine:3.19
+    restart: unless-stopped
+    environment:
+      - CRON_SECRET=${CRON_SECRET}
+      - APP_URL=http://app:3000
+    command: >
+      sh -c "echo '*/5 * * * * wget -q -O- --header=\"Authorization: Bearer $$CRON_SECRET\" --post-data=\"\" $$APP_URL/api/cron/cleanup || true' | crontab - && crond -f -L /dev/stdout"
+    depends_on: [app]
+    networks: [zync]
+
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
