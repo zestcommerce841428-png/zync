@@ -9,7 +9,6 @@ import Select from '@mui/material/Select'
 import MenuItem from '@mui/material/MenuItem'
 import FormControl from '@mui/material/FormControl'
 import InputLabel from '@mui/material/InputLabel'
-import Chip from '@mui/material/Chip'
 import Paper from '@mui/material/Paper'
 import Divider from '@mui/material/Divider'
 import AccessTimeIcon from '@mui/icons-material/AccessTime'
@@ -52,7 +51,9 @@ function RecentTransfers(): JSX.Element | null {
     try {
       const data = JSON.parse(localStorage.getItem('zync_recent_transfers') ?? '[]') as RecentEntry[]
       setRecent(data)
-    } catch {}
+    } catch (_) {
+      // ignore parse errors
+    }
   }, [])
 
   if (!recent.length) return null

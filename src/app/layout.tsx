@@ -81,7 +81,6 @@ export default function RootLayout({
             initial HTML and runs before hydration with no warning.
           */}
           <script
-            // eslint-disable-next-line react/no-danger
             dangerouslySetInnerHTML={{ __html: THEME_INIT }}
           />
           {/*
