@@ -120,7 +120,7 @@ export default function ResetPasswordPage(): React.ReactElement {
                   color="text.secondary"
                   sx={{ textAlign: 'left' }}
                 >
-                  Enter your email and we'll send you a 6-digit code to reset
+                  Enter your email and we'll send you an 8-digit code to reset
                   your password.
                 </Typography>
                 {error && <Alert severity="error">{error}</Alert>}
