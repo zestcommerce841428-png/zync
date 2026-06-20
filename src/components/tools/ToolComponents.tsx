@@ -747,6 +747,518 @@ function TextDiff() {
   )
 }
 
+// 16. Regex tester
+function RegexTester() {
+  const [pattern, setPattern] = React.useState('')
+  const [flags, setFlags] = React.useState('g')
+  const [text, setText] = React.useState('')
+  const [error, setError] = React.useState('')
+  const [matches, setMatches] = React.useState<string[]>([])
+
+  React.useEffect(() => {
+    if (!pattern) { setMatches([]); setError(''); return }
+    try {
+      const re = new RegExp(pattern, flags)
+      const m = [...text.matchAll(re)].map((x) => x[0])
+      setMatches(m)
+      setError('')
+    } catch (e) {
+      setError((e as Error).message)
+      setMatches([])
+    }
+  }, [pattern, flags, text])
+
+  return (
+    <Stack spacing={2}>
+      <Stack direction="row" spacing={1.5}>
+        <TextField
+          label="Pattern"
+          value={pattern}
+          onChange={(e) => setPattern(e.target.value)}
+          sx={{ flex: 3 }}
+          slotProps={{ htmlInput: { style: { fontFamily: 'monospace' } } }}
+        />
+        <TextField
+          label="Flags"
+          value={flags}
+          onChange={(e) => setFlags(e.target.value)}
+          sx={{ flex: 1 }}
+          slotProps={{ htmlInput: { style: { fontFamily: 'monospace' } } }}
+        />
+      </Stack>
+      {error && <Alert severity="error">{error}</Alert>}
+      <TextField
+        label="Test text"
+        multiline
+        minRows={4}
+        fullWidth
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+      />
+      {matches.length > 0 ? (
+        <Paper variant="outlined" sx={{ p: 2 }}>
+          <Typography variant="overline" color="text.secondary">
+            {matches.length} match{matches.length !== 1 ? 'es' : ''}
+          </Typography>
+          <Stack spacing={0.5} sx={{ mt: 1 }}>
+            {matches.slice(0, 50).map((m, i) => (
+              <Typography key={i} sx={{ fontFamily: 'monospace', fontSize: 13, bgcolor: 'warning.main', color: 'warning.contrastText', px: 1, borderRadius: 0.5, display: 'inline-block', width: 'fit-content' }}>
+                {m || '(empty match)'}
+              </Typography>
+            ))}
+          </Stack>
+        </Paper>
+      ) : pattern && text && !error ? (
+        <Alert severity="info">No matches</Alert>
+      ) : null}
+    </Stack>
+  )
+}
+
+// 17. JWT decoder
+function JwtDecoder() {
+  const [token, setToken] = React.useState('')
+  const [error, setError] = React.useState('')
+
+  const decode = (part: string) => {
+    try {
+      const pad = part.replace(/-/g, '+').replace(/_/g, '/') + '=='.slice((part.length + 2) % 4 === 0 ? 4 : (part.length + 2) % 4)
+      return JSON.parse(decodeURIComponent(escape(atob(pad))))
+    } catch {
+      return null
+    }
+  }
+
+  const parts = token.trim().split('.')
+  const isValid = parts.length === 3
+  const header = isValid ? decode(parts[0]) : null
+  const payload = isValid ? decode(parts[1]) : null
+
+  React.useEffect(() => {
+    if (token && !isValid) setError('Not a valid JWT (expected 3 dot-separated parts)')
+    else setError('')
+  }, [token, isValid])
+
+  const fmt = (obj: unknown) => JSON.stringify(obj, null, 2)
+
+  return (
+    <Stack spacing={2}>
+      <TextField
+        label="JWT token"
+        multiline
+        minRows={3}
+        fullWidth
+        value={token}
+        onChange={(e) => setToken(e.target.value)}
+        slotProps={{ htmlInput: { style: { fontFamily: 'monospace', fontSize: 12 } } }}
+      />
+      {error && <Alert severity="error">{error}</Alert>}
+      {header && <Output value={fmt(header)} label="Header" />}
+      {payload && (
+        <>
+          <Output value={fmt(payload)} label="Payload" />
+          {payload.exp && (
+            <Alert severity={payload.exp * 1000 > Date.now() ? 'success' : 'warning'}>
+              Expires: {new Date(payload.exp * 1000).toLocaleString()} ({payload.exp * 1000 > Date.now() ? 'valid' : 'expired'})
+            </Alert>
+          )}
+        </>
+      )}
+      {isValid && (
+        <Alert severity="info">Signature is NOT verified — this tool only decodes the payload.</Alert>
+      )}
+    </Stack>
+  )
+}
+
+// 18. Number base converter
+function BaseConverter() {
+  const [value, setValue] = React.useState('255')
+  const [from, setFrom] = React.useState<10 | 2 | 8 | 16>(10)
+  const num = parseInt(value, from)
+  const valid = !isNaN(num) && value.trim() !== ''
+  const bases: Array<[10 | 2 | 8 | 16, string, string]> = [
+    [2, 'Binary', '0b'],
+    [8, 'Octal', '0o'],
+    [10, 'Decimal', ''],
+    [16, 'Hexadecimal', '0x'],
+  ]
+
+  return (
+    <Stack spacing={2}>
+      <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+        <TextField
+          label="Value"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          slotProps={{ htmlInput: { style: { fontFamily: 'monospace' } } }}
+          sx={{ flex: 1 }}
+        />
+        <ToggleButtonGroup
+          exclusive
+          size="small"
+          value={from}
+          onChange={(_, v) => v && setFrom(v)}
+        >
+          {bases.map(([base, label]) => (
+            <ToggleButton key={base} value={base}>{label}</ToggleButton>
+          ))}
+        </ToggleButtonGroup>
+      </Stack>
+      {!valid && value && <Alert severity="error">Invalid value for base {from}</Alert>}
+      {valid && bases.map(([base, label, prefix]) => (
+        base !== from && (
+          <Output key={base} value={prefix + num.toString(base).toUpperCase()} label={label} />
+        )
+      ))}
+    </Stack>
+  )
+}
+
+// 19. Unit converter
+type UnitCategory = 'Temperature' | 'Length' | 'Weight' | 'Data'
+const UNITS: Record<UnitCategory, Array<{ label: string; toBase: (v: number) => number; fromBase: (v: number) => number }>> = {
+  Temperature: [
+    { label: '°C', toBase: (v) => v, fromBase: (v) => v },
+    { label: '°F', toBase: (v) => (v - 32) * 5 / 9, fromBase: (v) => v * 9 / 5 + 32 },
+    { label: 'K', toBase: (v) => v - 273.15, fromBase: (v) => v + 273.15 },
+  ],
+  Length: [
+    { label: 'mm', toBase: (v) => v / 1000, fromBase: (v) => v * 1000 },
+    { label: 'cm', toBase: (v) => v / 100, fromBase: (v) => v * 100 },
+    { label: 'm', toBase: (v) => v, fromBase: (v) => v },
+    { label: 'km', toBase: (v) => v * 1000, fromBase: (v) => v / 1000 },
+    { label: 'in', toBase: (v) => v * 0.0254, fromBase: (v) => v / 0.0254 },
+    { label: 'ft', toBase: (v) => v * 0.3048, fromBase: (v) => v / 0.3048 },
+    { label: 'mi', toBase: (v) => v * 1609.344, fromBase: (v) => v / 1609.344 },
+  ],
+  Weight: [
+    { label: 'mg', toBase: (v) => v / 1e6, fromBase: (v) => v * 1e6 },
+    { label: 'g', toBase: (v) => v / 1000, fromBase: (v) => v * 1000 },
+    { label: 'kg', toBase: (v) => v, fromBase: (v) => v },
+    { label: 'lb', toBase: (v) => v * 0.453592, fromBase: (v) => v / 0.453592 },
+    { label: 'oz', toBase: (v) => v * 0.0283495, fromBase: (v) => v / 0.0283495 },
+    { label: 't', toBase: (v) => v * 1000, fromBase: (v) => v / 1000 },
+  ],
+  Data: [
+    { label: 'B', toBase: (v) => v, fromBase: (v) => v },
+    { label: 'KB', toBase: (v) => v * 1024, fromBase: (v) => v / 1024 },
+    { label: 'MB', toBase: (v) => v * 1024 ** 2, fromBase: (v) => v / 1024 ** 2 },
+    { label: 'GB', toBase: (v) => v * 1024 ** 3, fromBase: (v) => v / 1024 ** 3 },
+    { label: 'TB', toBase: (v) => v * 1024 ** 4, fromBase: (v) => v / 1024 ** 4 },
+  ],
+}
+
+function UnitConverter() {
+  const [category, setCategory] = React.useState<UnitCategory>('Temperature')
+  const [fromUnit, setFromUnit] = React.useState(0)
+  const [value, setValue] = React.useState('100')
+
+  const units = UNITS[category]
+  const fromDef = units[fromUnit]
+  const base = fromDef ? fromDef.toBase(Number(value)) : NaN
+
+  return (
+    <Stack spacing={2}>
+      <ToggleButtonGroup
+        exclusive
+        size="small"
+        value={category}
+        onChange={(_, v) => { if (v) { setCategory(v as UnitCategory); setFromUnit(0) } }}
+        sx={{ flexWrap: 'wrap' }}
+      >
+        {Object.keys(UNITS).map((c) => (
+          <ToggleButton key={c} value={c}>{c}</ToggleButton>
+        ))}
+      </ToggleButtonGroup>
+      <Stack direction="row" spacing={1.5}>
+        <TextField
+          label="Value"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          type="number"
+          sx={{ flex: 1 }}
+        />
+        <ToggleButtonGroup
+          exclusive
+          size="small"
+          value={fromUnit}
+          onChange={(_, v) => v !== null && setFromUnit(v)}
+          sx={{ flexWrap: 'wrap' }}
+        >
+          {units.map((u, i) => (
+            <ToggleButton key={i} value={i}>{u.label}</ToggleButton>
+          ))}
+        </ToggleButtonGroup>
+      </Stack>
+      {!isNaN(base) && units.map((u, i) => i !== fromUnit && (
+        <Output key={i} value={String(parseFloat(u.fromBase(base).toPrecision(8)))} label={u.label} />
+      ))}
+    </Stack>
+  )
+}
+
+// 20. Cron parser
+function parseCron(expr: string): string {
+  const parts = expr.trim().split(/\s+/)
+  if (parts.length !== 5) return 'Expected 5 fields: minute hour day-of-month month day-of-week'
+  const [min, hr, dom, mon, dow] = parts
+  const months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  const fmt = (v: string, unit: string, names?: string[]) => {
+    if (v === '*') return `every ${unit}`
+    if (v.startsWith('*/')) return `every ${v.slice(2)} ${unit}s`
+    if (v.includes('-')) { const [a, b] = v.split('-'); return `${unit}s ${names ? names[+a] : a}–${names ? names[+b] : b}` }
+    if (v.includes(',')) return `${unit}s ${v.split(',').map((x) => names ? names[+x] : x).join(', ')}`
+    return `at ${unit} ${names ? names[+v] : v}`
+  }
+  return `Runs ${fmt(min, 'minute')} | ${fmt(hr, 'hour')} | ${fmt(dom, 'day-of-month')} | ${fmt(mon, 'month', months)} | ${fmt(dow, 'weekday', days)}`
+}
+
+function CronParser() {
+  const presets = [
+    ['Every minute', '* * * * *'],
+    ['Every hour', '0 * * * *'],
+    ['Daily at midnight', '0 0 * * *'],
+    ['Weekly (Sunday)', '0 0 * * 0'],
+    ['Monthly (1st)', '0 0 1 * *'],
+  ]
+  const [expr, setExpr] = React.useState('0 9 * * 1-5')
+  const description = parseCron(expr)
+  return (
+    <Stack spacing={2}>
+      <TextField
+        label="Cron expression"
+        value={expr}
+        onChange={(e) => setExpr(e.target.value)}
+        slotProps={{ htmlInput: { style: { fontFamily: 'monospace' } } }}
+        placeholder="* * * * *"
+      />
+      <Typography variant="caption" color="text.secondary">
+        Format: minute  hour  day-of-month  month  day-of-week
+      </Typography>
+      <Alert severity="info">{description}</Alert>
+      <Typography variant="overline" color="text.secondary">Presets</Typography>
+      <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1 }}>
+        {presets.map(([label, val]) => (
+          <Button key={val} size="small" variant="outlined" onClick={() => setExpr(val)}>{label}</Button>
+        ))}
+      </Stack>
+    </Stack>
+  )
+}
+
+// 21. Random generator
+function RandomGenerator() {
+  const [mode, setMode] = React.useState<'number' | 'dice' | 'coin' | 'list'>('number')
+  const [min, setMin] = React.useState(1)
+  const [max, setMax] = React.useState(100)
+  const [count, setCount] = React.useState(1)
+  const [list, setList] = React.useState('apple\nbanana\norange\ngrape\nmango')
+  const [result, setResult] = React.useState('')
+
+  const run = () => {
+    if (mode === 'number') {
+      const nums = Array.from({ length: count }, () => min + Math.floor(Math.random() * (max - min + 1)))
+      setResult(nums.join(', '))
+    } else if (mode === 'dice') {
+      const rolls = Array.from({ length: count }, () => 1 + Math.floor(Math.random() * 6))
+      setResult(rolls.join(', ') + ` (sum: ${rolls.reduce((a, b) => a + b, 0)})`)
+    } else if (mode === 'coin') {
+      setResult(Array.from({ length: count }, () => Math.random() < 0.5 ? 'Heads' : 'Tails').join(', '))
+    } else {
+      const items = list.split('\n').filter(Boolean)
+      if (!items.length) return
+      const picked = [...items].sort(() => Math.random() - 0.5).slice(0, Math.min(count, items.length))
+      setResult(picked.join('\n'))
+    }
+  }
+
+  return (
+    <Stack spacing={2}>
+      <ToggleButtonGroup exclusive size="small" value={mode} onChange={(_, v) => v && setMode(v)}>
+        <ToggleButton value="number">Number</ToggleButton>
+        <ToggleButton value="dice">Dice 🎲</ToggleButton>
+        <ToggleButton value="coin">Coin 🪙</ToggleButton>
+        <ToggleButton value="list">Pick from list</ToggleButton>
+      </ToggleButtonGroup>
+      {mode === 'number' && (
+        <Stack direction="row" spacing={1.5}>
+          <TextField label="Min" type="number" value={min} onChange={(e) => setMin(Number(e.target.value))} />
+          <TextField label="Max" type="number" value={max} onChange={(e) => setMax(Number(e.target.value))} />
+        </Stack>
+      )}
+      {mode === 'list' && (
+        <TextField label="Items (one per line)" multiline minRows={4} value={list} onChange={(e) => setList(e.target.value)} />
+      )}
+      <Box>
+        <Typography gutterBottom>Count: {count}</Typography>
+        <Slider min={1} max={mode === 'list' ? 20 : 50} value={count} onChange={(_, v) => setCount(v as number)} />
+      </Box>
+      <Button variant="contained" onClick={run}>Generate</Button>
+      <Output value={result} label="Result" />
+    </Stack>
+  )
+}
+
+// 22. CSS minifier
+function CssMinifier() {
+  const [css, setCss] = React.useState('')
+  const [out, setOut] = React.useState('')
+  const minify = () => {
+    const result = css
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/\s+/g, ' ')
+      .replace(/\s*([{}:;,>+~])\s*/g, '$1')
+      .replace(/;}/g, '}')
+      .trim()
+    setOut(result)
+  }
+  const savings = css.length && out.length ? Math.round((1 - out.length / css.length) * 100) : 0
+  return (
+    <Stack spacing={2}>
+      <TextField label="CSS" multiline minRows={8} fullWidth value={css} onChange={(e) => setCss(e.target.value)} slotProps={{ htmlInput: { style: { fontFamily: 'monospace', fontSize: 13 } } }} />
+      <Button variant="contained" onClick={minify}>Minify</Button>
+      {savings > 0 && <Alert severity="success">Saved {savings}% ({css.length - out.length} bytes)</Alert>}
+      <Output value={out} label="Minified CSS" />
+    </Stack>
+  )
+}
+
+// 23. Text repeater
+function TextRepeater() {
+  const [text, setText] = React.useState('')
+  const [n, setN] = React.useState(3)
+  const [sep, setSep] = React.useState('\n')
+  const out = text ? Array(n).fill(text).join(sep) : ''
+  return (
+    <Stack spacing={2}>
+      <TextField label="Text to repeat" multiline minRows={2} fullWidth value={text} onChange={(e) => setText(e.target.value)} />
+      <Stack direction="row" spacing={1.5}>
+        <Box sx={{ flex: 1 }}>
+          <Typography gutterBottom>Repeat: {n}×</Typography>
+          <Slider min={1} max={100} value={n} onChange={(_, v) => setN(v as number)} />
+        </Box>
+        <TextField
+          label="Separator"
+          value={sep}
+          onChange={(e) => setSep(e.target.value)}
+          sx={{ width: 140 }}
+          slotProps={{ htmlInput: { style: { fontFamily: 'monospace' } } }}
+          placeholder="\n"
+        />
+      </Stack>
+      <Output value={out} label={`Result (${out.length} chars)`} />
+    </Stack>
+  )
+}
+
+// 24. Pomodoro timer
+function PomodoroTimer() {
+  const presets = [
+    { label: 'Focus 25m', seconds: 25 * 60 },
+    { label: 'Short break 5m', seconds: 5 * 60 },
+    { label: 'Long break 15m', seconds: 15 * 60 },
+  ]
+  const [total, setTotal] = React.useState(25 * 60)
+  const [left, setLeft] = React.useState(25 * 60)
+  const [running, setRunning] = React.useState(false)
+  const [phase, setPhase] = React.useState('Focus 25m')
+
+  React.useEffect(() => {
+    if (!running) return
+    const id = setInterval(() => {
+      setLeft((l) => {
+        if (l <= 1) { setRunning(false); return 0 }
+        return l - 1
+      })
+    }, 1000)
+    return () => clearInterval(id)
+  }, [running])
+
+  const pick = (label: string, seconds: number) => {
+    setRunning(false)
+    setPhase(label)
+    setTotal(seconds)
+    setLeft(seconds)
+  }
+
+  const mm = String(Math.floor(left / 60)).padStart(2, '0')
+  const ss = String(left % 60).padStart(2, '0')
+  const pct = total > 0 ? ((total - left) / total) * 100 : 0
+
+  return (
+    <Stack spacing={2} sx={{ alignItems: 'center' }}>
+      <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', justifyContent: 'center' }}>
+        {presets.map((p) => (
+          <Button key={p.label} size="small" variant={phase === p.label ? 'contained' : 'outlined'} onClick={() => pick(p.label, p.seconds)}>
+            {p.label}
+          </Button>
+        ))}
+      </Stack>
+      <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+        <Box sx={{ width: 180, height: 180, borderRadius: '50%', background: `conic-gradient(var(--mui-palette-primary-main) ${pct}%, transparent ${pct}%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '4px solid', borderColor: 'divider' }}>
+          <Typography variant="h2" sx={{ fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>
+            {mm}:{ss}
+          </Typography>
+        </Box>
+      </Box>
+      <Stack direction="row" spacing={1.5}>
+        <Button variant="contained" size="large" onClick={() => setRunning((r) => !r)}>
+          {running ? 'Pause' : left === total ? 'Start' : 'Resume'}
+        </Button>
+        <Button variant="outlined" onClick={() => { setRunning(false); setLeft(total) }}>Reset</Button>
+      </Stack>
+      {left === 0 && <Alert severity="success">Time's up! Take a break 🎉</Alert>}
+    </Stack>
+  )
+}
+
+// 25. HTML formatter
+function HtmlFormatter() {
+  const [html, setHtml] = React.useState('')
+  const [out, setOut] = React.useState('')
+  const [mode, setMode] = React.useState<'beautify' | 'minify'>('beautify')
+
+  const process = () => {
+    if (mode === 'minify') {
+      setOut(html.replace(/<!--[\s\S]*?-->/g, '').replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim())
+    } else {
+      let indent = 0
+      const voidTags = new Set(['area','base','br','col','embed','hr','img','input','link','meta','param','source','track','wbr'])
+      const tokens = html.match(/<[^>]+>|[^<]+/g) || []
+      const lines: string[] = []
+      for (const tok of tokens) {
+        const text = tok.trim()
+        if (!text) continue
+        if (text.startsWith('</')) {
+          indent = Math.max(0, indent - 1)
+          lines.push('  '.repeat(indent) + text)
+        } else if (text.startsWith('<') && !text.startsWith('<!')) {
+          const tag = (text.match(/^<(\w+)/) || [])[1]?.toLowerCase() ?? ''
+          lines.push('  '.repeat(indent) + text)
+          if (tag && !voidTags.has(tag) && !text.endsWith('/>')) indent++
+        } else {
+          lines.push('  '.repeat(indent) + text)
+        }
+      }
+      setOut(lines.join('\n'))
+    }
+  }
+
+  return (
+    <Stack spacing={2}>
+      <ToggleButtonGroup exclusive size="small" value={mode} onChange={(_, v) => v && setMode(v)}>
+        <ToggleButton value="beautify">Beautify</ToggleButton>
+        <ToggleButton value="minify">Minify</ToggleButton>
+      </ToggleButtonGroup>
+      <TextField label="HTML" multiline minRows={8} fullWidth value={html} onChange={(e) => setHtml(e.target.value)} slotProps={{ htmlInput: { style: { fontFamily: 'monospace', fontSize: 13 } } }} />
+      <Button variant="contained" onClick={process}>{mode === 'beautify' ? 'Beautify' : 'Minify'}</Button>
+      <Output value={out} label="Result" />
+    </Stack>
+  )
+}
+
 export const TOOL_COMPONENTS: Record<string, React.ComponentType> = {
   'password-generator': PasswordGenerator,
   'qr-generator': QrGenerator,
@@ -763,4 +1275,14 @@ export const TOOL_COMPONENTS: Record<string, React.ComponentType> = {
   'slug-generator': SlugGenerator,
   'markdown-preview': MarkdownPreview,
   'text-diff': TextDiff,
+  'regex-tester': RegexTester,
+  'jwt-decoder': JwtDecoder,
+  'base-converter': BaseConverter,
+  'unit-converter': UnitConverter,
+  'cron-parser': CronParser,
+  'random-generator': RandomGenerator,
+  'css-minifier': CssMinifier,
+  'text-repeater': TextRepeater,
+  pomodoro: PomodoroTimer,
+  'html-formatter': HtmlFormatter,
 }
