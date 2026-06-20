@@ -16,6 +16,9 @@ configs:
       proxy_buffers 8 32k;
       proxy_busy_buffers_size 64k;
       large_client_header_buffers 8 32k;
+  # Redirect www → non-www at nginx level (canonical URL)
+  www_redirect:
+    content: "return 301 https://videodownloaders.cloud$request_uri;"
 
 services:
   nginx-proxy:
@@ -24,6 +27,8 @@ services:
     configs:
       - source: nginx_buffers
         target: /etc/nginx/conf.d/zzz-buffers.conf
+      - source: www_redirect
+        target: /etc/nginx/vhost.d/www.videodownloaders.cloud
     ports:
       - "80:80"
       - "443:443"
@@ -62,10 +67,11 @@ services:
       - REDIS_URL=redis://redis:6379
       - NEXT_PUBLIC_SITE_URL=https://videodownloaders.cloud
       - ADMIN_EMAILS=zestcommerce841428@gmail.com
-      - VIRTUAL_HOST=videodownloaders.cloud
+      # Both www and non-www are proxied; Next.js middleware redirects www→non-www
+      - VIRTUAL_HOST=videodownloaders.cloud,www.videodownloaders.cloud
       - VIRTUAL_PORT=3000
-      - LETSENCRYPT_HOST=videodownloaders.cloud
-      # FILEPIZZA_SECRET is injected via the project environment (not committed)
+      - LETSENCRYPT_HOST=videodownloaders.cloud,www.videodownloaders.cloud
+      # FILEPIZZA_SECRET, R2 credentials etc. injected via project environment
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     depends_on:
