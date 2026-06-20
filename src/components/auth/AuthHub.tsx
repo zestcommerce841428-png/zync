@@ -309,8 +309,6 @@ function SignInForm({ next }: { next: string }): React.ReactElement {
       email,
       options: {
         shouldCreateUser: false,
-        // Send a 6-digit OTP code only — no magic link URL in the email.
-        // The email template must use {{ .Token }} not {{ .ConfirmationURL }}.
         emailRedirectTo: undefined,
       },
     })
@@ -318,7 +316,7 @@ function SignInForm({ next }: { next: string }): React.ReactElement {
     if (error) setError(error.message)
     else {
       setOtpSent(true)
-      setInfo('We emailed you a 6-digit code.')
+      setInfo('We emailed you a 6-digit code. Check your inbox.')
     }
   }
 
@@ -327,7 +325,7 @@ function SignInForm({ next }: { next: string }): React.ReactElement {
     setError(null)
     const { error } = await supabase.auth.verifyOtp({
       email,
-      token: otp,
+      token: otp.trim(),
       type: 'email',
     })
     setBusy(false)
@@ -342,12 +340,16 @@ function SignInForm({ next }: { next: string }): React.ReactElement {
     }
     setBusy(true)
     setError(null)
+    // OTP-based reset — no link, just a code sent to the user's email.
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: undefined,
     })
     setBusy(false)
     if (error) setError(error.message)
-    else setInfo('Password reset link sent — check your email.')
+    else
+      setInfo(
+        'We emailed you a 6-digit reset code. Go to the reset page to use it.',
+      )
   }
 
   return (
@@ -427,12 +429,7 @@ function SignInForm({ next }: { next: string }): React.ReactElement {
             {useOtp ? 'Use password instead' : 'Use a one-time code'}
           </Link>
           {!useOtp && (
-            <Link
-              component="button"
-              type="button"
-              variant="body2"
-              onClick={forgot}
-            >
+            <Link href="/reset-password" variant="body2">
               Forgot password?
             </Link>
           )}
@@ -453,6 +450,8 @@ function SignUpForm({ next }: { next: string }): React.ReactElement {
   const [busy, setBusy] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [info, setInfo] = React.useState<string | null>(null)
+  const [otpSent, setOtpSent] = React.useState(false)
+  const [otp, setOtp] = React.useState('')
   const fileRef = React.useRef<HTMLInputElement>(null)
   const strength = passwordScore(password)
 
@@ -463,8 +462,35 @@ function SignUpForm({ next }: { next: string }): React.ReactElement {
     setPhotoPreview(URL.createObjectURL(f))
   }
 
+  const verifyAndFinish = async () => {
+    setBusy(true)
+    setError(null)
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token: otp.trim(),
+      type: 'signup',
+    })
+    if (error) {
+      setBusy(false)
+      setError(error.message)
+      return
+    }
+    if (photo) {
+      const form = new FormData()
+      form.append('file', photo)
+      await fetch('/api/profile/avatar', { method: 'POST', body: form }).catch(
+        () => {},
+      )
+    }
+    window.location.href = next
+  }
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (otpSent) {
+      verifyAndFinish()
+      return
+    }
     if (password !== confirm) {
       setError('Passwords do not match.')
       return
@@ -481,7 +507,7 @@ function SignUpForm({ next }: { next: string }): React.ReactElement {
       password,
       options: {
         data: { full_name: fullName },
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+        emailRedirectTo: undefined,
       },
     })
     if (error) {
@@ -491,6 +517,7 @@ function SignUpForm({ next }: { next: string }): React.ReactElement {
     }
 
     if (data.session) {
+      // Email confirmations disabled — signed in immediately.
       if (photo) {
         const form = new FormData()
         form.append('file', photo)
@@ -504,8 +531,45 @@ function SignUpForm({ next }: { next: string }): React.ReactElement {
     }
 
     setBusy(false)
-    setInfo(
-      'Account created! Check your email to confirm, then sign in. You can add your photo from your profile.',
+    setOtpSent(true)
+    setInfo('We emailed you a 6-digit confirmation code. Enter it below.')
+  }
+
+  if (otpSent) {
+    return (
+      <Stack spacing={2}>
+        {error && <Alert severity="error">{error}</Alert>}
+        {info && <Alert severity="success">{info}</Alert>}
+        <TextField
+          label="6-digit confirmation code"
+          value={otp}
+          onChange={(e) => setOtp(e.target.value)}
+          slotProps={{ htmlInput: { inputMode: 'numeric', maxLength: 6 } }}
+          fullWidth
+          autoFocus
+        />
+        <Button
+          onClick={verifyAndFinish}
+          variant="contained"
+          size="large"
+          disabled={busy || otp.trim().length !== 6}
+        >
+          {busy ? <CircularProgress size={22} /> : 'Confirm & create account'}
+        </Button>
+        <Link
+          component="button"
+          type="button"
+          variant="body2"
+          onClick={() => {
+            setOtpSent(false)
+            setOtp('')
+            setInfo(null)
+            setError(null)
+          }}
+        >
+          ← Back
+        </Link>
+      </Stack>
     )
   }
 

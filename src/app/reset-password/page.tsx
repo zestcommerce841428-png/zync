@@ -10,33 +10,58 @@ import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
 import Alert from '@mui/material/Alert'
 import CircularProgress from '@mui/material/CircularProgress'
+import Link from '@mui/material/Link'
+import IconButton from '@mui/material/IconButton'
+import InputAdornment from '@mui/material/InputAdornment'
+import Visibility from '@mui/icons-material/Visibility'
+import VisibilityOff from '@mui/icons-material/VisibilityOff'
 import { ZyncIcon } from '../../components/Logo'
 import { getSupabaseBrowserClient } from '../../supabase/client'
 
+type Step = 'email' | 'code' | 'password' | 'done'
+
 export default function ResetPasswordPage(): React.ReactElement {
   const supabase = getSupabaseBrowserClient()
-  const [ready, setReady] = React.useState(false)
+  const [step, setStep] = React.useState<Step>('email')
+  const [email, setEmail] = React.useState('')
+  const [otp, setOtp] = React.useState('')
   const [password, setPassword] = React.useState('')
   const [confirm, setConfirm] = React.useState('')
+  const [showPw, setShowPw] = React.useState(false)
   const [busy, setBusy] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
-  const [done, setDone] = React.useState(false)
 
-  React.useEffect(() => {
-    if (!supabase) return
-    // The recovery link establishes a temporary session; allow updating once
-    // we have one (either already present or via the PASSWORD_RECOVERY event).
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) setReady(true)
-    })
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') setReady(true)
-    })
-    return () => sub.subscription.unsubscribe()
-  }, [supabase])
-
-  const submit = async (e: React.FormEvent) => {
+  const sendCode = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!supabase) return
+    setBusy(true)
+    setError(null)
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: undefined,
+    })
+    setBusy(false)
+    if (error) setError(error.message)
+    else setStep('code')
+  }
+
+  const verifyCode = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!supabase) return
+    setBusy(true)
+    setError(null)
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token: otp.trim(),
+      type: 'recovery',
+    })
+    setBusy(false)
+    if (error) setError(error.message)
+    else setStep('password')
+  }
+
+  const updatePassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!supabase) return
     if (password !== confirm) {
       setError('Passwords do not match.')
       return
@@ -47,10 +72,10 @@ export default function ResetPasswordPage(): React.ReactElement {
     }
     setBusy(true)
     setError(null)
-    const { error } = await supabase!.auth.updateUser({ password })
+    const { error } = await supabase.auth.updateUser({ password })
     setBusy(false)
     if (error) setError(error.message)
-    else setDone(true)
+    else setStep('done')
   }
 
   return (
@@ -63,45 +88,157 @@ export default function ResetPasswordPage(): React.ReactElement {
           >
             <ZyncIcon size={52} />
             <Typography variant="h5" sx={{ fontWeight: 800 }}>
-              Choose a new password
+              Reset your password
             </Typography>
 
             {!supabase ? (
               <Alert severity="info" sx={{ width: '100%' }}>
-                Authentication isn’t configured.
+                Authentication isn't configured.
               </Alert>
-            ) : done ? (
+            ) : step === 'done' ? (
               <>
-                <Alert severity="success" sx={{ width: '100%' }}>
-                  Password updated. You can now sign in.
+                <Alert
+                  severity="success"
+                  sx={{ width: '100%', textAlign: 'left' }}
+                >
+                  Password updated successfully.
                 </Alert>
-                <Button href="/login" variant="contained">
-                  Go to sign in
+                <Button href="/login" variant="contained" fullWidth>
+                  Sign in
                 </Button>
               </>
-            ) : !ready ? (
-              <Alert severity="warning" sx={{ width: '100%' }}>
-                Open this page from the password-reset link in your email.
-              </Alert>
-            ) : (
+            ) : step === 'email' ? (
               <Stack
                 component="form"
-                onSubmit={submit}
+                onSubmit={sendCode}
                 spacing={2}
                 sx={{ width: '100%' }}
               >
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ textAlign: 'left' }}
+                >
+                  Enter your email and we'll send you a 6-digit code to reset
+                  your password.
+                </Typography>
+                {error && <Alert severity="error">{error}</Alert>}
+                <TextField
+                  label="Email"
+                  type="email"
+                  required
+                  fullWidth
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoFocus
+                />
+                <Button
+                  type="submit"
+                  variant="contained"
+                  size="large"
+                  disabled={busy}
+                  fullWidth
+                >
+                  {busy ? <CircularProgress size={22} /> : 'Send reset code'}
+                </Button>
+                <Link
+                  href="/login"
+                  variant="body2"
+                  sx={{ textAlign: 'center' }}
+                >
+                  ← Back to sign in
+                </Link>
+              </Stack>
+            ) : step === 'code' ? (
+              <Stack
+                component="form"
+                onSubmit={verifyCode}
+                spacing={2}
+                sx={{ width: '100%' }}
+              >
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ textAlign: 'left' }}
+                >
+                  We sent a 6-digit code to <strong>{email}</strong>. Enter it
+                  below.
+                </Typography>
+                {error && <Alert severity="error">{error}</Alert>}
+                <TextField
+                  label="6-digit code"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  slotProps={{
+                    htmlInput: { inputMode: 'numeric', maxLength: 6 },
+                  }}
+                  fullWidth
+                  autoFocus
+                />
+                <Button
+                  type="submit"
+                  variant="contained"
+                  size="large"
+                  disabled={busy || otp.trim().length !== 6}
+                  fullWidth
+                >
+                  {busy ? <CircularProgress size={22} /> : 'Verify code'}
+                </Button>
+                <Link
+                  component="button"
+                  type="button"
+                  variant="body2"
+                  sx={{ textAlign: 'center' }}
+                  onClick={() => {
+                    setStep('email')
+                    setOtp('')
+                    setError(null)
+                  }}
+                >
+                  ← Try a different email
+                </Link>
+              </Stack>
+            ) : (
+              <Stack
+                component="form"
+                onSubmit={updatePassword}
+                spacing={2}
+                sx={{ width: '100%' }}
+              >
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ textAlign: 'left' }}
+                >
+                  Choose a new password for your account.
+                </Typography>
                 {error && <Alert severity="error">{error}</Alert>}
                 <TextField
                   label="New password"
-                  type="password"
+                  type={showPw ? 'text' : 'password'}
                   required
                   fullWidth
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  autoFocus
+                  slotProps={{
+                    input: {
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            onClick={() => setShowPw((s) => !s)}
+                            edge="end"
+                          >
+                            {showPw ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
                 />
                 <TextField
                   label="Confirm password"
-                  type="password"
+                  type={showPw ? 'text' : 'password'}
                   required
                   fullWidth
                   value={confirm}
@@ -112,6 +249,7 @@ export default function ResetPasswordPage(): React.ReactElement {
                   variant="contained"
                   size="large"
                   disabled={busy}
+                  fullWidth
                 >
                   {busy ? <CircularProgress size={22} /> : 'Update password'}
                 </Button>
