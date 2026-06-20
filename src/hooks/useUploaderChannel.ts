@@ -13,6 +13,7 @@ function generateURL(slug: string): string {
 export function useUploaderChannel(
   uploaderPeerID: string,
   renewInterval = 60_000,
+  options?: { note?: string; ttl?: number },
 ): {
   isLoading: boolean
   error: Error | null
@@ -20,6 +21,7 @@ export function useUploaderChannel(
   shortSlug: string | undefined
   longURL: string | undefined
   shortURL: string | undefined
+  expiresAt: number | undefined
 } {
   const { isLoading, error, data } = useQuery({
     queryKey: ['uploaderChannel', uploaderPeerID],
@@ -31,7 +33,7 @@ export function useUploaderChannel(
       const response = await fetch('/api/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uploaderPeerID }),
+        body: JSON.stringify({ uploaderPeerID, note: options?.note, ttl: options?.ttl }),
       })
       if (!response.ok) {
         console.error(
@@ -58,6 +60,7 @@ export function useUploaderChannel(
   const shortSlug = data?.shortSlug
   const longURL = longSlug ? generateURL(longSlug) : undefined
   const shortURL = shortSlug ? generateURL(shortSlug) : undefined
+  const expiresAt = data?.expiresAt as number | undefined
 
   const renewMutation = useMutation({
     mutationFn: async ({ secret: s }: { secret: string }) => {
@@ -130,5 +133,6 @@ export function useUploaderChannel(
     shortSlug,
     longURL,
     shortURL,
+    expiresAt,
   }
 }

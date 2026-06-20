@@ -25,7 +25,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const body = await request.json().catch(() => ({}))
-  const { uploaderPeerID, title, maxDownloads } = body
+  const { uploaderPeerID, title, note, maxDownloads, ttl } = body
 
   if (!uploaderPeerID || typeof uploaderPeerID !== 'string') {
     return NextResponse.json(
@@ -39,12 +39,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const isNewSession = !session
   if (!session) session = createSession()
 
+  // Clamp TTL to 1h–7d range.
+  const VALID_TTLS = [3600, 21600, 86400, 259200, 604800]
+  const resolvedTtl = VALID_TTLS.includes(Number(ttl)) ? Number(ttl) : undefined
+
   const channel = await getOrCreateChannelRepo().createChannel(uploaderPeerID, {
     title: typeof title === 'string' ? title.slice(0, 120) : undefined,
+    note: typeof note === 'string' ? note.slice(0, 500) : undefined,
     maxDownloads:
       Number.isInteger(maxDownloads) && maxDownloads > 0
         ? maxDownloads
         : undefined,
+    ttl: resolvedTtl,
     ownerSessionId: session.id,
   })
 

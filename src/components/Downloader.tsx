@@ -118,17 +118,35 @@ export function DownloadComplete({
   )
 }
 
+function formatBytes(b: number): string {
+  if (b >= 1e9) return `${(b / 1e9).toFixed(1)} GB`
+  if (b >= 1e6) return `${(b / 1e6).toFixed(1)} MB`
+  if (b >= 1e3) return `${(b / 1e3).toFixed(0)} KB`
+  return `${b} B`
+}
+
+function formatEta(sec: number): string {
+  if (sec < 60) return `${sec}s left`
+  if (sec < 3600) return `${Math.ceil(sec / 60)}m left`
+  return `${Math.ceil(sec / 3600)}h left`
+}
+
 export function DownloadInProgress({
   filesInfo,
   bytesDownloaded,
   totalSize,
+  speedBps,
+  etaSec,
   onStop,
 }: {
   filesInfo: FileInfo[]
   bytesDownloaded: number
   totalSize: number
+  speedBps: number
+  etaSec: number | null
   onStop: () => void
 }): JSX.Element {
+  const pct = totalSize > 0 ? Math.round((bytesDownloaded / totalSize) * 100) : 0
   return (
     <>
       <TitleText>
@@ -138,6 +156,15 @@ export function DownloadInProgress({
         <UploadFileList files={filesInfo} />
         <Box sx={{ width: '100%' }}>
           <ProgressBar value={bytesDownloaded} max={totalSize} />
+          <Stack direction="row" sx={{ justifyContent: 'space-between', mt: 0.5 }}>
+            <Typography variant="caption" color="text.secondary">
+              {formatBytes(bytesDownloaded)} / {formatBytes(totalSize)} ({pct}%)
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {speedBps > 0 && `${formatBytes(speedBps)}/s`}
+              {etaSec !== null && ` · ${formatEta(etaSec)}`}
+            </Typography>
+          </Stack>
         </Box>
         <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
           <StopButton onClick={onStop} isDownloading />
@@ -149,9 +176,11 @@ export function DownloadInProgress({
 
 export function ReadyToDownload({
   filesInfo,
+  note,
   onStart,
 }: {
   filesInfo: FileInfo[]
+  note?: string
   onStart: () => void
 }): JSX.Element {
   return (
@@ -161,6 +190,12 @@ export function ReadyToDownload({
         {pluralize(filesInfo.length, 'file', 'files')}.
       </TitleText>
       <Stack spacing={2.5} sx={{ alignItems: 'center', width: '100%' }}>
+        {note && (
+          <Paper variant="outlined" sx={{ width: '100%', p: 2, borderLeft: '3px solid', borderLeftColor: 'primary.main' }}>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>Message from sender</Typography>
+            <Typography variant="body2">{note}</Typography>
+          </Paper>
+        )}
         <UploadFileList files={filesInfo} />
         <DownloadButton onClick={onStart} />
       </Stack>
@@ -206,9 +241,11 @@ export function PasswordEntry({
 export default function Downloader({
   uploaderPeerID,
   slug,
+  note,
 }: {
   uploaderPeerID: string
   slug?: string
+  note?: string
 }): JSX.Element {
   const {
     filesInfo,
@@ -222,6 +259,8 @@ export default function Downloader({
     stopDownload,
     totalSize,
     bytesDownloaded,
+    speedBps,
+    etaSec,
   } = useDownloader(uploaderPeerID, slug)
 
   if (isDone && filesInfo) {
@@ -255,13 +294,15 @@ export default function Downloader({
         filesInfo={filesInfo}
         bytesDownloaded={bytesDownloaded}
         totalSize={totalSize}
+        speedBps={speedBps}
+        etaSec={etaSec}
         onStop={stopDownload}
       />
     )
   }
 
   if (filesInfo) {
-    return <ReadyToDownload filesInfo={filesInfo} onStart={startDownload} />
+    return <ReadyToDownload filesInfo={filesInfo} note={note} onStart={startDownload} />
   }
 
   if (!isConnected) {

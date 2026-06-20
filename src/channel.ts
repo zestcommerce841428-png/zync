@@ -10,9 +10,10 @@ export type Channel = {
   longSlug: string
   shortSlug: string
   uploaderPeerID: string
-  // Room metadata (optional, for multi-recipient "rooms")
   title?: string
+  note?: string
   maxDownloads?: number
+  expiresAt?: number
   createdAt?: number
   ownerSessionId?: string
 }
@@ -20,6 +21,7 @@ export type Channel = {
 export type CreateChannelOptions = {
   ttl?: number
   title?: string
+  note?: string
   maxDownloads?: number
   ownerSessionId?: string
 }
@@ -30,7 +32,9 @@ const ChannelSchema = z.object({
   shortSlug: z.string(),
   uploaderPeerID: z.string(),
   title: z.string().max(120).optional(),
+  note: z.string().max(500).optional(),
   maxDownloads: z.number().int().positive().optional(),
+  expiresAt: z.number().optional(),
   createdAt: z.number().optional(),
   ownerSessionId: z.string().optional(),
 })
@@ -131,18 +135,20 @@ export class MemoryChannelRepo implements ChannelRepo {
       this.channels.has(key),
     )
 
+    const expiresAt = Date.now() + ttl * 1000
     const channel: Channel = {
       secret: crypto.randomUUID(),
       longSlug,
       shortSlug,
       uploaderPeerID,
       title: options.title,
+      note: options.note,
       maxDownloads: options.maxDownloads,
+      expiresAt,
       ownerSessionId: options.ownerSessionId,
       createdAt: Date.now(),
     }
 
-    const expiresAt = Date.now() + ttl * 1000
     const storedChannel = { channel, expiresAt }
 
     const shortKey = getShortSlugKey(shortSlug)
@@ -257,7 +263,9 @@ export class RedisChannelRepo implements ChannelRepo {
       shortSlug,
       uploaderPeerID,
       title: options.title,
+      note: options.note,
       maxDownloads: options.maxDownloads,
+      expiresAt: Date.now() + ttl * 1000,
       ownerSessionId: options.ownerSessionId,
       createdAt: Date.now(),
     }

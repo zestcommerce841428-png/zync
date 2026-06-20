@@ -49,6 +49,8 @@ export function useDownloader(
   stopDownload: () => void
   totalSize: number
   bytesDownloaded: number
+  speedBps: number
+  etaSec: number | null
 } {
   const { peer } = useWebRTCPeer()
   const [dataConnection, setDataConnection] = useState<DataConnection | null>(
@@ -68,6 +70,9 @@ export function useDownloader(
   const [isDone, setDone] = useState(false)
   const [bytesDownloaded, setBytesDownloaded] = useState(0)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [speedBps, setSpeedBps] = useState(0)
+  const [etaSec, setEtaSec] = useState<number | null>(null)
+  const speedRef = useRef<{ bytes: number; ts: number } | null>(null)
 
   useEffect(() => {
     if (!peer) return
@@ -253,7 +258,24 @@ export function useDownloader(
       )
 
       const chunkSize = (message.bytes as ArrayBuffer).byteLength
-      setBytesDownloaded((bd) => bd + chunkSize)
+      setBytesDownloaded((bd) => {
+        const next = bd + chunkSize
+        // Update speed & ETA (rolling 2-second window)
+        const now = Date.now()
+        if (!speedRef.current) {
+          speedRef.current = { bytes: next, ts: now }
+        } else {
+          const elapsed = (now - speedRef.current.ts) / 1000
+          if (elapsed >= 2) {
+            const bps = (next - speedRef.current.bytes) / elapsed
+            setSpeedBps(bps)
+            const remaining = (filesInfo?.reduce((s, f) => s + f.size, 0) ?? 0) - next
+            setEtaSec(bps > 0 ? Math.ceil(remaining / bps) : null)
+            speedRef.current = { bytes: next, ts: now }
+          }
+        }
+        return next
+      })
       fileStream.enqueue(new Uint8Array(message.bytes as ArrayBuffer))
 
       // Send acknowledgment to uploader
@@ -347,5 +369,7 @@ export function useDownloader(
     stopDownload,
     totalSize: filesInfo?.reduce((acc, info) => acc + info.size, 0) ?? 0,
     bytesDownloaded,
+    speedBps,
+    etaSec,
   }
 }

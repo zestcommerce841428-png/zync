@@ -40,6 +40,7 @@ export default async function DownloadPage({
         <Downloader
           uploaderPeerID={channel.uploaderPeerID}
           slug={channel.shortSlug}
+          note={channel.note}
         />
         <ReportTermsViolationButton
           uploaderPeerID={channel.uploaderPeerID}
