@@ -45,6 +45,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const rl = await rateLimit(`transfer-create:${ip}`, { limit: 10, windowSeconds: 600 })
   if (!rl.success) return tooManyRequests(rl)
 
+  if (!process.env.R2_ACCOUNT_ID) {
+    return err('Cloud transfers are not configured on this server.', { status: 503 })
+  }
+
   const body = BodySchema.safeParse(await req.json().catch(() => null))
   if (!body.success) return err('Invalid payload.')
 
@@ -53,63 +57,65 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const totalSize = files.reduce((s, f) => s + f.size, 0)
   if (totalSize > MAX_BYTES) return err('Total size exceeds 2 GB limit.')
 
-  const supabase = await getSupabaseServerClient()
-  const user = supabase ? (await supabase.auth.getUser()).data.user : null
-  const ownerId = user?.id ?? null
+  try {
+    const supabase = await getSupabaseServerClient()
+    const user = supabase ? (await supabase.auth.getUser()).data.user : null
+    const ownerId = user?.id ?? null
 
-  const days =
-    body.data.expiryDays ?? defaultExpiryDays(!!ownerId)
-  // Enforce max per tier
-  const maxDays = ownerId ? 30 : 7
-  const expiryDays = Math.min(days, maxDays)
+    const days = body.data.expiryDays ?? defaultExpiryDays(!!ownerId)
+    const maxDays = ownerId ? 30 : 7
+    const expiryDays = Math.min(days, maxDays)
 
-  const slug = await generateShortSlug()
-  const r2 = getR2Client()
+    const slug = await generateShortSlug()
+    const r2 = getR2Client()
 
-  // Sweep expired transfers in background (deletes R2 objects on expiry)
-  void sweepExpiredTransfers()
+    void sweepExpiredTransfers()
 
-  const uploadUrls: string[] = []
-  const fileRecords: Array<{ key: string; name: string; size: number; type: string }> = []
+    const uploadUrls: string[] = []
+    const fileRecords: Array<{ key: string; name: string; size: number; type: string }> = []
 
-  for (const f of files) {
-    const key = `${slug}/${crypto.randomUUID()}_${f.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`
-    const cmd = new PutObjectCommand({
-      Bucket: R2_BUCKET,
-      Key: key,
-      ContentType: f.type || 'application/octet-stream',
-      ContentLength: f.size,
+    for (const f of files) {
+      const key = `${slug}/${crypto.randomUUID()}_${f.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`
+      const cmd = new PutObjectCommand({
+        Bucket: R2_BUCKET,
+        Key: key,
+        ContentType: f.type || 'application/octet-stream',
+        ContentLength: f.size,
+      })
+      const url = await getSignedUrl(r2, cmd, { expiresIn: 3600 })
+      uploadUrls.push(url)
+      fileRecords.push({ key, name: f.name, size: f.size, type: f.type })
+    }
+
+    const expires = expiryDate(expiryDays)
+
+    await saveTransfer({
+      slug,
+      ownerId,
+      files: fileRecords,
+      totalSize,
+      expiresAt: expires,
+      expiryDays,
+      maxDownloads,
+      downloadCount: 0,
+      title,
+      message,
+      passwordHash: password ? hashPassword(password) : null,
+      notifyEmail: notifyEmail || null,
+      notifiedAt: null,
+      recipientEmails,
+      burnAfterRead,
+      createdAt: new Date().toISOString(),
+      completed: false,
     })
-    const url = await getSignedUrl(r2, cmd, { expiresIn: 3600 })
-    uploadUrls.push(url)
-    fileRecords.push({ key, name: f.name, size: f.size, type: f.type })
+
+    if (ownerId) {
+      await addUserTransferIndex(ownerId, slug, expires)
+    }
+
+    return ok({ slug, uploadUrls, expiresAt: expires }, { status: 201, rl })
+  } catch (e) {
+    console.error('[transfer/create]', e)
+    return err('Failed to create transfer. Please try again.', { status: 500 })
   }
-
-  const expires = expiryDate(expiryDays)
-
-  await saveTransfer({
-    slug,
-    ownerId,
-    files: fileRecords,
-    totalSize,
-    expiresAt: expires,
-    expiryDays,
-    maxDownloads,
-    downloadCount: 0,
-    title,
-    message,
-    passwordHash: password ? hashPassword(password) : null,
-    notifyEmail: notifyEmail || null,
-    notifiedAt: null,
-    recipientEmails,
-    burnAfterRead,
-    createdAt: new Date().toISOString(),
-    completed: false,
-  })
-
-  if (ownerId) {
-    await addUserTransferIndex(ownerId, slug, expires)
-  }
-
-  return ok({ slug, uploadUrls, expiresAt: expires }, { status: 201, rl })
 }
