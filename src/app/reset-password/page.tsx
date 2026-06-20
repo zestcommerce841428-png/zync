@@ -5,6 +5,7 @@ import Container from '@mui/material/Container'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import Stack from '@mui/material/Stack'
+
 import Typography from '@mui/material/Typography'
 import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
@@ -184,19 +185,35 @@ export default function ResetPasswordPage(): React.ReactElement {
                 >
                   {busy ? <CircularProgress size={22} /> : 'Verify code'}
                 </Button>
-                <Link
-                  component="button"
-                  type="button"
-                  variant="body2"
-                  sx={{ textAlign: 'center' }}
-                  onClick={() => {
-                    setStep('email')
-                    setOtp('')
-                    setError(null)
-                  }}
-                >
-                  ← Try a different email
-                </Link>
+                <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
+                  <Link
+                    component="button"
+                    type="button"
+                    variant="body2"
+                    onClick={() => {
+                      setStep('email')
+                      setOtp('')
+                      setError(null)
+                    }}
+                  >
+                    ← Different email
+                  </Link>
+                  <Link
+                    component="button"
+                    type="button"
+                    variant="body2"
+                    onClick={async () => {
+                      setOtp('')
+                      setError(null)
+                      await supabase!.auth.resetPasswordForEmail(email, {
+                        redirectTo: undefined,
+                      })
+                      setError(null)
+                    }}
+                  >
+                    Resend code
+                  </Link>
+                </Stack>
               </Stack>
             ) : (
               <Stack

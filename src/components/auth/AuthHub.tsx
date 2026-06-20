@@ -376,14 +376,29 @@ function SignInForm({ next }: { next: string }): React.ReactElement {
             {busy ? <CircularProgress size={22} /> : 'Sign in'}
           </Button>
         ) : otpSent ? (
-          <Button
-            onClick={verifyOtp}
-            variant="contained"
-            size="large"
-            disabled={busy}
-          >
-            {busy ? <CircularProgress size={22} /> : 'Verify code'}
-          </Button>
+          <>
+            <Button
+              onClick={verifyOtp}
+              variant="contained"
+              size="large"
+              disabled={busy}
+            >
+              {busy ? <CircularProgress size={22} /> : 'Verify code'}
+            </Button>
+            <Link
+              component="button"
+              type="button"
+              variant="body2"
+              sx={{ textAlign: 'center' }}
+              onClick={() => {
+                setOtp('')
+                setError(null)
+                sendOtp()
+              }}
+            >
+              Resend code
+            </Link>
+          </>
         ) : (
           <Button
             onClick={sendOtp}
@@ -537,19 +552,41 @@ function SignUpForm({ next }: { next: string }): React.ReactElement {
         >
           {busy ? <CircularProgress size={22} /> : 'Confirm & create account'}
         </Button>
-        <Link
-          component="button"
-          type="button"
-          variant="body2"
-          onClick={() => {
-            setOtpSent(false)
-            setOtp('')
-            setInfo(null)
-            setError(null)
-          }}
-        >
-          ← Back
-        </Link>
+        <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
+          <Link
+            component="button"
+            type="button"
+            variant="body2"
+            onClick={() => {
+              setOtpSent(false)
+              setOtp('')
+              setInfo(null)
+              setError(null)
+            }}
+          >
+            ← Back
+          </Link>
+          <Link
+            component="button"
+            type="button"
+            variant="body2"
+            onClick={async () => {
+              setOtp('')
+              setError(null)
+              await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                  data: { full_name: fullName },
+                  emailRedirectTo: undefined,
+                },
+              })
+              setInfo('New code sent — check your inbox.')
+            }}
+          >
+            Resend code
+          </Link>
+        </Stack>
       </Stack>
     )
   }

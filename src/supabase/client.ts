@@ -11,7 +11,9 @@ let browserClient: SupabaseClient | null = null
 export function getSupabaseBrowserClient(): SupabaseClient | null {
   if (!isSupabaseConfigured()) return null
   if (!browserClient) {
-    browserClient = createBrowserClient(SUPABASE_URL!, SUPABASE_ANON_KEY!)
+    browserClient = createBrowserClient(SUPABASE_URL!, SUPABASE_ANON_KEY!, {
+      auth: { flowType: 'implicit' },
+    })
   }
   return browserClient
 }
