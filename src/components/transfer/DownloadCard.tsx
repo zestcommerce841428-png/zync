@@ -47,9 +47,11 @@ export default function DownloadCard({
   const [zipping, setZipping] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 
+  const [now, setNow] = React.useState<number | null>(null)
+  React.useEffect(() => { setNow(Date.now()) }, [])
   const expiry = new Date(expiresAt)
-  const daysLeft = Math.ceil((expiry.getTime() - Date.now()) / 86400000)
-  const expired = daysLeft <= 0
+  const daysLeft = now !== null ? Math.ceil((expiry.getTime() - now) / 86400000) : null
+  const expired = daysLeft !== null && daysLeft <= 0
 
   const downloadFile = async (index: number) => {
     setDownloading((prev) => new Set(prev).add(index))
@@ -135,11 +137,7 @@ export default function DownloadCard({
   }
 
   if (expired) {
-    return (
-      <Alert severity="warning">
-        This transfer has expired. The files have been deleted.
-      </Alert>
-    )
+    return <Alert severity="warning">This transfer has expired. The files have been deleted.</Alert>
   }
 
   return (
@@ -165,9 +163,9 @@ export default function DownloadCard({
       <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
         <Chip
           icon={<AccessTimeIcon />}
-          label={`Expires in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`}
+          label={daysLeft === null ? 'Checking expiry…' : `Expires in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`}
           size="small"
-          color={daysLeft <= 2 ? 'warning' : 'default'}
+          color={daysLeft !== null && daysLeft <= 2 ? 'warning' : 'default'}
         />
         <Chip label={`${files.length} file${files.length !== 1 ? 's' : ''}`} size="small" />
         <Chip label={formatBytes(totalSize)} size="small" />
