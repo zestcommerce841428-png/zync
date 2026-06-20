@@ -15,6 +15,7 @@ import { getSupabaseServerClient } from '../../../../supabase/server'
 import { generateShortSlug } from '../../../../slugs'
 import { rateLimit, getClientIp } from '../../../../rateLimit'
 import { tooManyRequests, ok, err } from '../../../../lib/apiResponse'
+import { verifyRecaptcha } from '../../../../recaptcha'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,6 +38,7 @@ const BodySchema = z.object({
   notifyEmail: z.string().email().optional().or(z.literal('')),
   recipientEmails: z.array(z.string().email()).max(20).default([]),
   burnAfterRead: z.boolean().default(false),
+  recaptchaToken: z.string().optional(),
 })
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
@@ -52,8 +54,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const body = BodySchema.safeParse(await req.json().catch(() => null))
   if (!body.success) return err('Invalid payload.')
 
-  const { files, title, message, password, maxDownloads, notifyEmail, recipientEmails, burnAfterRead } =
+  const { files, title, message, password, maxDownloads, notifyEmail, recipientEmails, burnAfterRead, recaptchaToken } =
     body.data
+
+  const captcha = await verifyRecaptcha(recaptchaToken, { minScore: 0.3 })
+  if (!captcha.ok) return err('Spam check failed. Please try again.', { status: 400 })
+
   const totalSize = files.reduce((s, f) => s + f.size, 0)
   if (totalSize > MAX_BYTES) return err('Total size exceeds 2 GB limit.')
 

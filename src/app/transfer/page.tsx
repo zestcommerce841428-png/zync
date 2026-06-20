@@ -30,6 +30,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility'
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
 import AddIcon from '@mui/icons-material/Add'
 import CloseIcon from '@mui/icons-material/Close'
+import { useRecaptcha } from '../../hooks/useRecaptcha'
 import UploadZone from '../../components/transfer/UploadZone'
 import UploadProgress, { FileProgress } from '../../components/transfer/UploadProgress'
 import ShareCard from '../../components/transfer/ShareCard'
@@ -59,6 +60,8 @@ export default function TransferPage(): React.ReactElement {
   const [resultExpiry, setResultExpiry] = React.useState('')
   const [resultTitle, setResultTitle] = React.useState('')
   const [resultBurn, setResultBurn] = React.useState(false)
+
+  const { getToken } = useRecaptcha()
 
   const totalSize = files.reduce((s, f) => s + f.size, 0)
   const overLimit = totalSize > 2 * 1024 * 1024 * 1024
@@ -113,6 +116,7 @@ export default function TransferPage(): React.ReactElement {
     }
 
     try {
+      const recaptchaToken = await getToken('transfer_create')
       const createRes = await fetch('/api/transfer/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -126,6 +130,7 @@ export default function TransferPage(): React.ReactElement {
           notifyEmail: notifyMe && notifyEmail ? notifyEmail : undefined,
           recipientEmails,
           burnAfterRead,
+          recaptchaToken,
         }),
       })
       if (!createRes.ok) {

@@ -9,45 +9,14 @@ import Alert from '@mui/material/Alert'
 import Stack from '@mui/material/Stack'
 import CircularProgress from '@mui/material/CircularProgress'
 import SendIcon from '@mui/icons-material/Send'
-
-declare global {
-  interface Window {
-    grecaptcha?: {
-      ready: (cb: () => void) => void
-      execute: (siteKey: string, opts: { action: string }) => Promise<string>
-    }
-  }
-}
-
-const SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY
-
-async function getRecaptchaToken(): Promise<string | undefined> {
-  if (!SITE_KEY || !window.grecaptcha) return undefined
-  return new Promise((resolve) => {
-    window.grecaptcha!.ready(() => {
-      window
-        .grecaptcha!.execute(SITE_KEY, { action: 'contact' })
-        .then(resolve)
-        .catch(() => resolve(undefined))
-    })
-  })
-}
+import { useRecaptcha } from '../hooks/useRecaptcha'
 
 export default function ContactForm(): React.ReactElement {
+  const { getToken } = useRecaptcha()
   const [status, setStatus] = React.useState<
     'idle' | 'sending' | 'sent' | 'error'
   >('idle')
   const [errorMsg, setErrorMsg] = React.useState('')
-
-  // Load reCAPTCHA v3 script if a site key is configured.
-  React.useEffect(() => {
-    if (!SITE_KEY || document.getElementById('recaptcha-v3')) return
-    const s = document.createElement('script')
-    s.id = 'recaptcha-v3'
-    s.src = `https://www.google.com/recaptcha/api.js?render=${SITE_KEY}`
-    s.async = true
-    document.body.appendChild(s)
-  }, [])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -55,7 +24,7 @@ export default function ContactForm(): React.ReactElement {
     setErrorMsg('')
     const form = e.currentTarget
     const data = new FormData(form)
-    const recaptchaToken = await getRecaptchaToken()
+    const recaptchaToken = await getToken('contact')
 
     try {
       const res = await fetch('/api/contact', {

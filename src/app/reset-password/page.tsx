@@ -18,11 +18,13 @@ import Visibility from '@mui/icons-material/Visibility'
 import VisibilityOff from '@mui/icons-material/VisibilityOff'
 import { ZyncIcon } from '../../components/Logo'
 import { getSupabaseBrowserClient } from '../../supabase/client'
+import { useRecaptcha } from '../../hooks/useRecaptcha'
 
 type Step = 'email' | 'code' | 'password' | 'done'
 
 export default function ResetPasswordPage(): React.ReactElement {
   const supabase = getSupabaseBrowserClient()
+  const { getToken } = useRecaptcha()
   const [step, setStep] = React.useState<Step>('email')
   const [email, setEmail] = React.useState('')
   const [otp, setOtp] = React.useState('')
@@ -37,6 +39,7 @@ export default function ResetPasswordPage(): React.ReactElement {
     if (!supabase) return
     setBusy(true)
     setError(null)
+    await getToken('reset_password')
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: undefined,
     })

@@ -29,6 +29,7 @@ import VerifiedUserOutlinedIcon from '@mui/icons-material/VerifiedUserOutlined'
 import { ZyncIcon } from '../Logo'
 import { getSupabaseBrowserClient } from '../../supabase/client'
 import { brand } from '../../brand'
+import { useRecaptcha } from '../../hooks/useRecaptcha'
 
 type Mode = 'signin' | 'signup'
 
@@ -278,6 +279,7 @@ function PasswordField({
 
 function SignInForm({ next }: { next: string }): React.ReactElement {
   const supabase = getSupabaseBrowserClient()!
+  const { getToken } = useRecaptcha()
   const [useOtp, setUseOtp] = React.useState(false)
   const [email, setEmail] = React.useState('')
   const [password, setPassword] = React.useState('')
@@ -293,6 +295,7 @@ function SignInForm({ next }: { next: string }): React.ReactElement {
     e.preventDefault()
     setBusy(true)
     setError(null)
+    await getToken('signin')
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -305,6 +308,7 @@ function SignInForm({ next }: { next: string }): React.ReactElement {
   const sendOtp = async () => {
     setBusy(true)
     setError(null)
+    await getToken('otp_request')
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
@@ -437,6 +441,7 @@ function SignInForm({ next }: { next: string }): React.ReactElement {
 
 function SignUpForm({ next }: { next: string }): React.ReactElement {
   const supabase = getSupabaseBrowserClient()!
+  const { getToken } = useRecaptcha()
   const [fullName, setFullName] = React.useState('')
   const [email, setEmail] = React.useState('')
   const [password, setPassword] = React.useState('')
@@ -497,6 +502,7 @@ function SignUpForm({ next }: { next: string }): React.ReactElement {
     }
     setBusy(true)
     setError(null)
+    await getToken('signup')
 
     const { data, error } = await supabase.auth.signUp({
       email,
