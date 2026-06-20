@@ -51,10 +51,15 @@ export default function BuildInfo(): React.ReactElement {
     const poll = async () => {
       try {
         const res = await fetch('/api/health', { cache: 'no-store' })
+        if (!res.ok) {
+          // Non-2xx (e.g. 403 from WAF) — treat as unknown, not offline
+          if (active) setOnline(true)
+          return
+        }
         const data = (await res.json()) as Health
         if (active) {
           setHealth(data)
-          setOnline(res.ok)
+          setOnline(true)
         }
       } catch {
         if (active) setOnline(false)

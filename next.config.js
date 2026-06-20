@@ -16,16 +16,16 @@ function gitSha() {
 // per-request nonce injection natively in standalone output mode.
 const CSP = [
   "default-src 'self'",
-  // Next.js inline hydration scripts + Google Tag Manager + reCAPTCHA
-  "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google.com https://www.gstatic.com",
+  // Next.js inline hydration scripts + Google Tag Manager + reCAPTCHA + Cloudflare Insights
+  "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google.com https://www.gstatic.com https://static.cloudflareinsights.com",
   // MUI emotion CSS-in-JS + Google Fonts
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   // Google Fonts glyphs
   "font-src 'self' https://fonts.gstatic.com data:",
   // Avatars, OG images, inline data URIs, blob URLs for ZIP downloads
   "img-src 'self' data: blob: https:",
-  // API calls: Supabase, R2 uploads/downloads, GA, PeerJS WebSocket
-  "connect-src 'self' wss: https://*.supabase.co https://*.r2.cloudflarestorage.com https://www.google-analytics.com https://www.googletagmanager.com https://analytics.google.com",
+  // API calls: Supabase, R2 uploads/downloads, GA, PeerJS WebSocket, Cloudflare Insights
+  "connect-src 'self' wss: https://*.supabase.co https://*.r2.cloudflarestorage.com https://www.google-analytics.com https://www.googletagmanager.com https://analytics.google.com https://cloudflareinsights.com",
   // PDF/video previews from R2 presigned URLs
   "media-src 'self' blob: https://*.r2.cloudflarestorage.com",
   // PDF iframe previews from R2
