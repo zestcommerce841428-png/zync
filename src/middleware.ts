@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
 // Routes that require a logged-in Supabase user
-const PROTECTED_PATHS = ['/transfer/history', '/account', '/profile']
+const PROTECTED_PATHS = ['/transfer', '/account', '/profile']
 
 export async function middleware(request: NextRequest): Promise<NextResponse> {
   const { pathname, host } = request.nextUrl
