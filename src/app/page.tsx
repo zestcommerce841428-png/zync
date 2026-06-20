@@ -20,6 +20,11 @@ import AllInclusiveIcon from '@mui/icons-material/AllInclusive'
 import QrCode2Icon from '@mui/icons-material/QrCode2'
 import ReplayIcon from '@mui/icons-material/Replay'
 import SensorsIcon from '@mui/icons-material/Sensors'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import CancelIcon from '@mui/icons-material/Cancel'
+import CloudUploadIcon from '@mui/icons-material/CloudUpload'
+import AutoDeleteIcon from '@mui/icons-material/AutoDelete'
+import Divider from '@mui/material/Divider'
 import { Link as ViewTransitionLink } from 'next-view-transitions'
 import { ZyncIcon } from '../components/Logo'
 import AnimatedBackground from '../components/AnimatedBackground'
@@ -412,6 +417,139 @@ export default function LandingPage(): React.ReactElement {
           </Grid>
         </Container>
       </Box>
+
+      {/* P2P vs Cloud comparison */}
+      <Container maxWidth="lg" id="compare" sx={{ py: { xs: 8, md: 10 }, scrollMarginTop: 80 }}>
+        <Stack spacing={1} sx={{ alignItems: 'center', textAlign: 'center', mb: 6 }}>
+          <Typography variant="overline" color="primary" sx={{ fontWeight: 700 }}>
+            Two ways to transfer
+          </Typography>
+          <Typography variant="h3" component="h2" sx={{ fontWeight: 800 }}>
+            P2P vs Cloud — pick what fits
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 620 }}>
+            Zync gives you both modes. Use P2P when both sides are online and privacy is paramount.
+            Use Cloud when you need a shareable link that works anytime.
+          </Typography>
+        </Stack>
+
+        <Grid container spacing={3} sx={{ alignItems: 'stretch' }}>
+          {/* P2P card */}
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Card
+              variant="outlined"
+              sx={{
+                height: '100%',
+                borderColor: 'primary.main',
+                borderWidth: 2,
+                position: 'relative',
+                overflow: 'visible',
+              }}
+            >
+              <Chip
+                label="WebRTC · P2P"
+                color="primary"
+                size="small"
+                icon={<SensorsIcon />}
+                sx={{ position: 'absolute', top: -14, left: 20, fontWeight: 700 }}
+              />
+              <CardContent sx={{ p: 3, pt: 4 }}>
+                <Typography variant="h5" sx={{ fontWeight: 800, mb: 0.5 }}>
+                  Peer-to-Peer Transfer
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                  Files go straight from your browser to theirs — server sees zero bytes.
+                </Typography>
+                <Stack spacing={1.5}>
+                  {[
+                    { ok: true,  text: 'Unlimited file size — no cap ever' },
+                    { ok: true,  text: 'End-to-end encrypted (DTLS, mandatory)' },
+                    { ok: true,  text: 'Zero server storage — nothing to delete' },
+                    { ok: true,  text: 'Resumable on flaky networks' },
+                    { ok: true,  text: 'Live presence & download count via SSE' },
+                    { ok: true,  text: 'QR code + short link sharing' },
+                    { ok: false, text: 'Recipient must be online at the same time' },
+                    { ok: false, text: 'Link dies when sender closes the tab' },
+                    { ok: false, text: 'No persistent download history' },
+                  ].map(({ ok, text }) => (
+                    <Stack key={text} direction="row" spacing={1} sx={{ alignItems: 'flex-start' }}>
+                      {ok
+                        ? <CheckCircleIcon fontSize="small" color="success" sx={{ mt: 0.15, flexShrink: 0 }} />
+                        : <CancelIcon fontSize="small" color="disabled" sx={{ mt: 0.15, flexShrink: 0 }} />}
+                      <Typography variant="body2" color={ok ? 'text.primary' : 'text.disabled'}>{text}</Typography>
+                    </Stack>
+                  ))}
+                </Stack>
+                <Divider sx={{ my: 2 }} />
+                <Button component={ViewTransitionLink} href="/send" variant="contained" fullWidth endIcon={<ArrowForwardIcon />}>
+                  Start P2P transfer
+                </Button>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Cloud card */}
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Card
+              variant="outlined"
+              sx={{
+                height: '100%',
+                borderColor: 'secondary.main',
+                borderWidth: 2,
+                position: 'relative',
+                overflow: 'visible',
+              }}
+            >
+              <Chip
+                label="Cloudflare R2 · Cloud"
+                color="secondary"
+                size="small"
+                icon={<CloudUploadIcon />}
+                sx={{ position: 'absolute', top: -14, left: 20, fontWeight: 700 }}
+              />
+              <CardContent sx={{ p: 3, pt: 4 }}>
+                <Typography variant="h5" sx={{ fontWeight: 800, mb: 0.5 }}>
+                  Cloud Transfer (WeTransfer-style)
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                  Files are stored on Cloudflare R2 for the link lifetime, then automatically deleted.
+                </Typography>
+                <Stack spacing={1.5}>
+                  {[
+                    { ok: true,  text: 'Works asynchronously — recipient downloads later' },
+                    { ok: true,  text: 'Persistent link (1 – 30 days) with QR code' },
+                    { ok: true,  text: 'Password protection & download cap' },
+                    { ok: true,  text: 'Burn-after-read: auto-deleted 30 s after first download' },
+                    { ok: true,  text: 'Auto-deleted at expiry — cron cleanup every 5 min' },
+                    { ok: true,  text: 'Inline image thumbnails + full-screen preview' },
+                    { ok: true,  text: 'Social share: WhatsApp, Telegram, X, Email, Web Share' },
+                    { ok: true,  text: 'Sender confirmation email + download notification' },
+                    { ok: false, text: 'Up to 2 GB per transfer (cloud storage limit)' },
+                    { ok: false, text: 'Files are transiently stored on a server (encrypted R2)' },
+                  ].map(({ ok, text }) => (
+                    <Stack key={text} direction="row" spacing={1} sx={{ alignItems: 'flex-start' }}>
+                      {ok
+                        ? <CheckCircleIcon fontSize="small" color="success" sx={{ mt: 0.15, flexShrink: 0 }} />
+                        : <CancelIcon fontSize="small" color="disabled" sx={{ mt: 0.15, flexShrink: 0 }} />}
+                      <Typography variant="body2" color={ok ? 'text.primary' : 'text.disabled'}>{text}</Typography>
+                    </Stack>
+                  ))}
+                </Stack>
+                <Divider sx={{ my: 2 }} />
+                <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 2 }}>
+                  <AutoDeleteIcon fontSize="small" color="warning" />
+                  <Typography variant="caption" color="text.secondary">
+                    Storage auto-cleans via Alpine cron container every 5 min. Zero R2 egress fees — presigned URLs bypass the VPS.
+                  </Typography>
+                </Stack>
+                <Button component={ViewTransitionLink} href="/transfer" variant="outlined" color="secondary" fullWidth endIcon={<ArrowForwardIcon />}>
+                  Start cloud transfer
+                </Button>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+      </Container>
 
       {/* Tech stack */}
       <Container maxWidth="lg" sx={{ py: { xs: 8, md: 10 } }}>
