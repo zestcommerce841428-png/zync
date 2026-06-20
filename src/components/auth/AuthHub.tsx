@@ -242,7 +242,15 @@ function SignInForm({ next }: { next: string }): React.ReactElement {
 
   const sendOtp = async () => {
     setBusy(true); setError(null)
-    const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: false } })
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: false,
+        // Send a 6-digit OTP code only — no magic link URL in the email.
+        // The email template must use {{ .Token }} not {{ .ConfirmationURL }}.
+        emailRedirectTo: undefined,
+      },
+    })
     setBusy(false)
     if (error) setError(error.message)
     else { setOtpSent(true); setInfo('We emailed you a 6-digit code.') }
