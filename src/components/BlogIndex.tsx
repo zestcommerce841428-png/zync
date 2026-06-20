@@ -111,10 +111,11 @@ export default function BlogIndex({
                     {p.excerpt}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    {new Date(p.date).toLocaleDateString(undefined, {
+                    {new Date(p.date).toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'short',
                       day: 'numeric',
+                      timeZone: 'UTC',
                     })}{' '}
                     · {p.readingMinutes} min read
                   </Typography>

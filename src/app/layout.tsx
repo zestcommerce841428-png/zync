@@ -38,7 +38,6 @@ export const metadata: Metadata = {
     'encrypted file transfer',
     brand.name,
   ],
-  manifest: '/manifest.webmanifest',
   icons: {
     icon: [{ url: '/icon.svg', type: 'image/svg+xml' }],
     apple: [{ url: '/icon.svg' }],
@@ -84,6 +83,17 @@ export default function RootLayout({
           <script
             // eslint-disable-next-line react/no-danger
             dangerouslySetInnerHTML={{ __html: THEME_INIT }}
+          />
+          {/*
+            Manifest is emitted manually (not via metadata.manifest) so we can
+            set crossOrigin="use-credentials". Behind Cloudflare the credential-
+            less manifest fetch can't run CF's JS challenge and gets a 403;
+            requesting it with credentials sends the CF clearance cookie.
+          */}
+          <link
+            rel="manifest"
+            href="/manifest.webmanifest"
+            crossOrigin="use-credentials"
           />
         </head>
         <body>

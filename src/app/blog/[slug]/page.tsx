@@ -99,10 +99,11 @@ export default async function PostPage({
         </Typography>
         <Typography variant="body2" color="text.secondary">
           By {post.author} ·{' '}
-          {new Date(post.date).toLocaleDateString(undefined, {
+          {new Date(post.date).toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'long',
             day: 'numeric',
+            timeZone: 'UTC',
           })}{' '}
           · {post.readingMinutes} min read
         </Typography>
