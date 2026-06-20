@@ -333,25 +333,6 @@ function SignInForm({ next }: { next: string }): React.ReactElement {
     else go()
   }
 
-  const forgot = async () => {
-    if (!email) {
-      setError('Enter your email first.')
-      return
-    }
-    setBusy(true)
-    setError(null)
-    // OTP-based reset — no link, just a code sent to the user's email.
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: undefined,
-    })
-    setBusy(false)
-    if (error) setError(error.message)
-    else
-      setInfo(
-        'We emailed you a 6-digit reset code. Go to the reset page to use it.',
-      )
-  }
-
   return (
     <Box component="form" onSubmit={passwordSignIn}>
       <Stack spacing={2}>
