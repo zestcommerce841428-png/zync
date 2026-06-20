@@ -17,9 +17,7 @@ export async function POST(
   { params }: { params: Promise<{ slug: string }> },
 ): Promise<NextResponse> {
   const { slug } = await params
-  const { viewerId, action = 'view' } = await request
-    .json()
-    .catch(() => ({}))
+  const { viewerId, action = 'view' } = await request.json().catch(() => ({}))
 
   if (!viewerId || typeof viewerId !== 'string') {
     return NextResponse.json({ error: 'viewerId is required' }, { status: 400 })
@@ -37,10 +35,7 @@ export async function POST(
 
   if (action === 'download') {
     const presence = await getPresence(channel.shortSlug)
-    if (
-      channel.maxDownloads &&
-      presence.downloads >= channel.maxDownloads
-    ) {
+    if (channel.maxDownloads && presence.downloads >= channel.maxDownloads) {
       return NextResponse.json(
         { error: 'This room has reached its download limit.', capped: true },
         { status: 423 },

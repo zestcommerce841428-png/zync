@@ -42,7 +42,8 @@ export async function saveProgress(
   } else {
     const k = key(slug, downloaderId)
     const existing = memory.get(k)
-    const value = existing && existing.expiresAt > Date.now() ? existing.value : {}
+    const value =
+      existing && existing.expiresAt > Date.now() ? existing.value : {}
     value[fileName] = offset
     memory.set(k, { value, expiresAt: Date.now() + TTL * 1000 })
   }

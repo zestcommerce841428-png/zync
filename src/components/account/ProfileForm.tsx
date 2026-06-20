@@ -14,7 +14,11 @@ import Stack from '@mui/material/Stack'
 import CircularProgress from '@mui/material/CircularProgress'
 import SaveIcon from '@mui/icons-material/Save'
 import { getSupabaseBrowserClient } from '../../supabase/client'
-import { PROFILE_FIELDS, PROFILE_GROUPS, type ProfileField } from './profileFields'
+import {
+  PROFILE_FIELDS,
+  PROFILE_GROUPS,
+  type ProfileField,
+} from './profileFields'
 
 export default function ProfileForm({
   initial,
@@ -23,12 +27,16 @@ export default function ProfileForm({
 }): React.ReactElement {
   const [values, setValues] = React.useState<Record<string, string>>(initial)
   const [busy, setBusy] = React.useState(false)
-  const [msg, setMsg] = React.useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [msg, setMsg] = React.useState<{
+    type: 'success' | 'error'
+    text: string
+  } | null>(null)
 
   const set = (key: string, v: string) => setValues((s) => ({ ...s, [key]: v }))
 
   const save = async () => {
-    setBusy(true); setMsg(null)
+    setBusy(true)
+    setMsg(null)
     const supabase = getSupabaseBrowserClient()
     const { error } = (await supabase?.auth.updateUser({ data: values })) || {}
     setBusy(false)
@@ -41,7 +49,8 @@ export default function ProfileForm({
     const common = {
       label: f.label,
       value: values[f.key] ?? '',
-      onChange: (e: React.ChangeEvent<HTMLInputElement>) => set(f.key, e.target.value),
+      onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+        set(f.key, e.target.value),
       fullWidth: true,
       size: 'small' as const,
     }
@@ -49,7 +58,9 @@ export default function ProfileForm({
       return (
         <TextField select {...common}>
           {(f.options ?? []).map((o) => (
-            <MenuItem key={o} value={o}>{o || '—'}</MenuItem>
+            <MenuItem key={o} value={o}>
+              {o || '—'}
+            </MenuItem>
           ))}
         </TextField>
       )
@@ -66,7 +77,11 @@ export default function ProfileForm({
 
   return (
     <Box>
-      {msg && <Alert severity={msg.type} sx={{ mb: 3 }}>{msg.text}</Alert>}
+      {msg && (
+        <Alert severity={msg.type} sx={{ mb: 3 }}>
+          {msg.text}
+        </Alert>
+      )}
 
       {PROFILE_GROUPS.map((group) => (
         <Card variant="outlined" key={group} sx={{ mb: 3 }}>
@@ -85,7 +100,10 @@ export default function ProfileForm({
         </Card>
       ))}
 
-      <Stack direction="row" sx={{ justifyContent: 'flex-end', position: 'sticky', bottom: 16 }}>
+      <Stack
+        direction="row"
+        sx={{ justifyContent: 'flex-end', position: 'sticky', bottom: 16 }}
+      >
         <Button
           variant="contained"
           size="large"

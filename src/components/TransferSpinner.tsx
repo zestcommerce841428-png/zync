@@ -42,7 +42,15 @@ export default function TransferSpinner({
           opacity: 0.9,
         }}
       />
-      <Box sx={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
+      <Box
+        sx={{
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 0.5,
+        }}
+      >
         <ZyncIcon size={64} />
         <Arrow sx={{ color: 'primary.main' }} />
       </Box>

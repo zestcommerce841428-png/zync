@@ -30,12 +30,26 @@ export default function ToolsPage(): React.ReactElement {
           {TOOLS.map((t) => (
             <Grid size={{ xs: 12, sm: 6, md: 4 }} key={t.slug}>
               <Card variant="outlined" sx={{ height: '100%' }}>
-                <CardActionArea component={ViewTransitionLink} href={`/tools/${t.slug}`} sx={{ height: '100%', alignItems: 'stretch' }}>
+                <CardActionArea
+                  component={ViewTransitionLink}
+                  href={`/tools/${t.slug}`}
+                  sx={{ height: '100%', alignItems: 'stretch' }}
+                >
                   <CardContent>
                     <Box sx={{ fontSize: 34, mb: 1 }}>{t.emoji}</Box>
-                    <Chip label={t.category} size="small" variant="outlined" color="primary" sx={{ mb: 1 }} />
-                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>{t.name}</Typography>
-                    <Typography variant="body2" color="text.secondary">{t.description}</Typography>
+                    <Chip
+                      label={t.category}
+                      size="small"
+                      variant="outlined"
+                      color="primary"
+                      sx={{ mb: 1 }}
+                    />
+                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
+                      {t.name}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {t.description}
+                    </Typography>
                   </CardContent>
                 </CardActionArea>
               </Card>

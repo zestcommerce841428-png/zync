@@ -22,7 +22,8 @@ export async function GET(): Promise<NextResponse> {
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Not signed in.' }, { status: 401 })
+  if (!user)
+    return NextResponse.json({ error: 'Not signed in.' }, { status: 401 })
 
   const { data, error } = await supabase
     .from('transfers')
@@ -41,10 +42,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Not signed in.' }, { status: 401 })
+  if (!user)
+    return NextResponse.json({ error: 'Not signed in.' }, { status: 401 })
 
   const parsed = RecordSchema.safeParse(await request.json().catch(() => null))
-  if (!parsed.success) return NextResponse.json({ error: 'Invalid payload.' }, { status: 400 })
+  if (!parsed.success)
+    return NextResponse.json({ error: 'Invalid payload.' }, { status: 400 })
   const { slug, title, files, totalBytes } = parsed.data
 
   const { error } = await supabase.from('transfers').insert({
@@ -68,7 +71,8 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Not signed in.' }, { status: 401 })
+  if (!user)
+    return NextResponse.json({ error: 'Not signed in.' }, { status: 401 })
 
   const id = new URL(request.url).searchParams.get('id')
   if (!id) return NextResponse.json({ error: 'Missing id.' }, { status: 400 })

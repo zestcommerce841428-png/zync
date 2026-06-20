@@ -33,9 +33,21 @@ import { brand } from '../../brand'
 type Mode = 'signin' | 'signup'
 
 const FEATURES = [
-  { icon: <LockOutlinedIcon />, title: 'End-to-end encrypted', text: 'Files stream peer-to-peer over WebRTC DTLS — never stored on a server.' },
-  { icon: <BoltOutlinedIcon />, title: 'No size limits', text: 'Send files of any size, straight from your browser.' },
-  { icon: <VisibilityOffOutlinedIcon />, title: 'Private by design', text: 'No file scanning, no tracking, nothing retained after a transfer.' },
+  {
+    icon: <LockOutlinedIcon />,
+    title: 'End-to-end encrypted',
+    text: 'Files stream peer-to-peer over WebRTC DTLS — never stored on a server.',
+  },
+  {
+    icon: <BoltOutlinedIcon />,
+    title: 'No size limits',
+    text: 'Send files of any size, straight from your browser.',
+  },
+  {
+    icon: <VisibilityOffOutlinedIcon />,
+    title: 'Private by design',
+    text: 'No file scanning, no tracking, nothing retained after a transfer.',
+  },
 ]
 
 export default function AuthHub(): React.ReactElement {
@@ -51,7 +63,14 @@ export default function AuthHub(): React.ReactElement {
   }, [])
 
   return (
-    <Box sx={{ display: 'flex', justifyContent: 'center', px: 2, py: { xs: 4, md: 8 } }}>
+    <Box
+      sx={{
+        display: 'flex',
+        justifyContent: 'center',
+        px: 2,
+        py: { xs: 4, md: 8 },
+      }}
+    >
       <Card
         variant="outlined"
         sx={{
@@ -87,26 +106,47 @@ export default function AuthHub(): React.ReactElement {
 
           <Stack spacing={2.5} sx={{ my: 4 }}>
             {FEATURES.map((f) => (
-              <Stack key={f.title} direction="row" spacing={1.5} sx={{ alignItems: 'flex-start' }}>
+              <Stack
+                key={f.title}
+                direction="row"
+                spacing={1.5}
+                sx={{ alignItems: 'flex-start' }}
+              >
                 <Box sx={{ mt: 0.3, opacity: 0.95 }}>{f.icon}</Box>
                 <Box>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{f.title}</Typography>
-                  <Typography variant="caption" sx={{ opacity: 0.85 }}>{f.text}</Typography>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                    {f.title}
+                  </Typography>
+                  <Typography variant="caption" sx={{ opacity: 0.85 }}>
+                    {f.text}
+                  </Typography>
                 </Box>
               </Stack>
             ))}
           </Stack>
 
-          <Stack direction="row" spacing={1} sx={{ alignItems: 'center', opacity: 0.9 }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{ alignItems: 'center', opacity: 0.9 }}
+          >
             <VerifiedUserOutlinedIcon fontSize="small" />
-            <Typography variant="caption">Trusted, encrypted, and ad-free.</Typography>
+            <Typography variant="caption">
+              Trusted, encrypted, and ad-free.
+            </Typography>
           </Stack>
         </Box>
 
         {/* Auth panel */}
         <Box sx={{ p: { xs: 3, sm: 5 } }}>
           <Stack spacing={1} sx={{ mb: 3 }}>
-            <Box sx={{ display: { xs: 'flex', md: 'none' }, justifyContent: 'center', mb: 1 }}>
+            <Box
+              sx={{
+                display: { xs: 'flex', md: 'none' },
+                justifyContent: 'center',
+                mb: 1,
+              }}
+            >
               <ZyncIcon size={44} />
             </Box>
             <Typography variant="h5" sx={{ fontWeight: 800 }}>
@@ -121,16 +161,26 @@ export default function AuthHub(): React.ReactElement {
 
           {!supabase ? (
             <Alert severity="info">
-              Authentication isn’t configured yet. Add your Supabase keys to enable sign-in.
+              Authentication isn’t configured yet. Add your Supabase keys to
+              enable sign-in.
             </Alert>
           ) : (
             <>
-              <Tabs value={mode} onChange={(_, v) => setMode(v)} variant="fullWidth" sx={{ mb: 3 }}>
+              <Tabs
+                value={mode}
+                onChange={(_, v) => setMode(v)}
+                variant="fullWidth"
+                sx={{ mb: 3 }}
+              >
                 <Tab value="signin" label="Sign in" />
                 <Tab value="signup" label="Create account" />
               </Tabs>
 
-              {mode === 'signin' ? <SignInForm next={next} /> : <SignUpForm next={next} />}
+              {mode === 'signin' ? (
+                <SignInForm next={next} />
+              ) : (
+                <SignUpForm next={next} />
+              )}
 
               <Divider sx={{ my: 3 }}>or</Divider>
               <GoogleButton next={next} />
@@ -164,7 +214,11 @@ function GoogleButton({ next }: { next: string }): React.ReactElement {
   )
 }
 
-function passwordScore(pw: string): { score: number; label: string; color: 'error' | 'warning' | 'info' | 'success' } {
+function passwordScore(pw: string): {
+  score: number
+  label: string
+  color: 'error' | 'warning' | 'info' | 'success'
+} {
   let s = 0
   if (pw.length >= 8) s++
   if (pw.length >= 12) s++
@@ -207,7 +261,11 @@ function PasswordField({
         input: {
           endAdornment: (
             <InputAdornment position="end">
-              <IconButton onClick={() => setShow((s) => !s)} edge="end" aria-label="Toggle password visibility">
+              <IconButton
+                onClick={() => setShow((s) => !s)}
+                edge="end"
+                aria-label="Toggle password visibility"
+              >
                 {show ? <VisibilityOff /> : <Visibility />}
               </IconButton>
             </InputAdornment>
@@ -233,15 +291,20 @@ function SignInForm({ next }: { next: string }): React.ReactElement {
 
   const passwordSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
-    setBusy(true); setError(null)
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    setBusy(true)
+    setError(null)
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
     setBusy(false)
     if (error) setError(error.message)
     else go()
   }
 
   const sendOtp = async () => {
-    setBusy(true); setError(null)
+    setBusy(true)
+    setError(null)
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
@@ -253,20 +316,32 @@ function SignInForm({ next }: { next: string }): React.ReactElement {
     })
     setBusy(false)
     if (error) setError(error.message)
-    else { setOtpSent(true); setInfo('We emailed you a 6-digit code.') }
+    else {
+      setOtpSent(true)
+      setInfo('We emailed you a 6-digit code.')
+    }
   }
 
   const verifyOtp = async () => {
-    setBusy(true); setError(null)
-    const { error } = await supabase.auth.verifyOtp({ email, token: otp, type: 'email' })
+    setBusy(true)
+    setError(null)
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token: otp,
+      type: 'email',
+    })
     setBusy(false)
     if (error) setError(error.message)
     else go()
   }
 
   const forgot = async () => {
-    if (!email) { setError('Enter your email first.'); return }
-    setBusy(true); setError(null)
+    if (!email) {
+      setError('Enter your email first.')
+      return
+    }
+    setBusy(true)
+    setError(null)
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
     })
@@ -281,9 +356,22 @@ function SignInForm({ next }: { next: string }): React.ReactElement {
         {error && <Alert severity="error">{error}</Alert>}
         {info && <Alert severity="success">{info}</Alert>}
 
-        <TextField label="Email" type="email" required fullWidth value={email} onChange={(e) => setEmail(e.target.value)} />
+        <TextField
+          label="Email"
+          type="email"
+          required
+          fullWidth
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
 
-        {!useOtp && <PasswordField label="Password" value={password} onChange={setPassword} />}
+        {!useOtp && (
+          <PasswordField
+            label="Password"
+            value={password}
+            onChange={setPassword}
+          />
+        )}
 
         {useOtp && otpSent && (
           <TextField
@@ -296,25 +384,55 @@ function SignInForm({ next }: { next: string }): React.ReactElement {
         )}
 
         {!useOtp ? (
-          <Button type="submit" variant="contained" size="large" disabled={busy}>
+          <Button
+            type="submit"
+            variant="contained"
+            size="large"
+            disabled={busy}
+          >
             {busy ? <CircularProgress size={22} /> : 'Sign in'}
           </Button>
         ) : otpSent ? (
-          <Button onClick={verifyOtp} variant="contained" size="large" disabled={busy}>
+          <Button
+            onClick={verifyOtp}
+            variant="contained"
+            size="large"
+            disabled={busy}
+          >
             {busy ? <CircularProgress size={22} /> : 'Verify code'}
           </Button>
         ) : (
-          <Button onClick={sendOtp} variant="contained" size="large" disabled={busy || !email}>
+          <Button
+            onClick={sendOtp}
+            variant="contained"
+            size="large"
+            disabled={busy || !email}
+          >
             {busy ? <CircularProgress size={22} /> : 'Email me a code'}
           </Button>
         )}
 
         <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
-          <Link component="button" type="button" variant="body2" onClick={() => { setUseOtp(!useOtp); setOtpSent(false); setError(null); setInfo(null) }}>
+          <Link
+            component="button"
+            type="button"
+            variant="body2"
+            onClick={() => {
+              setUseOtp(!useOtp)
+              setOtpSent(false)
+              setError(null)
+              setInfo(null)
+            }}
+          >
             {useOtp ? 'Use password instead' : 'Use a one-time code'}
           </Link>
           {!useOtp && (
-            <Link component="button" type="button" variant="body2" onClick={forgot}>
+            <Link
+              component="button"
+              type="button"
+              variant="body2"
+              onClick={forgot}
+            >
               Forgot password?
             </Link>
           )}
@@ -347,9 +465,16 @@ function SignUpForm({ next }: { next: string }): React.ReactElement {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (password !== confirm) { setError('Passwords do not match.'); return }
-    if (password.length < 8) { setError('Use at least 8 characters.'); return }
-    setBusy(true); setError(null)
+    if (password !== confirm) {
+      setError('Passwords do not match.')
+      return
+    }
+    if (password.length < 8) {
+      setError('Use at least 8 characters.')
+      return
+    }
+    setBusy(true)
+    setError(null)
 
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -359,20 +484,29 @@ function SignUpForm({ next }: { next: string }): React.ReactElement {
         emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
       },
     })
-    if (error) { setBusy(false); setError(error.message); return }
+    if (error) {
+      setBusy(false)
+      setError(error.message)
+      return
+    }
 
     if (data.session) {
       if (photo) {
         const form = new FormData()
         form.append('file', photo)
-        await fetch('/api/profile/avatar', { method: 'POST', body: form }).catch(() => {})
+        await fetch('/api/profile/avatar', {
+          method: 'POST',
+          body: form,
+        }).catch(() => {})
       }
       window.location.href = next
       return
     }
 
     setBusy(false)
-    setInfo('Account created! Check your email to confirm, then sign in. You can add your photo from your profile.')
+    setInfo(
+      'Account created! Check your email to confirm, then sign in. You can add your photo from your profile.',
+    )
   }
 
   return (
@@ -382,26 +516,65 @@ function SignUpForm({ next }: { next: string }): React.ReactElement {
         {info && <Alert severity="success">{info}</Alert>}
 
         <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-          <Avatar src={photoPreview || undefined} sx={{ width: 64, height: 64 }}>
+          <Avatar
+            src={photoPreview || undefined}
+            sx={{ width: 64, height: 64 }}
+          >
             {fullName?.[0]?.toUpperCase()}
           </Avatar>
           <Box>
-            <input ref={fileRef} type="file" accept="image/*" hidden onChange={onPhoto} />
-            <Button size="small" variant="outlined" startIcon={<PhotoCameraIcon />} onClick={() => fileRef.current?.click()}>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={onPhoto}
+            />
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<PhotoCameraIcon />}
+              onClick={() => fileRef.current?.click()}
+            >
               {photo ? 'Change photo' : 'Add photo'}
             </Button>
             {photo && (
-              <IconButton size="small" onClick={() => { setPhoto(null); setPhotoPreview(null) }} aria-label="Remove photo">
+              <IconButton
+                size="small"
+                onClick={() => {
+                  setPhoto(null)
+                  setPhotoPreview(null)
+                }}
+                aria-label="Remove photo"
+              >
                 ✕
               </IconButton>
             )}
           </Box>
         </Stack>
 
-        <TextField label="Full name" required fullWidth value={fullName} onChange={(e) => setFullName(e.target.value)} />
-        <TextField label="Email" type="email" required fullWidth value={email} onChange={(e) => setEmail(e.target.value)} />
+        <TextField
+          label="Full name"
+          required
+          fullWidth
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+        />
+        <TextField
+          label="Email"
+          type="email"
+          required
+          fullWidth
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
         <Box>
-          <PasswordField label="Password" value={password} onChange={setPassword} helperText="At least 8 characters" />
+          <PasswordField
+            label="Password"
+            value={password}
+            onChange={setPassword}
+            helperText="At least 8 characters"
+          />
           {password.length > 0 && (
             <Box sx={{ mt: 1 }}>
               <LinearProgress
@@ -410,19 +583,33 @@ function SignUpForm({ next }: { next: string }): React.ReactElement {
                 color={strength.color}
                 sx={{ height: 6, borderRadius: 3 }}
               />
-              <Typography variant="caption" color={`${strength.color}.main`} sx={{ fontWeight: 600 }}>
+              <Typography
+                variant="caption"
+                color={`${strength.color}.main`}
+                sx={{ fontWeight: 600 }}
+              >
                 {strength.label}
               </Typography>
             </Box>
           )}
         </Box>
-        <PasswordField label="Confirm password" value={confirm} onChange={setConfirm} />
+        <PasswordField
+          label="Confirm password"
+          value={confirm}
+          onChange={setConfirm}
+        />
 
         <Button type="submit" variant="contained" size="large" disabled={busy}>
           {busy ? <CircularProgress size={22} /> : 'Create account'}
         </Button>
-        <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center' }}>
-          By creating an account you agree to our <Link href="/terms">Terms</Link> and <Link href="/privacy">Privacy Policy</Link>.
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ textAlign: 'center' }}
+        >
+          By creating an account you agree to our{' '}
+          <Link href="/terms">Terms</Link> and{' '}
+          <Link href="/privacy">Privacy Policy</Link>.
         </Typography>
       </Stack>
     </Box>

@@ -27,12 +27,19 @@ export default function PageShell({
           borderColor: 'divider',
         }}
       >
-        <Container maxWidth={maxWidth} sx={{ py: { xs: 6, md: 8 }, textAlign: 'center' }}>
+        <Container
+          maxWidth={maxWidth}
+          sx={{ py: { xs: 6, md: 8 }, textAlign: 'center' }}
+        >
           <Typography variant="h3" component="h1" sx={{ fontWeight: 800 }}>
             {title}
           </Typography>
           {subtitle && (
-            <Typography variant="h6" color="text.secondary" sx={{ mt: 1.5, fontWeight: 400 }}>
+            <Typography
+              variant="h6"
+              color="text.secondary"
+              sx={{ mt: 1.5, fontWeight: 400 }}
+            >
               {subtitle}
             </Typography>
           )}

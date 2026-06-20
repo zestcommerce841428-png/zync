@@ -17,7 +17,14 @@ export default function ReportedPage(): JSX.Element {
   return (
     <Stack
       spacing={2.5}
-      sx={{ alignItems: 'center', py: 8, px: 2, maxWidth: 480, mx: 'auto', width: '100%' }}
+      sx={{
+        alignItems: 'center',
+        py: 8,
+        px: 2,
+        maxWidth: 480,
+        mx: 'auto',
+        width: '100%',
+      }}
     >
       <TransferSpinner direction="down" />
       <TitleText>This transfer has been halted.</TitleText>

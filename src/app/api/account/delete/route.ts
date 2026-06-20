@@ -29,8 +29,12 @@ export async function POST(): Promise<NextResponse> {
   }
 
   const email = user.email
-  const meta = (user.user_metadata || {}) as { full_name?: string; name?: string }
-  const name = meta.full_name || meta.name || (email ? email.split('@')[0] : 'there')
+  const meta = (user.user_metadata || {}) as {
+    full_name?: string
+    name?: string
+  }
+  const name =
+    meta.full_name || meta.name || (email ? email.split('@')[0] : 'there')
 
   const { error } = await admin.auth.admin.deleteUser(user.id)
   if (error) {
@@ -40,7 +44,10 @@ export async function POST(): Promise<NextResponse> {
   // Operational notifications (best-effort).
   if (email) sendMailBg({ to: email, ...tplAccountDeleted(name) })
   notifyAdmins(
-    tplCriticalAlert({ event: 'Account deleted', detail: `${name} <${email || 'unknown'}> deleted their account.` }),
+    tplCriticalAlert({
+      event: 'Account deleted',
+      detail: `${name} <${email || 'unknown'}> deleted their account.`,
+    }),
   ).catch(() => {})
 
   // Clear the local session.

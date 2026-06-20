@@ -63,7 +63,11 @@ export function ConnectionListItem({
         </Stack>
 
         <Box sx={{ textAlign: 'right' }}>
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ display: 'block' }}
+          >
             Completed: {conn.completedFiles} / {conn.totalFiles} files
           </Typography>
           {conn.uploadingFileName &&

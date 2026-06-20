@@ -42,7 +42,9 @@ export async function getCurrentUser(): Promise<User | null> {
 // Gate a protected tool/page. When Supabase auth is configured, an
 // unauthenticated visitor is redirected to /login?next=<path>. When auth is not
 // configured the page renders (nothing to enforce against yet).
-export async function requireUserOrRedirect(next: string): Promise<User | null> {
+export async function requireUserOrRedirect(
+  next: string,
+): Promise<User | null> {
   if (!isSupabaseConfigured()) return null
   const user = await getCurrentUser()
   if (!user) {

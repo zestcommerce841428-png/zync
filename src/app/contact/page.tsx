@@ -35,7 +35,11 @@ export default function ContactPage(): React.ReactElement {
                 <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
                   Prefer something quicker?
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 2 }}
+                >
                   Message us directly — we usually reply within a day.
                 </Typography>
                 <Stack spacing={1.5}>

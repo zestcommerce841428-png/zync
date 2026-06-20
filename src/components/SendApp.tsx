@@ -49,9 +49,11 @@ function RecentTransfers(): JSX.Element | null {
 
   useEffect(() => {
     try {
-      const data = JSON.parse(localStorage.getItem('zync_recent_transfers') ?? '[]') as RecentEntry[]
+      const data = JSON.parse(
+        localStorage.getItem('zync_recent_transfers') ?? '[]',
+      ) as RecentEntry[]
       setRecent(data)
-    // eslint-disable-next-line no-empty
+      // eslint-disable-next-line no-empty
     } catch {}
   }, [])
 
@@ -67,17 +69,47 @@ function RecentTransfers(): JSX.Element | null {
     <Box sx={{ width: '100%', maxWidth: 448 }}>
       <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 1 }}>
         <HistoryIcon fontSize="small" sx={{ color: 'text.secondary' }} />
-        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>Recent transfers</Typography>
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{
+            fontWeight: 600,
+            textTransform: 'uppercase',
+            letterSpacing: 0.5,
+          }}
+        >
+          Recent transfers
+        </Typography>
       </Stack>
       <Paper variant="outlined" sx={{ overflow: 'hidden' }}>
         {recent.map((r, i) => (
           <React.Fragment key={r.url}>
             {i > 0 && <Divider />}
-            <Stack direction="row" spacing={1} sx={{ p: 1.5, alignItems: 'center' }}>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{ p: 1.5, alignItems: 'center' }}
+            >
               <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography variant="caption" noWrap sx={{ display: 'block', fontWeight: 500 }}>{r.files.join(', ')}</Typography>
-                <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block', fontSize: 11 }}>
-                  {new Date(r.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                <Typography
+                  variant="caption"
+                  noWrap
+                  sx={{ display: 'block', fontWeight: 500 }}
+                >
+                  {r.files.join(', ')}
+                </Typography>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  noWrap
+                  sx={{ display: 'block', fontSize: 11 }}
+                >
+                  {new Date(r.date).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
                 </Typography>
               </Box>
               <Tooltip title={copied === r.url ? 'Copied!' : 'Copy link'}>
@@ -97,7 +129,14 @@ function PageWrapper({ children }: { children: React.ReactNode }): JSX.Element {
   return (
     <Stack
       spacing={2.5}
-      sx={{ alignItems: 'center', py: 5, px: 2, maxWidth: 672, mx: 'auto', width: '100%' }}
+      sx={{
+        alignItems: 'center',
+        py: 5,
+        px: 2,
+        maxWidth: 672,
+        mx: 'auto',
+        width: '100%',
+      }}
     >
       <TransferSpinner direction="up" />
       {children}
@@ -113,7 +152,9 @@ function InitialState({
   return (
     <PageWrapper>
       <Stack sx={{ alignItems: 'center', maxWidth: 448 }}>
-        <TitleText>Drop a file to beam it straight to another browser.</TitleText>
+        <TitleText>
+          Drop a file to beam it straight to another browser.
+        </TitleText>
       </Stack>
       <DropZone onDrop={onDrop} />
       <TermsAcceptance />
@@ -184,10 +225,16 @@ function ConfirmUploadState({
           value={ttl}
           label="Link expires after"
           onChange={(e) => onChangeTtl(Number(e.target.value))}
-          startAdornment={<AccessTimeIcon sx={{ mr: 1, color: 'text.secondary', fontSize: 18 }} />}
+          startAdornment={
+            <AccessTimeIcon
+              sx={{ mr: 1, color: 'text.secondary', fontSize: 18 }}
+            />
+          }
         >
           {TTL_OPTIONS.map((o) => (
-            <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>
+            <MenuItem key={o.value} value={o.value}>
+              {o.label}
+            </MenuItem>
           ))}
         </Select>
       </FormControl>
@@ -223,7 +270,13 @@ function UploadingState({
       </SubtitleText>
       <UploadFileList files={fileListData} />
       <WebRTCPeerProvider>
-        <Uploader files={uploadedFiles} password={password} note={note} ttl={ttl} onStop={onStop} />
+        <Uploader
+          files={uploadedFiles}
+          password={password}
+          note={note}
+          ttl={ttl}
+          onStop={onStop}
+        />
       </WebRTCPeerProvider>
     </PageWrapper>
   )

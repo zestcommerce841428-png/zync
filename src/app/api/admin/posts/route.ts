@@ -17,17 +17,30 @@ async function requireAdmin(): Promise<
   const supabase = await getSupabaseServerClient()
   const user = supabase ? (await supabase.auth.getUser()).data.user : null
   if (!user || !isAdminEmail(user.email)) {
-    return { ok: false, res: NextResponse.json({ error: 'Forbidden' }, { status: 403 }) }
+    return {
+      ok: false,
+      res: NextResponse.json({ error: 'Forbidden' }, { status: 403 }),
+    }
   }
   const admin = getSupabaseAdminClient()
   if (!admin) {
-    return { ok: false, res: NextResponse.json({ error: 'Service role key not configured.' }, { status: 503 }) }
+    return {
+      ok: false,
+      res: NextResponse.json(
+        { error: 'Service role key not configured.' },
+        { status: 503 },
+      ),
+    }
   }
   return { ok: true, admin }
 }
 
 const PostSchema = z.object({
-  slug: z.string().min(1).max(160).regex(/^[a-z0-9-]+$/, 'lowercase letters, numbers and dashes only'),
+  slug: z
+    .string()
+    .min(1)
+    .max(160)
+    .regex(/^[a-z0-9-]+$/, 'lowercase letters, numbers and dashes only'),
   title: z.string().min(1).max(240),
   category: z.string().max(80).default('General'),
   excerpt: z.string().max(600).default(''),
@@ -51,7 +64,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       .select('slug,title,date,category,excerpt,tags,author,content,published')
       .eq('slug', full)
       .maybeSingle()
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 500 })
     if (!data) return NextResponse.json({ post: null })
     return NextResponse.json({
       post: {
@@ -69,7 +83,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   const { data, error } = await gate.admin
     .from('posts')
-    .select('id,slug,title,date,category,excerpt,tags,author,published,updated_at')
+    .select(
+      'id,slug,title,date,category,excerpt,tags,author,published,updated_at',
+    )
     .order('date', { ascending: false })
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ posts: data ?? [] })
@@ -80,7 +96,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   if (!gate.ok) return gate.res
   const parsed = PostSchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.issues[0]?.message || 'Invalid post.' }, { status: 400 })
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message || 'Invalid post.' },
+      { status: 400 },
+    )
   }
   const p = parsed.data
   const { error } = await gate.admin.from('posts').upsert(
@@ -107,7 +126,8 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
   const gate = await requireAdmin()
   if (!gate.ok) return gate.res
   const slug = new URL(request.url).searchParams.get('slug')
-  if (!slug) return NextResponse.json({ error: 'Missing slug.' }, { status: 400 })
+  if (!slug)
+    return NextResponse.json({ error: 'Missing slug.' }, { status: 400 })
   const { error } = await gate.admin.from('posts').delete().eq('slug', slug)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true })

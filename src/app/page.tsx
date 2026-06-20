@@ -93,7 +93,10 @@ const HIGHLIGHTS: Array<{ stat: string; label: string }> = [
 ]
 
 const TECH: Array<{ name: string; role: string }> = [
-  { name: 'Next.js 16', role: 'App Router + Turbopack for a fast, SEO-ready frontend & API' },
+  {
+    name: 'Next.js 16',
+    role: 'App Router + Turbopack for a fast, SEO-ready frontend & API',
+  },
   { name: 'React 19', role: 'Modern UI with Server Components' },
   { name: 'TypeScript', role: 'End-to-end type safety' },
   { name: 'Material UI', role: 'Accessible, themeable design system' },
@@ -175,7 +178,12 @@ export default function LandingPage(): React.ReactElement {
         <AnimatedBackground />
         <Container
           maxWidth="md"
-          sx={{ py: { xs: 8, md: 12 }, textAlign: 'center', position: 'relative', zIndex: 1 }}
+          sx={{
+            py: { xs: 8, md: 12 },
+            textAlign: 'center',
+            position: 'relative',
+            zIndex: 1,
+          }}
         >
           <Stack spacing={3} sx={{ alignItems: 'center' }}>
             <ZyncIcon size={72} />
@@ -208,13 +216,23 @@ export default function LandingPage(): React.ReactElement {
                 browser to browser
               </Box>
             </Typography>
-            <Typography variant="h6" sx={{ color: 'text.secondary', maxWidth: 640, fontWeight: 400 }}>
+            <Typography
+              variant="h6"
+              sx={{ color: 'text.secondary', maxWidth: 640, fontWeight: 400 }}
+            >
               {brand.name} beams your files directly to the recipient over an
-              encrypted peer-to-peer connection. <strong>No file-size caps and
-              no upload or download limits</strong> — and nothing is stored on a
-              server. Your files are gone the moment you close the tab.
+              encrypted peer-to-peer connection.{' '}
+              <strong>
+                No file-size caps and no upload or download limits
+              </strong>{' '}
+              — and nothing is stored on a server. Your files are gone the
+              moment you close the tab.
             </Typography>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ pt: 1 }}>
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={2}
+              sx={{ pt: 1 }}
+            >
               <Button
                 component={ViewTransitionLink}
                 href="/send"
@@ -238,7 +256,14 @@ export default function LandingPage(): React.ReactElement {
       </Box>
 
       {/* Highlights band */}
-      <Box sx={{ borderTop: '1px solid', borderBottom: '1px solid', borderColor: 'divider', bgcolor: 'background.paper' }}>
+      <Box
+        sx={{
+          borderTop: '1px solid',
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          bgcolor: 'background.paper',
+        }}
+      >
         <Container maxWidth="lg" sx={{ py: 4 }}>
           <Grid container spacing={2}>
             {HIGHLIGHTS.map((h) => (
@@ -266,15 +291,30 @@ export default function LandingPage(): React.ReactElement {
       </Box>
 
       {/* Features */}
-      <Container maxWidth="lg" id="features" sx={{ py: { xs: 8, md: 10 }, scrollMarginTop: 80 }}>
-        <Stack spacing={1} sx={{ alignItems: 'center', textAlign: 'center', mb: 6 }}>
-          <Typography variant="overline" color="primary" sx={{ fontWeight: 700 }}>
+      <Container
+        maxWidth="lg"
+        id="features"
+        sx={{ py: { xs: 8, md: 10 }, scrollMarginTop: 80 }}
+      >
+        <Stack
+          spacing={1}
+          sx={{ alignItems: 'center', textAlign: 'center', mb: 6 }}
+        >
+          <Typography
+            variant="overline"
+            color="primary"
+            sx={{ fontWeight: 700 }}
+          >
             Why Zync
           </Typography>
           <Typography variant="h3" component="h2" sx={{ fontWeight: 800 }}>
             Private by design, fast by default
           </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 640 }}>
+          <Typography
+            variant="body1"
+            color="text.secondary"
+            sx={{ maxWidth: 640 }}
+          >
             Most “file sharing” tools upload your data to a server you don’t
             control. Zync skips the middleman entirely.
           </Typography>
@@ -318,10 +358,28 @@ export default function LandingPage(): React.ReactElement {
       </Container>
 
       {/* How it works */}
-      <Box sx={{ bgcolor: 'background.paper', borderTop: '1px solid', borderBottom: '1px solid', borderColor: 'divider' }}>
-        <Container maxWidth="lg" id="how-it-works" sx={{ py: { xs: 8, md: 10 }, scrollMarginTop: 80 }}>
-          <Stack spacing={1} sx={{ alignItems: 'center', textAlign: 'center', mb: 6 }}>
-            <Typography variant="overline" color="primary" sx={{ fontWeight: 700 }}>
+      <Box
+        sx={{
+          bgcolor: 'background.paper',
+          borderTop: '1px solid',
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+        }}
+      >
+        <Container
+          maxWidth="lg"
+          id="how-it-works"
+          sx={{ py: { xs: 8, md: 10 }, scrollMarginTop: 80 }}
+        >
+          <Stack
+            spacing={1}
+            sx={{ alignItems: 'center', textAlign: 'center', mb: 6 }}
+          >
+            <Typography
+              variant="overline"
+              color="primary"
+              sx={{ fontWeight: 700 }}
+            >
               How it works
             </Typography>
             <Typography variant="h3" component="h2" sx={{ fontWeight: 800 }}>
@@ -334,7 +392,11 @@ export default function LandingPage(): React.ReactElement {
                 <Stack spacing={1.5}>
                   <Typography
                     variant="h2"
-                    sx={{ fontWeight: 800, color: 'primary.main', opacity: 0.25 }}
+                    sx={{
+                      fontWeight: 800,
+                      color: 'primary.main',
+                      opacity: 0.25,
+                    }}
                   >
                     {s.n}
                   </Typography>
@@ -353,16 +415,27 @@ export default function LandingPage(): React.ReactElement {
 
       {/* Tech stack */}
       <Container maxWidth="lg" sx={{ py: { xs: 8, md: 10 } }}>
-        <Stack spacing={1} sx={{ alignItems: 'center', textAlign: 'center', mb: 6 }}>
-          <Typography variant="overline" color="primary" sx={{ fontWeight: 700 }}>
+        <Stack
+          spacing={1}
+          sx={{ alignItems: 'center', textAlign: 'center', mb: 6 }}
+        >
+          <Typography
+            variant="overline"
+            color="primary"
+            sx={{ fontWeight: 700 }}
+          >
             Under the hood
           </Typography>
           <Typography variant="h3" component="h2" sx={{ fontWeight: 800 }}>
             Built with a modern, secure stack
           </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 640 }}>
-            {brand.name} is engineered for speed, privacy and scale — every piece
-            chosen to keep your data on the edge and out of a database.
+          <Typography
+            variant="body1"
+            color="text.secondary"
+            sx={{ maxWidth: 640 }}
+          >
+            {brand.name} is engineered for speed, privacy and scale — every
+            piece chosen to keep your data on the edge and out of a database.
           </Typography>
         </Stack>
         <Grid container spacing={2}>
@@ -382,11 +455,18 @@ export default function LandingPage(): React.ReactElement {
       </Container>
 
       {/* CTA */}
-      <Container maxWidth="md" sx={{ py: { xs: 8, md: 12 }, textAlign: 'center' }}>
+      <Container
+        maxWidth="md"
+        sx={{ py: { xs: 8, md: 12 }, textAlign: 'center' }}
+      >
         <Typography variant="h3" component="h2" sx={{ fontWeight: 800, mb: 2 }}>
           Ready to share something?
         </Typography>
-        <Typography variant="body1" color="text.secondary" sx={{ mb: 4, maxWidth: 560, mx: 'auto' }}>
+        <Typography
+          variant="body1"
+          color="text.secondary"
+          sx={{ mb: 4, maxWidth: 560, mx: 'auto' }}
+        >
           Create your free account once, then send unlimited files in seconds —
           no installs, no catch.
         </Typography>

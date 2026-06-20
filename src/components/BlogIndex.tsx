@@ -52,7 +52,11 @@ export default function BlogIndex({
       <Stack
         direction={{ xs: 'column', md: 'row' }}
         spacing={2}
-        sx={{ alignItems: { md: 'center' }, justifyContent: 'space-between', mb: 3 }}
+        sx={{
+          alignItems: { md: 'center' },
+          justifyContent: 'space-between',
+          mb: 3,
+        }}
       >
         <TextField
           value={query}
@@ -75,7 +79,11 @@ export default function BlogIndex({
         </Typography>
       </Stack>
 
-      <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1, mb: 4 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{ flexWrap: 'wrap', gap: 1, mb: 4 }}
+      >
         <Chip
           label="All"
           color={category === null ? 'primary' : 'default'}
@@ -103,11 +111,24 @@ export default function BlogIndex({
                 sx={{ height: '100%', alignItems: 'stretch' }}
               >
                 <CardContent>
-                  <Chip label={p.category} size="small" color="primary" variant="outlined" sx={{ mb: 1.5 }} />
-                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 1, lineHeight: 1.3 }}>
+                  <Chip
+                    label={p.category}
+                    size="small"
+                    color="primary"
+                    variant="outlined"
+                    sx={{ mb: 1.5 }}
+                  />
+                  <Typography
+                    variant="h6"
+                    sx={{ fontWeight: 700, mb: 1, lineHeight: 1.3 }}
+                  >
                     {p.title}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 2 }}
+                  >
                     {p.excerpt}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">

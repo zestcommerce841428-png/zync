@@ -113,7 +113,10 @@ export async function registerViewer(
     await client.zremrangebyscore(RKEY.viewers(slug), 0, now)
     await client.expire(RKEY.viewers(slug), VIEWER_TTL * 2)
   } else {
-    memChannel(slug).viewers.set(slug + viewerId, Date.now() + VIEWER_TTL * 1000)
+    memChannel(slug).viewers.set(
+      slug + viewerId,
+      Date.now() + VIEWER_TTL * 1000,
+    )
   }
   await notify(slug)
 }

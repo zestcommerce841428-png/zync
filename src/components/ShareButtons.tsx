@@ -12,23 +12,38 @@ import { brand } from '../brand'
 // Quick share actions for a generated transfer link: native OS share sheet
 // (mobile), WhatsApp, and email. Falls back gracefully when the Web Share API
 // isn't available.
-export default function ShareButtons({ url }: { url: string }): React.ReactElement {
+export default function ShareButtons({
+  url,
+}: {
+  url: string
+}): React.ReactElement {
   const [canNativeShare, setCanNativeShare] = React.useState(false)
   React.useEffect(() => {
-    setCanNativeShare(typeof navigator !== 'undefined' && typeof navigator.share === 'function')
+    setCanNativeShare(
+      typeof navigator !== 'undefined' && typeof navigator.share === 'function',
+    )
   }, [])
 
   const text = `I'm sharing a file with you via ${brand.name}: ${url}`
   const nativeShare = () =>
     navigator
-      .share({ title: `${brand.name} file transfer`, text: `Download the file I sent you on ${brand.name}.`, url })
+      .share({
+        title: `${brand.name} file transfer`,
+        text: `Download the file I sent you on ${brand.name}.`,
+        url,
+      })
       .catch(() => {})
 
   return (
     <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
       {canNativeShare && (
         <Tooltip title="Share via your device">
-          <Button variant="contained" size="small" startIcon={<ShareIcon />} onClick={nativeShare}>
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<ShareIcon />}
+            onClick={nativeShare}
+          >
             Share
           </Button>
         </Tooltip>

@@ -46,12 +46,23 @@ type Editing = {
 }
 
 const EMPTY: Editing = {
-  slug: '', title: '', category: 'General', excerpt: '', author: 'Zync Team',
-  tags: '', content: '', published: true, isNew: true,
+  slug: '',
+  title: '',
+  category: 'General',
+  excerpt: '',
+  author: 'Zync Team',
+  tags: '',
+  content: '',
+  published: true,
+  isNew: true,
 }
 
 function slugify(s: string): string {
-  return s.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+  return s
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
 }
 
 export default function BlogManager(): React.ReactElement {
@@ -66,28 +77,44 @@ export default function BlogManager(): React.ReactElement {
     setError(null)
     const res = await fetch('/api/admin/posts', { cache: 'no-store' })
     const data = await res.json()
-    if (!res.ok) { setError(data.error || 'Failed to load posts.'); setPosts([]); return }
+    if (!res.ok) {
+      setError(data.error || 'Failed to load posts.')
+      setPosts([])
+      return
+    }
     setPosts(data.posts ?? [])
   }, [])
 
-  React.useEffect(() => { load() }, [load])
+  React.useEffect(() => {
+    load()
+  }, [load])
 
   const importStatic = async () => {
-    setBusy(true); setError(null)
+    setBusy(true)
+    setError(null)
     const res = await fetch('/api/admin/posts/import', { method: 'POST' })
     const data = await res.json()
     setBusy(false)
-    if (!res.ok) { setError(data.error || 'Import failed.'); return }
+    if (!res.ok) {
+      setError(data.error || 'Import failed.')
+      return
+    }
     await load()
   }
 
-  const openNew = () => { setSaveErr(null); setEditing({ ...EMPTY }) }
+  const openNew = () => {
+    setSaveErr(null)
+    setEditing({ ...EMPTY })
+  }
 
   const openEdit = async (slug: string) => {
     setSaveErr(null)
     // fetch full content from the public source via the admin list we have +
     // the post API isn't needed; load content from the blog page data:
-    const res = await fetch(`/api/admin/posts?full=${encodeURIComponent(slug)}`, { cache: 'no-store' }).catch(() => null)
+    const res = await fetch(
+      `/api/admin/posts?full=${encodeURIComponent(slug)}`,
+      { cache: 'no-store' },
+    ).catch(() => null)
     // Fallback: load from the published JSON endpoint not available; use minimal.
     const row = posts?.find((p) => p.slug === slug)
     let full: Partial<Editing> = {}
@@ -110,14 +137,18 @@ export default function BlogManager(): React.ReactElement {
 
   const save = async () => {
     if (!editing) return
-    setSaving(true); setSaveErr(null)
+    setSaving(true)
+    setSaveErr(null)
     const body = {
       slug: editing.slug || slugify(editing.title),
       title: editing.title,
       category: editing.category,
       excerpt: editing.excerpt,
       author: editing.author,
-      tags: editing.tags.split(',').map((t) => t.trim()).filter(Boolean),
+      tags: editing.tags
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean),
       content: editing.content,
       published: editing.published,
     }
@@ -128,7 +159,10 @@ export default function BlogManager(): React.ReactElement {
     })
     const data = await res.json()
     setSaving(false)
-    if (!res.ok) { setSaveErr(data.error || 'Save failed.'); return }
+    if (!res.ok) {
+      setSaveErr(data.error || 'Save failed.')
+      return
+    }
     setEditing(null)
     await load()
   }
@@ -136,47 +170,119 @@ export default function BlogManager(): React.ReactElement {
   const remove = async (slug: string) => {
     if (!confirm(`Delete "${slug}"? This cannot be undone.`)) return
     setPosts((p) => p?.filter((x) => x.slug !== slug) ?? null)
-    await fetch(`/api/admin/posts?slug=${encodeURIComponent(slug)}`, { method: 'DELETE' }).catch(() => {})
+    await fetch(`/api/admin/posts?slug=${encodeURIComponent(slug)}`, {
+      method: 'DELETE',
+    }).catch(() => {})
   }
 
   return (
     <Box>
-      <Stack direction="row" spacing={1} sx={{ alignItems: 'center', justifyContent: 'space-between', mb: 2, flexWrap: 'wrap', gap: 1 }}>
-        <Typography variant="h6" sx={{ fontWeight: 800 }}>Blog posts {posts ? `(${posts.length})` : ''}</Typography>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          mb: 2,
+          flexWrap: 'wrap',
+          gap: 1,
+        }}
+      >
+        <Typography variant="h6" sx={{ fontWeight: 800 }}>
+          Blog posts {posts ? `(${posts.length})` : ''}
+        </Typography>
         <Stack direction="row" spacing={1}>
           <Tooltip title="Import all built-in static posts into the database">
             <span>
-              <Button onClick={importStatic} disabled={busy} startIcon={busy ? <CircularProgress size={16} /> : <DownloadOutlinedIcon />} variant="outlined" size="small">
+              <Button
+                onClick={importStatic}
+                disabled={busy}
+                startIcon={
+                  busy ? (
+                    <CircularProgress size={16} />
+                  ) : (
+                    <DownloadOutlinedIcon />
+                  )
+                }
+                variant="outlined"
+                size="small"
+              >
                 Import static posts
               </Button>
             </span>
           </Tooltip>
-          <Button onClick={openNew} startIcon={<AddIcon />} variant="contained" size="small">New post</Button>
+          <Button
+            onClick={openNew}
+            startIcon={<AddIcon />}
+            variant="contained"
+            size="small"
+          >
+            New post
+          </Button>
         </Stack>
       </Stack>
 
-      {error && <Alert severity="warning" sx={{ mb: 2 }}>{error} {error.includes('posts') && '— run supabase/posts.sql first.'}</Alert>}
+      {error && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          {error} {error.includes('posts') && '— run supabase/posts.sql first.'}
+        </Alert>
+      )}
 
       {posts === null ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}><CircularProgress /></Box>
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+          <CircularProgress />
+        </Box>
       ) : posts.length === 0 ? (
-        <Typography variant="body2" color="text.secondary">No posts yet. Click “Import static posts” to migrate the built-in articles, or “New post”.</Typography>
+        <Typography variant="body2" color="text.secondary">
+          No posts yet. Click “Import static posts” to migrate the built-in
+          articles, or “New post”.
+        </Typography>
       ) : (
         <Stack spacing={1}>
           {posts.map((p) => (
             <Card key={p.id} variant="outlined">
               <CardContent sx={{ py: 1.25, '&:last-child': { pb: 1.25 } }}>
-                <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+                <Stack
+                  direction="row"
+                  spacing={1.5}
+                  sx={{ alignItems: 'center' }}
+                >
                   <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="subtitle2" noWrap sx={{ fontWeight: 700 }}>{p.title}</Typography>
-                    <Stack direction="row" spacing={1} sx={{ mt: 0.5, flexWrap: 'wrap' }}>
+                    <Typography
+                      variant="subtitle2"
+                      noWrap
+                      sx={{ fontWeight: 700 }}
+                    >
+                      {p.title}
+                    </Typography>
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      sx={{ mt: 0.5, flexWrap: 'wrap' }}
+                    >
                       <Chip size="small" label={p.category} />
-                      {!p.published && <Chip size="small" color="warning" label="Draft" />}
-                      <Typography variant="caption" color="text.secondary" sx={{ alignSelf: 'center' }}>/{p.slug}</Typography>
+                      {!p.published && (
+                        <Chip size="small" color="warning" label="Draft" />
+                      )}
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ alignSelf: 'center' }}
+                      >
+                        /{p.slug}
+                      </Typography>
                     </Stack>
                   </Box>
-                  <Tooltip title="Edit"><IconButton size="small" onClick={() => openEdit(p.slug)}><EditOutlinedIcon fontSize="small" /></IconButton></Tooltip>
-                  <Tooltip title="Delete"><IconButton size="small" onClick={() => remove(p.slug)}><DeleteOutlinedIcon fontSize="small" /></IconButton></Tooltip>
+                  <Tooltip title="Edit">
+                    <IconButton size="small" onClick={() => openEdit(p.slug)}>
+                      <EditOutlinedIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Delete">
+                    <IconButton size="small" onClick={() => remove(p.slug)}>
+                      <DeleteOutlinedIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
                 </Stack>
               </CardContent>
             </Card>
@@ -184,29 +290,107 @@ export default function BlogManager(): React.ReactElement {
         </Stack>
       )}
 
-      <Dialog open={Boolean(editing)} onClose={() => setEditing(null)} fullWidth maxWidth="md">
+      <Dialog
+        open={Boolean(editing)}
+        onClose={() => setEditing(null)}
+        fullWidth
+        maxWidth="md"
+      >
         <DialogTitle>{editing?.isNew ? 'New post' : 'Edit post'}</DialogTitle>
         <DialogContent dividers>
           {editing && (
             <Stack spacing={2} sx={{ mt: 1 }}>
               {saveErr && <Alert severity="error">{saveErr}</Alert>}
-              <TextField label="Title" fullWidth value={editing.title}
-                onChange={(e) => setEditing({ ...editing, title: e.target.value, slug: editing.isNew ? slugify(e.target.value) : editing.slug })} />
-              <TextField label="Slug" fullWidth value={editing.slug} onChange={(e) => setEditing({ ...editing, slug: e.target.value })} helperText="lowercase-with-dashes" />
+              <TextField
+                label="Title"
+                fullWidth
+                value={editing.title}
+                onChange={(e) =>
+                  setEditing({
+                    ...editing,
+                    title: e.target.value,
+                    slug: editing.isNew
+                      ? slugify(e.target.value)
+                      : editing.slug,
+                  })
+                }
+              />
+              <TextField
+                label="Slug"
+                fullWidth
+                value={editing.slug}
+                onChange={(e) =>
+                  setEditing({ ...editing, slug: e.target.value })
+                }
+                helperText="lowercase-with-dashes"
+              />
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                <TextField label="Category" fullWidth value={editing.category} onChange={(e) => setEditing({ ...editing, category: e.target.value })} />
-                <TextField label="Author" fullWidth value={editing.author} onChange={(e) => setEditing({ ...editing, author: e.target.value })} />
+                <TextField
+                  label="Category"
+                  fullWidth
+                  value={editing.category}
+                  onChange={(e) =>
+                    setEditing({ ...editing, category: e.target.value })
+                  }
+                />
+                <TextField
+                  label="Author"
+                  fullWidth
+                  value={editing.author}
+                  onChange={(e) =>
+                    setEditing({ ...editing, author: e.target.value })
+                  }
+                />
               </Stack>
-              <TextField label="Tags (comma separated)" fullWidth value={editing.tags} onChange={(e) => setEditing({ ...editing, tags: e.target.value })} />
-              <TextField label="Excerpt" fullWidth multiline minRows={2} value={editing.excerpt} onChange={(e) => setEditing({ ...editing, excerpt: e.target.value })} />
-              <TextField label="Content (Markdown)" fullWidth multiline minRows={12} value={editing.content} onChange={(e) => setEditing({ ...editing, content: e.target.value })} />
-              <FormControlLabel control={<Switch checked={editing.published} onChange={(e) => setEditing({ ...editing, published: e.target.checked })} />} label="Published" />
+              <TextField
+                label="Tags (comma separated)"
+                fullWidth
+                value={editing.tags}
+                onChange={(e) =>
+                  setEditing({ ...editing, tags: e.target.value })
+                }
+              />
+              <TextField
+                label="Excerpt"
+                fullWidth
+                multiline
+                minRows={2}
+                value={editing.excerpt}
+                onChange={(e) =>
+                  setEditing({ ...editing, excerpt: e.target.value })
+                }
+              />
+              <TextField
+                label="Content (Markdown)"
+                fullWidth
+                multiline
+                minRows={12}
+                value={editing.content}
+                onChange={(e) =>
+                  setEditing({ ...editing, content: e.target.value })
+                }
+              />
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={editing.published}
+                    onChange={(e) =>
+                      setEditing({ ...editing, published: e.target.checked })
+                    }
+                  />
+                }
+                label="Published"
+              />
             </Stack>
           )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setEditing(null)}>Cancel</Button>
-          <Button onClick={save} variant="contained" disabled={saving || !editing?.title}>
+          <Button
+            onClick={save}
+            variant="contained"
+            disabled={saving || !editing?.title}
+          >
             {saving ? <CircularProgress size={20} /> : 'Save'}
           </Button>
         </DialogActions>

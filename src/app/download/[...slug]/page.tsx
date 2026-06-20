@@ -32,7 +32,14 @@ export default async function DownloadPage({
   return (
     <Stack
       spacing={2.5}
-      sx={{ alignItems: 'center', py: 5, px: 2, maxWidth: 672, mx: 'auto', width: '100%' }}
+      sx={{
+        alignItems: 'center',
+        py: 5,
+        px: 2,
+        maxWidth: 672,
+        mx: 'auto',
+        width: '100%',
+      }}
     >
       <TransferSpinner direction="down" />
       <ChannelPresenceBadge slug={channel.shortSlug} />

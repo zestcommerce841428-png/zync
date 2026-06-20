@@ -24,9 +24,21 @@ const PUBLIC_STUN: IceServer[] = [
 // NAT traversal out of the box with no account/credit card. Disable with
 // DISABLE_FREE_TURN=true, or override with your own TURN_URLS.
 const FREE_OPEN_RELAY: IceServer[] = [
-  { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
-  { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
-  { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' },
+  {
+    urls: 'turn:openrelay.metered.ca:80',
+    username: 'openrelayproject',
+    credential: 'openrelayproject',
+  },
+  {
+    urls: 'turn:openrelay.metered.ca:443',
+    username: 'openrelayproject',
+    credential: 'openrelayproject',
+  },
+  {
+    urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+    username: 'openrelayproject',
+    credential: 'openrelayproject',
+  },
 ]
 
 export async function POST(): Promise<NextResponse> {
@@ -36,7 +48,10 @@ export async function POST(): Promise<NextResponse> {
   const staticUrls = process.env.TURN_URLS
   if (staticUrls) {
     iceServers.push({
-      urls: staticUrls.split(',').map((u) => u.trim()).filter(Boolean),
+      urls: staticUrls
+        .split(',')
+        .map((u) => u.trim())
+        .filter(Boolean),
       username: process.env.TURN_USERNAME,
       credential: process.env.TURN_CREDENTIAL,
     })

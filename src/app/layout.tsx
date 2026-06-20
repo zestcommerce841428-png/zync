@@ -80,9 +80,7 @@ export default function RootLayout({
             src>` rendered in a component; an inline script is injected into the
             initial HTML and runs before hydration with no warning.
           */}
-          <script
-            dangerouslySetInnerHTML={{ __html: THEME_INIT }}
-          />
+          <script dangerouslySetInnerHTML={{ __html: THEME_INIT }} />
           {/*
             Manifest is emitted manually (not via metadata.manifest) so we can
             set crossOrigin="use-credentials". Behind Cloudflare the credential-
@@ -107,7 +105,10 @@ export default function RootLayout({
                   }}
                 >
                   <Header />
-                  <Box component="main" sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                  <Box
+                    component="main"
+                    sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}
+                  >
                     {children}
                   </Box>
                   <Footer />

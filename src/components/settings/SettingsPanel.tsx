@@ -141,7 +141,14 @@ export default function SettingsPanel(): React.ReactElement {
       )}
 
       <Drawer anchor="right" open={open} onClose={() => setOpen(false)}>
-        <Box sx={{ width: { xs: 300, sm: 360 }, display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <Box
+          sx={{
+            width: { xs: 300, sm: 360 },
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100%',
+          }}
+        >
           <Stack
             direction="row"
             sx={{ alignItems: 'center', justifyContent: 'space-between', p: 2 }}
@@ -181,8 +188,12 @@ export default function SettingsPanel(): React.ReactElement {
                           update('radius', p.radius)
                           update('fontFamily', p.fontFamily)
                         }}
-                        variant={settings.primary === p.primary ? 'filled' : 'outlined'}
-                        color={settings.primary === p.primary ? 'primary' : 'default'}
+                        variant={
+                          settings.primary === p.primary ? 'filled' : 'outlined'
+                        }
+                        color={
+                          settings.primary === p.primary ? 'primary' : 'default'
+                        }
                         sx={{ fontWeight: 600 }}
                       />
                     ))}
@@ -196,7 +207,12 @@ export default function SettingsPanel(): React.ReactElement {
                         key={name}
                         component="button"
                         aria-label={name}
-                        onClick={() => update('primary', name as keyof typeof PRIMARY_PRESETS)}
+                        onClick={() =>
+                          update(
+                            'primary',
+                            name as keyof typeof PRIMARY_PRESETS,
+                          )
+                        }
                         sx={{
                           width: 30,
                           height: 30,
@@ -205,7 +221,9 @@ export default function SettingsPanel(): React.ReactElement {
                           cursor: 'pointer',
                           border: '2px solid',
                           borderColor:
-                            settings.primary === name ? 'text.primary' : 'transparent',
+                            settings.primary === name
+                              ? 'text.primary'
+                              : 'transparent',
                           outline: 'none',
                         }}
                       />
@@ -219,17 +237,28 @@ export default function SettingsPanel(): React.ReactElement {
                     fullWidth
                     size="small"
                     value={settings.fontFamily}
-                    onChange={(e) => update('fontFamily', e.target.value as keyof typeof FONT_FAMILIES)}
+                    onChange={(e) =>
+                      update(
+                        'fontFamily',
+                        e.target.value as keyof typeof FONT_FAMILIES,
+                      )
+                    }
                   >
                     {Object.keys(FONT_FAMILIES).map((f) => (
-                      <MenuItem key={f} value={f} sx={{ textTransform: 'capitalize' }}>
+                      <MenuItem
+                        key={f}
+                        value={f}
+                        sx={{ textTransform: 'capitalize' }}
+                      >
                         {f}
                       </MenuItem>
                     ))}
                   </TextField>
                 </Section>
 
-                <Section title={`Text size — ${Math.round(settings.fontScale * 100)}%`}>
+                <Section
+                  title={`Text size — ${Math.round(settings.fontScale * 100)}%`}
+                >
                   <Slider
                     min={0.85}
                     max={1.3}
@@ -351,7 +380,10 @@ export default function SettingsPanel(): React.ReactElement {
                 </Section>
 
                 <Divider sx={{ mb: 1.5 }} />
-                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5 }}>
+                <Typography
+                  variant="subtitle2"
+                  sx={{ fontWeight: 700, mb: 0.5 }}
+                >
                   Toggles
                 </Typography>
 
@@ -382,13 +414,22 @@ export default function SettingsPanel(): React.ReactElement {
                       <FormControlLabel
                         key={key}
                         labelPlacement="start"
-                        sx={{ ml: 0, mr: 0, justifyContent: 'space-between', width: '100%', py: 0.25 }}
+                        sx={{
+                          ml: 0,
+                          mr: 0,
+                          justifyContent: 'space-between',
+                          width: '100%',
+                          py: 0.25,
+                        }}
                         control={
                           <Switch
                             checked={checked}
                             onChange={(e) => {
                               if (key === 'motion') {
-                                update('motion', e.target.checked ? 'reduced' : 'normal')
+                                update(
+                                  'motion',
+                                  e.target.checked ? 'reduced' : 'normal',
+                                )
                               } else {
                                 update(key, e.target.checked as never)
                               }

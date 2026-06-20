@@ -70,5 +70,7 @@ export function ConsentProvider({
     [consent, hydrated, bannerOpen, save, reopen],
   )
 
-  return <ConsentContext.Provider value={value}>{children}</ConsentContext.Provider>
+  return (
+    <ConsentContext.Provider value={value}>{children}</ConsentContext.Provider>
+  )
 }

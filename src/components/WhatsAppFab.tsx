@@ -86,7 +86,10 @@ export default function WhatsAppFab(): React.ReactElement | null {
           transition: 'all .25s ease',
         }}
       >
-        <Typography variant="caption" sx={{ fontWeight: 700, display: 'block' }}>
+        <Typography
+          variant="caption"
+          sx={{ fontWeight: 700, display: 'block' }}
+        >
           Chat on WhatsApp
         </Typography>
         <Typography variant="caption" color="text.secondary">

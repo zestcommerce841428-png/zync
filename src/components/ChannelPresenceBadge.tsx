@@ -34,7 +34,9 @@ export default function ChannelPresenceBadge({
               height: 8,
               borderRadius: '50%',
               ml: 1,
-              bgcolor: presence.uploaderOnline ? 'success.main' : 'text.disabled',
+              bgcolor: presence.uploaderOnline
+                ? 'success.main'
+                : 'text.disabled',
             }}
           />
         }

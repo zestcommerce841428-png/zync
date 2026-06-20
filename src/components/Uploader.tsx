@@ -33,11 +33,16 @@ function useExpiryCountdown(expiresAt?: number): string {
     if (!expiresAt) return
     const tick = () => {
       const rem = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000))
-      if (rem === 0) { setLabel('Expired'); return }
+      if (rem === 0) {
+        setLabel('Expired')
+        return
+      }
       const h = Math.floor(rem / 3600)
       const m = Math.floor((rem % 3600) / 60)
       const s = rem % 60
-      setLabel(h > 0 ? `${h}h ${m}m left` : m > 0 ? `${m}m ${s}s left` : `${s}s left`)
+      setLabel(
+        h > 0 ? `${h}h ${m}m left` : m > 0 ? `${m}m ${s}s left` : `${s}s left`,
+      )
     }
     tick()
     const id = setInterval(tick, 1000)
@@ -60,8 +65,15 @@ export default function Uploader({
   onStop: () => void
 }): JSX.Element {
   const { peer, stop } = useWebRTCPeer()
-  const { isLoading, error, longSlug, shortSlug, longURL, shortURL, expiresAt } =
-    useUploaderChannel(peer.id, 60_000, { note, ttl })
+  const {
+    isLoading,
+    error,
+    longSlug,
+    shortSlug,
+    longURL,
+    shortURL,
+    expiresAt,
+  } = useUploaderChannel(peer.id, 60_000, { note, ttl })
   const connections = useUploaderConnections(peer, files, password)
   const [notifEnabled, setNotifEnabled] = useState(false)
   const expiryLabel = useExpiryCountdown(expiresAt)
@@ -89,10 +101,16 @@ export default function Uploader({
   useEffect(() => {
     if (!notifEnabled) return
     if (activeDownloaders > prevActive.current) {
-      new Notification('Zync — Download started', { body: 'Someone started downloading your file.', icon: '/icon.svg' })
+      new Notification('Zync — Download started', {
+        body: 'Someone started downloading your file.',
+        icon: '/icon.svg',
+      })
     }
     if (doneDownloaders > prevDone.current) {
-      new Notification('Zync — Download complete', { body: 'A recipient finished downloading.', icon: '/icon.svg' })
+      new Notification('Zync — Download complete', {
+        body: 'A recipient finished downloading.',
+        icon: '/icon.svg',
+      })
     }
     prevActive.current = activeDownloaders
     prevDone.current = doneDownloaders
@@ -111,10 +129,21 @@ export default function Uploader({
     savedRecent.current = true
     try {
       const key = 'zync_recent_transfers'
-      const existing = JSON.parse(localStorage.getItem(key) ?? '[]') as Array<{url: string; files: string[]; date: string}>
-      const entry = { url: shortURL, files: files.map(f => f.name), date: new Date().toISOString() }
-      localStorage.setItem(key, JSON.stringify([entry, ...existing].slice(0, 5)))
-    // eslint-disable-next-line no-empty
+      const existing = JSON.parse(localStorage.getItem(key) ?? '[]') as Array<{
+        url: string
+        files: string[]
+        date: string
+      }>
+      const entry = {
+        url: shortURL,
+        files: files.map((f) => f.name),
+        date: new Date().toISOString(),
+      }
+      localStorage.setItem(
+        key,
+        JSON.stringify([entry, ...existing].slice(0, 5)),
+      )
+      // eslint-disable-next-line no-empty
     } catch {}
   }, [shortURL, longSlug, files])
 
@@ -147,27 +176,55 @@ export default function Uploader({
 
   const emailUrl = shortURL ?? longURL ?? ''
   const emailSubject = encodeURIComponent('Your file is ready on Zync')
-  const emailBody = encodeURIComponent(`Here's your secure download link:\n\n${emailUrl}\n\nThis link is valid for a limited time and transfers directly between browsers — no files stored on any server.`)
+  const emailBody = encodeURIComponent(
+    `Here's your secure download link:\n\n${emailUrl}\n\nThis link is valid for a limited time and transfers directly between browsers — no files stored on any server.`,
+  )
 
   return (
     <Box sx={{ width: '100%' }}>
-      <Stack direction="row" spacing={2} sx={{ alignItems: 'center', width: '100%' }}>
+      <Stack
+        direction="row"
+        spacing={2}
+        sx={{ alignItems: 'center', width: '100%' }}
+      >
         <Box sx={{ flex: 'none', bgcolor: '#fff', p: 1, borderRadius: 1 }}>
           <QRCode value={shortURL ?? ''} size={QR_CODE_SIZE} />
         </Box>
         <Stack spacing={1} sx={{ justifyContent: 'center', flex: 'auto' }}>
           <CopyableInput label="Long URL" value={longURL ?? ''} />
           <CopyableInput label="Short URL" value={shortURL ?? ''} />
-          <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap', gap: 0.5 }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{ alignItems: 'center', flexWrap: 'wrap', gap: 0.5 }}
+          >
             <ShareButtons url={emailUrl} />
             <Tooltip title="Email this link">
-              <IconButton size="small" component="a" href={`mailto:?subject=${emailSubject}&body=${emailBody}`}>
+              <IconButton
+                size="small"
+                component="a"
+                href={`mailto:?subject=${emailSubject}&body=${emailBody}`}
+              >
                 <EmailOutlinedIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-            <Tooltip title={notifEnabled ? 'Notifications on' : 'Enable desktop notifications'}>
-              <IconButton size="small" onClick={enableNotifications} color={notifEnabled ? 'primary' : 'default'}>
-                {notifEnabled ? <NotificationsActiveIcon fontSize="small" /> : <NotificationsNoneIcon fontSize="small" />}
+            <Tooltip
+              title={
+                notifEnabled
+                  ? 'Notifications on'
+                  : 'Enable desktop notifications'
+              }
+            >
+              <IconButton
+                size="small"
+                onClick={enableNotifications}
+                color={notifEnabled ? 'primary' : 'default'}
+              >
+                {notifEnabled ? (
+                  <NotificationsActiveIcon fontSize="small" />
+                ) : (
+                  <NotificationsNoneIcon fontSize="small" />
+                )}
               </IconButton>
             </Tooltip>
           </Stack>
@@ -176,7 +233,13 @@ export default function Uploader({
 
       {expiryLabel && (
         <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
-          <Chip icon={<AccessTimeIcon />} label={expiryLabel} size="small" variant="outlined" color={expiryLabel === 'Expired' ? 'error' : 'default'} />
+          <Chip
+            icon={<AccessTimeIcon />}
+            label={expiryLabel}
+            size="small"
+            variant="outlined"
+            color={expiryLabel === 'Expired' ? 'error' : 'default'}
+          />
         </Stack>
       )}
 
@@ -186,8 +249,12 @@ export default function Uploader({
         direction="row"
         sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 1 }}
       >
-        <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-          {activeDownloaders} Downloading · {doneDownloaders} Done · {connections.length} Total
+        <Typography
+          variant="subtitle1"
+          sx={{ fontWeight: 600, color: 'text.secondary' }}
+        >
+          {activeDownloaders} Downloading · {doneDownloaders} Done ·{' '}
+          {connections.length} Total
         </Typography>
         <StopButton onClick={handleStop} />
       </Stack>

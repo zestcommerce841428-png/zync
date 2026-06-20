@@ -18,7 +18,10 @@ const ContactSchema = z.object({
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const ip = getClientIp(request)
-  const limit = await rateLimit(`contact:${ip}`, { limit: 5, windowSeconds: 600 })
+  const limit = await rateLimit(`contact:${ip}`, {
+    limit: 5,
+    windowSeconds: 600,
+  })
   if (!limit.success) {
     return NextResponse.json(
       { error: 'Too many messages. Please try again later.' },

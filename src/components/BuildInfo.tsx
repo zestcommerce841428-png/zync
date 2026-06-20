@@ -66,10 +66,25 @@ export default function BuildInfo(): React.ReactElement {
   }, [])
 
   const state = !online
-    ? { color: 'error.main', rgba: '239,68,68', label: 'Reconnecting…', chip: 'error' as const }
+    ? {
+        color: 'error.main',
+        rgba: '239,68,68',
+        label: 'Reconnecting…',
+        chip: 'error' as const,
+      }
     : health?.status === 'degraded'
-      ? { color: 'warning.main', rgba: '245,158,11', label: 'Degraded performance', chip: 'warning' as const }
-      : { color: 'success.main', rgba: '34,197,94', label: 'All systems operational', chip: 'success' as const }
+      ? {
+          color: 'warning.main',
+          rgba: '245,158,11',
+          label: 'Degraded performance',
+          chip: 'warning' as const,
+        }
+      : {
+          color: 'success.main',
+          rgba: '34,197,94',
+          label: 'All systems operational',
+          chip: 'success' as const,
+        }
 
   const dot = (
     <Box
@@ -95,14 +110,23 @@ export default function BuildInfo(): React.ReactElement {
       arrow
       title={
         <Box sx={{ p: 0.5 }}>
-          <Typography variant="caption" sx={{ display: 'block' }}>Version: {VERSION}</Typography>
-          <Typography variant="caption" sx={{ display: 'block' }}>Commit: {COMMIT}</Typography>
           <Typography variant="caption" sx={{ display: 'block' }}>
-            Built: {BUILD_TIME ? new Date(BUILD_TIME).toLocaleString() : 'local dev'}
+            Version: {VERSION}
           </Typography>
-          <Typography variant="caption" sx={{ display: 'block' }}>Session: {uptime}s</Typography>
           <Typography variant="caption" sx={{ display: 'block' }}>
-            Server: {online ? `up ${health?.serverUptimeSec ?? 0}s` : 'unreachable'} · Redis: {health?.redis ?? '—'}
+            Commit: {COMMIT}
+          </Typography>
+          <Typography variant="caption" sx={{ display: 'block' }}>
+            Built:{' '}
+            {BUILD_TIME ? new Date(BUILD_TIME).toLocaleString() : 'local dev'}
+          </Typography>
+          <Typography variant="caption" sx={{ display: 'block' }}>
+            Session: {uptime}s
+          </Typography>
+          <Typography variant="caption" sx={{ display: 'block' }}>
+            Server:{' '}
+            {online ? `up ${health?.serverUptimeSec ?? 0}s` : 'unreachable'} ·
+            Redis: {health?.redis ?? '—'}
           </Typography>
           <Typography variant="caption" sx={{ display: 'block' }}>
             Runtime: Next.js 16 · React 19 · WebRTC
@@ -113,7 +137,12 @@ export default function BuildInfo(): React.ReactElement {
       <Stack
         direction="row"
         spacing={1}
-        sx={{ alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center', cursor: 'help' }}
+        sx={{
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+          cursor: 'help',
+        }}
       >
         <Chip
           size="small"
@@ -126,7 +155,9 @@ export default function BuildInfo(): React.ReactElement {
         <Typography variant="caption" color="text.secondary">
           {brand.name} v{VERSION}
         </Typography>
-        <Typography variant="caption" color="text.secondary">·</Typography>
+        <Typography variant="caption" color="text.secondary">
+          ·
+        </Typography>
         <Link
           href={`${brand.social.github}`}
           target="_blank"
@@ -137,7 +168,9 @@ export default function BuildInfo(): React.ReactElement {
         >
           {COMMIT}
         </Link>
-        <Typography variant="caption" color="text.secondary">·</Typography>
+        <Typography variant="caption" color="text.secondary">
+          ·
+        </Typography>
         <Typography variant="caption" color="text.secondary">
           built {relativeBuild(BUILD_TIME)}
         </Typography>

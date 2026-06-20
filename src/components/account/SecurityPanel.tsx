@@ -18,11 +18,19 @@ import DialogActions from '@mui/material/DialogActions'
 import CircularProgress from '@mui/material/CircularProgress'
 import { getSupabaseBrowserClient } from '../../supabase/client'
 
-function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
+function SectionCard({
+  title,
+  children,
+}: {
+  title: string
+  children: React.ReactNode
+}) {
   return (
     <Card variant="outlined" sx={{ mb: 3 }}>
       <CardContent>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>{title}</Typography>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>
+          {title}
+        </Typography>
         {children}
       </CardContent>
     </Card>
@@ -51,25 +59,55 @@ function ChangePassword(): React.ReactElement {
   const [pw, setPw] = React.useState('')
   const [confirm, setConfirm] = React.useState('')
   const [busy, setBusy] = React.useState(false)
-  const [msg, setMsg] = React.useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [msg, setMsg] = React.useState<{
+    type: 'success' | 'error'
+    text: string
+  } | null>(null)
 
   const save = async () => {
-    if (pw !== confirm) return setMsg({ type: 'error', text: 'Passwords do not match.' })
-    if (pw.length < 8) return setMsg({ type: 'error', text: 'Use at least 8 characters.' })
-    setBusy(true); setMsg(null)
+    if (pw !== confirm)
+      return setMsg({ type: 'error', text: 'Passwords do not match.' })
+    if (pw.length < 8)
+      return setMsg({ type: 'error', text: 'Use at least 8 characters.' })
+    setBusy(true)
+    setMsg(null)
     const { error } = (await supabase?.auth.updateUser({ password: pw })) || {}
     setBusy(false)
     if (error) setMsg({ type: 'error', text: error.message })
-    else { setMsg({ type: 'success', text: 'Password updated.' }); setPw(''); setConfirm('') }
+    else {
+      setMsg({ type: 'success', text: 'Password updated.' })
+      setPw('')
+      setConfirm('')
+    }
   }
 
   return (
     <SectionCard title="Change password">
-      {msg && <Alert severity={msg.type} sx={{ mb: 2 }}>{msg.text}</Alert>}
+      {msg && (
+        <Alert severity={msg.type} sx={{ mb: 2 }}>
+          {msg.text}
+        </Alert>
+      )}
       <Stack spacing={2}>
-        <TextField label="New password" type="password" size="small" value={pw} onChange={(e) => setPw(e.target.value)} />
-        <TextField label="Confirm password" type="password" size="small" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
-        <Box><Button variant="contained" onClick={save} disabled={busy}>{busy ? <CircularProgress size={20} /> : 'Update password'}</Button></Box>
+        <TextField
+          label="New password"
+          type="password"
+          size="small"
+          value={pw}
+          onChange={(e) => setPw(e.target.value)}
+        />
+        <TextField
+          label="Confirm password"
+          type="password"
+          size="small"
+          value={confirm}
+          onChange={(e) => setConfirm(e.target.value)}
+        />
+        <Box>
+          <Button variant="contained" onClick={save} disabled={busy}>
+            {busy ? <CircularProgress size={20} /> : 'Update password'}
+          </Button>
+        </Box>
       </Stack>
     </SectionCard>
   )
@@ -79,11 +117,16 @@ function BackupEmail({ initial }: { initial: string }): React.ReactElement {
   const supabase = getSupabaseBrowserClient()
   const [val, setVal] = React.useState(initial)
   const [busy, setBusy] = React.useState(false)
-  const [msg, setMsg] = React.useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [msg, setMsg] = React.useState<{
+    type: 'success' | 'error'
+    text: string
+  } | null>(null)
 
   const save = async () => {
-    setBusy(true); setMsg(null)
-    const { error } = (await supabase?.auth.updateUser({ data: { backup_email: val } })) || {}
+    setBusy(true)
+    setMsg(null)
+    const { error } =
+      (await supabase?.auth.updateUser({ data: { backup_email: val } })) || {}
     setBusy(false)
     if (error) setMsg({ type: 'error', text: error.message })
     else setMsg({ type: 'success', text: 'Backup email saved.' })
@@ -91,13 +134,26 @@ function BackupEmail({ initial }: { initial: string }): React.ReactElement {
 
   return (
     <SectionCard title="Backup (recovery) email">
-      {msg && <Alert severity={msg.type} sx={{ mb: 2 }}>{msg.text}</Alert>}
+      {msg && (
+        <Alert severity={msg.type} sx={{ mb: 2 }}>
+          {msg.text}
+        </Alert>
+      )}
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         A secondary email we can use to help you recover access.
       </Typography>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-        <TextField label="Backup email" type="email" size="small" fullWidth value={val} onChange={(e) => setVal(e.target.value)} />
-        <Button variant="contained" onClick={save} disabled={busy}>Save</Button>
+        <TextField
+          label="Backup email"
+          type="email"
+          size="small"
+          fullWidth
+          value={val}
+          onChange={(e) => setVal(e.target.value)}
+        />
+        <Button variant="contained" onClick={save} disabled={busy}>
+          Save
+        </Button>
       </Stack>
     </SectionCard>
   )
@@ -108,59 +164,105 @@ type Factor = { id: string; status: string }
 function TotpSection(): React.ReactElement {
   const supabase = getSupabaseBrowserClient()
   const [factors, setFactors] = React.useState<Factor[]>([])
-  const [enroll, setEnroll] = React.useState<{ id: string; qr: string; secret: string } | null>(null)
+  const [enroll, setEnroll] = React.useState<{
+    id: string
+    qr: string
+    secret: string
+  } | null>(null)
   const [code, setCode] = React.useState('')
   const [busy, setBusy] = React.useState(false)
-  const [msg, setMsg] = React.useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [msg, setMsg] = React.useState<{
+    type: 'success' | 'error'
+    text: string
+  } | null>(null)
 
   const refresh = React.useCallback(async () => {
     const { data } = (await supabase?.auth.mfa.listFactors()) || { data: null }
     setFactors((data?.totp as Factor[]) || [])
   }, [supabase])
 
-  React.useEffect(() => { refresh() }, [refresh])
+  React.useEffect(() => {
+    refresh()
+  }, [refresh])
 
   const startEnroll = async () => {
-    setBusy(true); setMsg(null)
-    const { data, error } = (await supabase!.auth.mfa.enroll({ factorType: 'totp' })) as {
+    setBusy(true)
+    setMsg(null)
+    const { data, error } = (await supabase!.auth.mfa.enroll({
+      factorType: 'totp',
+    })) as {
       data: { id: string; totp: { qr_code: string; secret: string } } | null
       error: { message: string } | null
     }
     setBusy(false)
-    if (error || !data) return setMsg({ type: 'error', text: error?.message || 'Could not start enrollment.' })
+    if (error || !data)
+      return setMsg({
+        type: 'error',
+        text: error?.message || 'Could not start enrollment.',
+      })
     setEnroll({ id: data.id, qr: data.totp.qr_code, secret: data.totp.secret })
   }
 
   const verify = async () => {
     if (!enroll) return
-    setBusy(true); setMsg(null)
+    setBusy(true)
+    setMsg(null)
     const ch = await supabase!.auth.mfa.challenge({ factorId: enroll.id })
-    if (ch.error) { setBusy(false); return setMsg({ type: 'error', text: ch.error.message }) }
-    const v = await supabase!.auth.mfa.verify({ factorId: enroll.id, challengeId: ch.data.id, code })
+    if (ch.error) {
+      setBusy(false)
+      return setMsg({ type: 'error', text: ch.error.message })
+    }
+    const v = await supabase!.auth.mfa.verify({
+      factorId: enroll.id,
+      challengeId: ch.data.id,
+      code,
+    })
     setBusy(false)
     if (v.error) setMsg({ type: 'error', text: v.error.message })
-    else { setEnroll(null); setCode(''); setMsg({ type: 'success', text: 'Two-factor authentication enabled.' }); refresh() }
+    else {
+      setEnroll(null)
+      setCode('')
+      setMsg({ type: 'success', text: 'Two-factor authentication enabled.' })
+      refresh()
+    }
   }
 
   const disable = async (id: string) => {
-    setBusy(true); setMsg(null)
-    const { error } = (await supabase!.auth.mfa.unenroll({ factorId: id }))
+    setBusy(true)
+    setMsg(null)
+    const { error } = await supabase!.auth.mfa.unenroll({ factorId: id })
     setBusy(false)
     if (error) setMsg({ type: 'error', text: error.message })
-    else { setMsg({ type: 'success', text: 'Two-factor disabled.' }); refresh() }
+    else {
+      setMsg({ type: 'success', text: 'Two-factor disabled.' })
+      refresh()
+    }
   }
 
   const active = factors.filter((f) => f.status === 'verified')
 
   return (
     <SectionCard title="Two-factor authentication (TOTP)">
-      {msg && <Alert severity={msg.type} sx={{ mb: 2 }}>{msg.text}</Alert>}
+      {msg && (
+        <Alert severity={msg.type} sx={{ mb: 2 }}>
+          {msg.text}
+        </Alert>
+      )}
       {active.length > 0 ? (
         <Stack spacing={2}>
-          <Chip color="success" label="2FA is enabled" sx={{ alignSelf: 'flex-start' }} />
+          <Chip
+            color="success"
+            label="2FA is enabled"
+            sx={{ alignSelf: 'flex-start' }}
+          />
           {active.map((f) => (
             <Box key={f.id}>
-              <Button color="error" variant="outlined" onClick={() => disable(f.id)} disabled={busy}>
+              <Button
+                color="error"
+                variant="outlined"
+                onClick={() => disable(f.id)}
+                disabled={busy}
+              >
                 Disable 2FA
               </Button>
             </Box>
@@ -169,16 +271,30 @@ function TotpSection(): React.ReactElement {
       ) : enroll ? (
         <Stack spacing={2} sx={{ alignItems: 'flex-start' }}>
           <Typography variant="body2" color="text.secondary">
-            Scan this QR code with your authenticator app, then enter the 6-digit code.
+            Scan this QR code with your authenticator app, then enter the
+            6-digit code.
           </Typography>
           {/* qr_code is an SVG data URI from Supabase */}
-          <Box component="img" src={enroll.qr} alt="TOTP QR code" sx={{ width: 180, height: 180 }} />
+          <Box
+            component="img"
+            src={enroll.qr}
+            alt="TOTP QR code"
+            sx={{ width: 180, height: 180 }}
+          />
           <Typography variant="caption" sx={{ wordBreak: 'break-all' }}>
             Secret: {enroll.secret}
           </Typography>
-          <TextField label="6-digit code" size="small" value={code} onChange={(e) => setCode(e.target.value)} slotProps={{ htmlInput: { inputMode: 'numeric', maxLength: 6 } }} />
+          <TextField
+            label="6-digit code"
+            size="small"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            slotProps={{ htmlInput: { inputMode: 'numeric', maxLength: 6 } }}
+          />
           <Stack direction="row" spacing={1.5}>
-            <Button variant="contained" onClick={verify} disabled={busy}>Verify & enable</Button>
+            <Button variant="contained" onClick={verify} disabled={busy}>
+              Verify & enable
+            </Button>
             <Button onClick={() => setEnroll(null)}>Cancel</Button>
           </Stack>
         </Stack>
@@ -203,7 +319,8 @@ function DangerZone({ email }: { email: string }): React.ReactElement {
   const [error, setError] = React.useState<string | null>(null)
 
   const del = async () => {
-    setBusy(true); setError(null)
+    setBusy(true)
+    setError(null)
     try {
       const res = await fetch('/api/account/delete', { method: 'POST' })
       const data = await res.json().catch(() => ({}))
@@ -218,7 +335,10 @@ function DangerZone({ email }: { email: string }): React.ReactElement {
   return (
     <Card variant="outlined" sx={{ borderColor: 'error.main' }}>
       <CardContent>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1, color: 'error.main' }}>
+        <Typography
+          variant="subtitle1"
+          sx={{ fontWeight: 700, mb: 1, color: 'error.main' }}
+        >
           Delete account
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -232,15 +352,31 @@ function DangerZone({ email }: { email: string }): React.ReactElement {
       <Dialog open={open} onClose={() => setOpen(false)}>
         <DialogTitle>Delete your account?</DialogTitle>
         <DialogContent>
-          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
           <Typography variant="body2" sx={{ mb: 2 }}>
-            This permanently deletes your account. Type your email <strong>{email}</strong> to confirm.
+            This permanently deletes your account. Type your email{' '}
+            <strong>{email}</strong> to confirm.
           </Typography>
-          <TextField fullWidth size="small" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder={email} />
+          <TextField
+            fullWidth
+            size="small"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            placeholder={email}
+          />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpen(false)}>Cancel</Button>
-          <Button color="error" variant="contained" disabled={busy || confirm !== email} onClick={del}>
+          <Button
+            color="error"
+            variant="contained"
+            disabled={busy || confirm !== email}
+            onClick={del}
+          >
             {busy ? <CircularProgress size={20} /> : 'Permanently delete'}
           </Button>
         </DialogActions>

@@ -41,22 +41,43 @@ export default function AccountTabs({
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
         spacing={2}
-        sx={{ alignItems: { sm: 'center' }, justifyContent: 'space-between', mb: 2 }}
+        sx={{
+          alignItems: { sm: 'center' },
+          justifyContent: 'space-between',
+          mb: 2,
+        }}
       >
         <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
-          <Typography variant="h4" sx={{ fontWeight: 800 }}>Your account</Typography>
+          <Typography variant="h4" sx={{ fontWeight: 800 }}>
+            Your account
+          </Typography>
           {isAdmin && <Chip label="Super Admin" color="primary" size="small" />}
         </Stack>
         <Stack direction="row" spacing={1}>
-          {isAdmin && <Button href="/admin" variant="text">Admin</Button>}
-          <Button onClick={signOut} variant="outlined" color="inherit" startIcon={<LogoutIcon />}>
+          {isAdmin && (
+            <Button href="/admin" variant="text">
+              Admin
+            </Button>
+          )}
+          <Button
+            onClick={signOut}
+            variant="outlined"
+            color="inherit"
+            startIcon={<LogoutIcon />}
+          >
             Sign out
           </Button>
         </Stack>
       </Stack>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>{email}</Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        {email}
+      </Typography>
 
-      <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+      <Tabs
+        value={tab}
+        onChange={(_, v) => setTab(v)}
+        sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}
+      >
         <Tab label="Profile" />
         <Tab label="History" />
         <Tab label="Security" />
@@ -75,7 +96,10 @@ export default function AccountTabs({
       {tab === 1 && <TransferHistory />}
 
       {tab === 2 && (
-        <SecurityPanel email={email} initialBackupEmail={metadata.backup_email || ''} />
+        <SecurityPanel
+          email={email}
+          initialBackupEmail={metadata.backup_email || ''}
+        />
       )}
     </Box>
   )

@@ -32,7 +32,10 @@ function rowToPost(r: Row): Post {
     excerpt: r.excerpt,
     tags: r.tags ?? [],
     author: r.author,
-    readingMinutes: Math.max(1, Math.round(readingTime(r.content || '').minutes)),
+    readingMinutes: Math.max(
+      1,
+      Math.round(readingTime(r.content || '').minutes),
+    ),
     content: r.content || '',
   }
 }
@@ -74,10 +77,14 @@ export async function getAllSlugsAsync(): Promise<string[]> {
   return db.map((p) => p.slug)
 }
 
-export async function getCategoriesAsync(): Promise<Array<{ name: string; count: number }>> {
+export async function getCategoriesAsync(): Promise<
+  Array<{ name: string; count: number }>
+> {
   const db = await dbPosts()
   if (!db) return fsCategories()
   const counts = new Map<string, number>()
   for (const p of db) counts.set(p.category, (counts.get(p.category) ?? 0) + 1)
-  return [...counts.entries()].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count)
+  return [...counts.entries()]
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count)
 }

@@ -16,7 +16,10 @@ export async function POST(): Promise<NextResponse> {
   }
   const admin = getSupabaseAdminClient()
   if (!admin) {
-    return NextResponse.json({ error: 'Service role key not configured.' }, { status: 503 })
+    return NextResponse.json(
+      { error: 'Service role key not configured.' },
+      { status: 503 },
+    )
   }
 
   const slugs = getAllSlugs()
@@ -42,8 +45,14 @@ export async function POST(): Promise<NextResponse> {
   let imported = 0
   for (let i = 0; i < rows.length; i += 50) {
     const chunk = rows.slice(i, i + 50)
-    const { error } = await admin.from('posts').upsert(chunk, { onConflict: 'slug' })
-    if (error) return NextResponse.json({ error: error.message, imported }, { status: 500 })
+    const { error } = await admin
+      .from('posts')
+      .upsert(chunk, { onConflict: 'slug' })
+    if (error)
+      return NextResponse.json(
+        { error: error.message, imported },
+        { status: 500 },
+      )
     imported += chunk.length
   }
   return NextResponse.json({ ok: true, imported })

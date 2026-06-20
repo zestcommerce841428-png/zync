@@ -14,8 +14,10 @@ const TEXT = '#1f2330'
 const MUTED = '#6b7280'
 
 function esc(s: string): string {
-  return String(s).replace(/[&<>"]/g, (c) =>
-    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] as string,
+  return String(s).replace(
+    /[&<>"]/g,
+    (c) =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] as string,
   )
 }
 
@@ -29,7 +31,14 @@ export function baseLayout(opts: {
   button?: EmailButton
   footerNote?: string
 }): string {
-  const { preheader = '', heading, intro = '', bodyHtml, button, footerNote } = opts
+  const {
+    preheader = '',
+    heading,
+    intro = '',
+    bodyHtml,
+    button,
+    footerNote,
+  } = opts
   const year = new Date().getFullYear()
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"/>
@@ -79,7 +88,11 @@ function kv(rows: Array<[string, string]>): string {
 
 // ── Specific templates ──────────────────────────────────────────────────────
 
-export function tplWelcome(name: string): { subject: string; html: string; text: string } {
+export function tplWelcome(name: string): {
+  subject: string
+  html: string
+  text: string
+} {
   return {
     subject: `Welcome to ${brand.name} 🎉`,
     text: `Hi ${name}, welcome to ${brand.name}! Your account is ready. Open ${brand.url}/account`,
@@ -94,7 +107,10 @@ export function tplWelcome(name: string): { subject: string; html: string; text:
   }
 }
 
-export function tplSignInAlert(name: string, meta: { time: string; ip?: string; agent?: string }): {
+export function tplSignInAlert(
+  name: string,
+  meta: { time: string; ip?: string; agent?: string },
+): {
   subject: string
   html: string
   text: string
@@ -117,7 +133,11 @@ export function tplSignInAlert(name: string, meta: { time: string; ip?: string; 
   }
 }
 
-export function tplAccountDeleted(name: string): { subject: string; html: string; text: string } {
+export function tplAccountDeleted(name: string): {
+  subject: string
+  html: string
+  text: string
+} {
   return {
     subject: `Your ${brand.name} account has been deleted`,
     text: `Hi ${name}, your ${brand.name} account and data have been permanently deleted. Sorry to see you go.`,
@@ -131,7 +151,11 @@ export function tplAccountDeleted(name: string): { subject: string; html: string
   }
 }
 
-export function tplContactReceipt(name: string): { subject: string; html: string; text: string } {
+export function tplContactReceipt(name: string): {
+  subject: string
+  html: string
+  text: string
+} {
   return {
     subject: `We received your message — ${brand.name}`,
     text: `Hi ${name}, thanks for contacting ${brand.name}. We've received your message and will reply soon.`,
@@ -145,7 +169,12 @@ export function tplContactReceipt(name: string): { subject: string; html: string
   }
 }
 
-export function tplContactAdmin(d: { name: string; email: string; message: string; ip?: string }): {
+export function tplContactAdmin(d: {
+  name: string
+  email: string
+  message: string
+  ip?: string
+}): {
   subject: string
   html: string
   text: string

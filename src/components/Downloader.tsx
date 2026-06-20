@@ -146,7 +146,8 @@ export function DownloadInProgress({
   etaSec: number | null
   onStop: () => void
 }): JSX.Element {
-  const pct = totalSize > 0 ? Math.round((bytesDownloaded / totalSize) * 100) : 0
+  const pct =
+    totalSize > 0 ? Math.round((bytesDownloaded / totalSize) * 100) : 0
   return (
     <>
       <TitleText>
@@ -156,7 +157,10 @@ export function DownloadInProgress({
         <UploadFileList files={filesInfo} />
         <Box sx={{ width: '100%' }}>
           <ProgressBar value={bytesDownloaded} max={totalSize} />
-          <Stack direction="row" sx={{ justifyContent: 'space-between', mt: 0.5 }}>
+          <Stack
+            direction="row"
+            sx={{ justifyContent: 'space-between', mt: 0.5 }}
+          >
             <Typography variant="caption" color="text.secondary">
               {formatBytes(bytesDownloaded)} / {formatBytes(totalSize)} ({pct}%)
             </Typography>
@@ -191,8 +195,28 @@ export function ReadyToDownload({
       </TitleText>
       <Stack spacing={2.5} sx={{ alignItems: 'center', width: '100%' }}>
         {note && (
-          <Paper variant="outlined" sx={{ width: '100%', p: 2, borderLeft: '3px solid', borderLeftColor: 'primary.main' }}>
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>Message from sender</Typography>
+          <Paper
+            variant="outlined"
+            sx={{
+              width: '100%',
+              p: 2,
+              borderLeft: '3px solid',
+              borderLeftColor: 'primary.main',
+            }}
+          >
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{
+                display: 'block',
+                mb: 0.5,
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                letterSpacing: 0.5,
+              }}
+            >
+              Message from sender
+            </Typography>
             <Typography variant="body2">{note}</Typography>
           </Paper>
         )}
@@ -302,7 +326,13 @@ export default function Downloader({
   }
 
   if (filesInfo) {
-    return <ReadyToDownload filesInfo={filesInfo} note={note} onStart={startDownload} />
+    return (
+      <ReadyToDownload
+        filesInfo={filesInfo}
+        note={note}
+        onStart={startDownload}
+      />
+    )
   }
 
   if (!isConnected) {

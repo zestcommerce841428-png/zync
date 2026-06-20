@@ -28,7 +28,12 @@ export default function CookieConsent(): React.ReactElement | null {
 
   return (
     <>
-      <Slide direction="up" in={bannerOpen && !customize} mountOnEnter unmountOnExit>
+      <Slide
+        direction="up"
+        in={bannerOpen && !customize}
+        mountOnEnter
+        unmountOnExit
+      >
         <Paper
           elevation={8}
           role="dialog"
@@ -52,7 +57,11 @@ export default function CookieConsent(): React.ReactElement | null {
             spacing={2}
             sx={{ alignItems: { md: 'center' } }}
           >
-            <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start', flex: 1 }}>
+            <Stack
+              direction="row"
+              spacing={1.5}
+              sx={{ alignItems: 'flex-start', flex: 1 }}
+            >
               <CookieIcon color="primary" />
               <Box>
                 <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
@@ -65,14 +74,26 @@ export default function CookieConsent(): React.ReactElement | null {
                 </Typography>
               </Box>
             </Stack>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ flexShrink: 0 }}>
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={1}
+              sx={{ flexShrink: 0 }}
+            >
               <Button size="small" onClick={() => setCustomize(true)}>
                 Customize
               </Button>
-              <Button size="small" variant="outlined" onClick={() => save(false)}>
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => save(false)}
+              >
                 Reject all
               </Button>
-              <Button size="small" variant="contained" onClick={() => save(true)}>
+              <Button
+                size="small"
+                variant="contained"
+                onClick={() => save(true)}
+              >
                 Accept all
               </Button>
             </Stack>
@@ -80,26 +101,41 @@ export default function CookieConsent(): React.ReactElement | null {
         </Paper>
       </Slide>
 
-      <Dialog open={customize} onClose={() => setCustomize(false)} maxWidth="xs" fullWidth>
+      <Dialog
+        open={customize}
+        onClose={() => setCustomize(false)}
+        maxWidth="xs"
+        fullWidth
+      >
         <DialogTitle sx={{ fontWeight: 700 }}>Cookie preferences</DialogTitle>
         <DialogContent>
           <FormControlLabel
             control={<Switch checked disabled />}
             label={
               <Box>
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>Strictly necessary</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  Strictly necessary
+                </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  Required for sign-in, security and core functionality. Always on.
+                  Required for sign-in, security and core functionality. Always
+                  on.
                 </Typography>
               </Box>
             }
           />
           <FormControlLabel
             sx={{ mt: 1 }}
-            control={<Switch checked={analytics} onChange={(e) => setAnalytics(e.target.checked)} />}
+            control={
+              <Switch
+                checked={analytics}
+                onChange={(e) => setAnalytics(e.target.checked)}
+              />
+            }
             label={
               <Box>
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>Analytics</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  Analytics
+                </Typography>
                 <Typography variant="caption" color="text.secondary">
                   Privacy-respecting, IP-anonymized usage measurement.
                 </Typography>
@@ -108,10 +144,20 @@ export default function CookieConsent(): React.ReactElement | null {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => { save(false); setCustomize(false) }}>Reject all</Button>
+          <Button
+            onClick={() => {
+              save(false)
+              setCustomize(false)
+            }}
+          >
+            Reject all
+          </Button>
           <Button
             variant="contained"
-            onClick={() => { save(analytics); setCustomize(false) }}
+            onClick={() => {
+              save(analytics)
+              setCustomize(false)
+            }}
           >
             Save preferences
           </Button>

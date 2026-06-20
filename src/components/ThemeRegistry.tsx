@@ -49,7 +49,7 @@ function a11yGlobalStyles() {
     },
     'html[data-big-cursor="true"], html[data-big-cursor="true"] *': {
       cursor:
-        'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'48\' height=\'48\' viewBox=\'0 0 48 48\'%3E%3Cpath d=\'M6 2l30 18-13 3 8 16-6 3-8-16-11 9z\' fill=\'black\' stroke=\'white\' stroke-width=\'2\'/%3E%3C/svg%3E") 4 2, auto',
+        "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cpath d='M6 2l30 18-13 3 8 16-6 3-8-16-11 9z' fill='black' stroke='white' stroke-width='2'/%3E%3C/svg%3E\") 4 2, auto",
     },
     'html[data-focus-ring="true"] :focus-visible': {
       outline: '3px solid #6366f1 !important',
@@ -67,10 +67,11 @@ function a11yGlobalStyles() {
     'html[data-invert="true"] img, html[data-invert="true"] video': {
       filter: 'invert(1) hue-rotate(180deg)',
     },
-    'html[data-bigger-targets="true"] :is(button, a, [role="button"], .MuiIconButton-root)': {
-      minHeight: '44px',
-      minWidth: '44px',
-    },
+    'html[data-bigger-targets="true"] :is(button, a, [role="button"], .MuiIconButton-root)':
+      {
+        minHeight: '44px',
+        minWidth: '44px',
+      },
     'html[data-highlight-hover="true"] :is(a, button, [role="button"]):hover': {
       outline: '2px solid #6366f1',
       outlineOffset: '2px',

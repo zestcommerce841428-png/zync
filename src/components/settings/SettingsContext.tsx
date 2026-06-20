@@ -69,13 +69,38 @@ export type Settings = {
 // Curated theme presets — one click applies a coherent accent + shape + font.
 export const THEME_PRESETS: Record<
   string,
-  { label: string; primary: keyof typeof PRIMARY_PRESETS; radius: number; fontFamily: keyof typeof FONT_FAMILIES }
+  {
+    label: string
+    primary: keyof typeof PRIMARY_PRESETS
+    radius: number
+    fontFamily: keyof typeof FONT_FAMILIES
+  }
 > = {
-  indigo: { label: 'Indigo', primary: 'indigo', radius: 12, fontFamily: 'system' },
-  midnight: { label: 'Midnight', primary: 'violet', radius: 16, fontFamily: 'system' },
+  indigo: {
+    label: 'Indigo',
+    primary: 'indigo',
+    radius: 12,
+    fontFamily: 'system',
+  },
+  midnight: {
+    label: 'Midnight',
+    primary: 'violet',
+    radius: 16,
+    fontFamily: 'system',
+  },
   ocean: { label: 'Ocean', primary: 'cyan', radius: 14, fontFamily: 'system' },
-  emerald: { label: 'Emerald', primary: 'emerald', radius: 10, fontFamily: 'system' },
-  sunset: { label: 'Sunset', primary: 'orange', radius: 18, fontFamily: 'rounded' },
+  emerald: {
+    label: 'Emerald',
+    primary: 'emerald',
+    radius: 10,
+    fontFamily: 'system',
+  },
+  sunset: {
+    label: 'Sunset',
+    primary: 'orange',
+    radius: 18,
+    fontFamily: 'rounded',
+  },
   rose: { label: 'Rose', primary: 'rose', radius: 20, fontFamily: 'system' },
   slate: { label: 'Slate', primary: 'slate', radius: 8, fontFamily: 'system' },
   mono: { label: 'Mono', primary: 'slate', radius: 4, fontFamily: 'mono' },

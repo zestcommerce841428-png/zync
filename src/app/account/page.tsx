@@ -44,9 +44,11 @@ export default async function AccountPage(): Promise<React.ReactElement> {
   const raw = (user.user_metadata || {}) as Record<string, unknown>
   const metadata: Record<string, string> = {}
   for (const f of PROFILE_FIELDS) {
-    metadata[f.key] = typeof raw[f.key] === 'string' ? (raw[f.key] as string) : ''
+    metadata[f.key] =
+      typeof raw[f.key] === 'string' ? (raw[f.key] as string) : ''
   }
-  if (typeof raw.backup_email === 'string') metadata.backup_email = raw.backup_email
+  if (typeof raw.backup_email === 'string')
+    metadata.backup_email = raw.backup_email
   const name =
     (typeof raw.full_name === 'string' && raw.full_name) ||
     (typeof raw.name === 'string' && raw.name) ||

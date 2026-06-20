@@ -24,16 +24,30 @@ export default function AccountButton(): React.ReactElement | null {
       if (!active) return
       const user = data.user
       if (!user) return setState('signed-out')
-      const meta = (user.user_metadata || {}) as { avatar_url?: string; full_name?: string; name?: string }
-      setState({ avatar: meta.avatar_url || null, name: meta.full_name || meta.name || user.email || 'Account' })
+      const meta = (user.user_metadata || {}) as {
+        avatar_url?: string
+        full_name?: string
+        name?: string
+      }
+      setState({
+        avatar: meta.avatar_url || null,
+        name: meta.full_name || meta.name || user.email || 'Account',
+      })
     })
     const { data: sub } = supabase.auth.onAuthStateChange(() => {
       supabase.auth.getUser().then(({ data }) => {
         if (!active) return
         const user = data.user
         if (!user) return setState('signed-out')
-        const meta = (user.user_metadata || {}) as { avatar_url?: string; full_name?: string; name?: string }
-        setState({ avatar: meta.avatar_url || null, name: meta.full_name || meta.name || user.email || 'Account' })
+        const meta = (user.user_metadata || {}) as {
+          avatar_url?: string
+          full_name?: string
+          name?: string
+        }
+        setState({
+          avatar: meta.avatar_url || null,
+          name: meta.full_name || meta.name || user.email || 'Account',
+        })
       })
     })
     return () => {
@@ -48,7 +62,12 @@ export default function AccountButton(): React.ReactElement | null {
 
   if (state === 'signed-out') {
     return (
-      <Button component={ViewTransitionLink} href="/login" color="inherit" sx={{ fontWeight: 600 }}>
+      <Button
+        component={ViewTransitionLink}
+        href="/login"
+        color="inherit"
+        sx={{ fontWeight: 600 }}
+      >
         Sign in
       </Button>
     )
@@ -56,8 +75,15 @@ export default function AccountButton(): React.ReactElement | null {
 
   return (
     <Tooltip title="Your account">
-      <IconButton component={ViewTransitionLink} href="/account" aria-label="Account">
-        <Avatar src={state.avatar || undefined} sx={{ width: 30, height: 30, fontSize: 14 }}>
+      <IconButton
+        component={ViewTransitionLink}
+        href="/account"
+        aria-label="Account"
+      >
+        <Avatar
+          src={state.avatar || undefined}
+          sx={{ width: 30, height: 30, fontSize: 14 }}
+        >
           {state.name[0]?.toUpperCase()}
         </Avatar>
       </IconButton>

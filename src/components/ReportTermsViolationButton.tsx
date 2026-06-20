@@ -86,7 +86,11 @@ export default function ReportTermsViolationButton({
         </Button>
       </Box>
 
-      <Dialog open={showModal} onClose={() => setShowModal(false)} maxWidth="sm">
+      <Dialog
+        open={showModal}
+        onClose={() => setShowModal(false)}
+        maxWidth="sm"
+      >
         <DialogTitle sx={{ fontWeight: 700 }}>
           Found a suspicious delivery?
         </DialogTitle>

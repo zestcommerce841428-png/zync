@@ -269,7 +269,8 @@ export function useDownloader(
           if (elapsed >= 2) {
             const bps = (next - speedRef.current.bytes) / elapsed
             setSpeedBps(bps)
-            const remaining = (filesInfo?.reduce((s, f) => s + f.size, 0) ?? 0) - next
+            const remaining =
+              (filesInfo?.reduce((s, f) => s + f.size, 0) ?? 0) - next
             setEtaSec(bps > 0 ? Math.ceil(remaining / bps) : null)
             speedRef.current = { bytes: next, ts: now }
           }

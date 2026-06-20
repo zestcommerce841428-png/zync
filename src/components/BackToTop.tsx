@@ -37,7 +37,10 @@ export default function BackToTop(): React.ReactElement | null {
 
   const goTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
   const goBottom = () =>
-    window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' })
+    window.scrollTo({
+      top: document.documentElement.scrollHeight,
+      behavior: 'smooth',
+    })
 
   const canScroll =
     document.documentElement.scrollHeight > window.innerHeight * 1.3

@@ -51,10 +51,14 @@ export async function uploadAvatar(
       })
       if (!res.ok) {
         const data = (await res.json().catch(() => ({}))) as { error?: string }
-        return { ok: false, error: data.error || `Upload failed (${res.status}).` }
+        return {
+          ok: false,
+          error: data.error || `Upload failed (${res.status}).`,
+        }
       }
       const data = (await res.json().catch(() => ({}))) as { url?: string }
-      if (!data.url) return { ok: false, error: 'Upload endpoint returned no URL.' }
+      if (!data.url)
+        return { ok: false, error: 'Upload endpoint returned no URL.' }
       return { ok: true, url: data.url }
     } catch {
       return { ok: false, error: 'Could not reach the upload endpoint.' }

@@ -11,7 +11,10 @@ import Alert from '@mui/material/Alert'
 
 export default function AdminTools(): React.ReactElement {
   const [slug, setSlug] = React.useState('')
-  const [msg, setMsg] = React.useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [msg, setMsg] = React.useState<{
+    type: 'success' | 'error'
+    text: string
+  } | null>(null)
   const [busy, setBusy] = React.useState(false)
 
   const destroy = async () => {
@@ -43,7 +46,11 @@ export default function AdminTools(): React.ReactElement {
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           Immediately halt a transfer by its slug (short or long).
         </Typography>
-        {msg && <Alert severity={msg.type} sx={{ mb: 2 }}>{msg.text}</Alert>}
+        {msg && (
+          <Alert severity={msg.type} sx={{ mb: 2 }}>
+            {msg.text}
+          </Alert>
+        )}
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
           <TextField
             label="Channel slug"
@@ -52,7 +59,12 @@ export default function AdminTools(): React.ReactElement {
             size="small"
             fullWidth
           />
-          <Button variant="contained" color="error" onClick={destroy} disabled={busy}>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={destroy}
+            disabled={busy}
+          >
             Destroy
           </Button>
         </Stack>

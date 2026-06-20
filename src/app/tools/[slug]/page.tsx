@@ -54,8 +54,18 @@ export default async function ToolPage({
         '@type': 'BreadcrumbList',
         itemListElement: [
           { '@type': 'ListItem', position: 1, name: 'Home', item: brand.url },
-          { '@type': 'ListItem', position: 2, name: 'Tools', item: `${brand.url}/tools` },
-          { '@type': 'ListItem', position: 3, name: tool.name, item: `${brand.url}/tools/${tool.slug}` },
+          {
+            '@type': 'ListItem',
+            position: 2,
+            name: 'Tools',
+            item: `${brand.url}/tools`,
+          },
+          {
+            '@type': 'ListItem',
+            position: 3,
+            name: tool.name,
+            item: `${brand.url}/tools/${tool.slug}`,
+          },
         ],
       },
     ],
@@ -63,10 +73,21 @@ export default async function ToolPage({
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <PageShell title={`${tool.emoji} ${tool.name}`} subtitle={tool.description} maxWidth="md">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <PageShell
+        title={`${tool.emoji} ${tool.name}`}
+        subtitle={tool.description}
+        maxWidth="md"
+      >
         <Box sx={{ mb: 3 }}>
-          <Button component={ViewTransitionLink} href="/tools" startIcon={<ArrowBackIcon />}>
+          <Button
+            component={ViewTransitionLink}
+            href="/tools"
+            startIcon={<ArrowBackIcon />}
+          >
             All tools
           </Button>
         </Box>

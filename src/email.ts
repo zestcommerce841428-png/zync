@@ -85,13 +85,10 @@ export async function notifyAdmins(msg: {
 }): Promise<void> {
   const admins = getAdminEmails()
   if (admins.length === 0) return
-  await Promise.allSettled(
-    admins.map((to) => sendMail({ to, ...msg })),
-  )
+  await Promise.allSettled(admins.map((to) => sendMail({ to, ...msg })))
 }
 
 // Best-effort fire-and-forget send (won't block or throw in request handlers).
 export function sendMailBg(args: Parameters<typeof sendMail>[0]): void {
   sendMail(args).catch((e) => console.error('[email] bg send failed:', e))
 }
-

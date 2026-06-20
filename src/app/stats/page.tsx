@@ -85,7 +85,14 @@ export default function StatsPage(): React.ReactElement {
   return (
     <Stack
       spacing={3}
-      sx={{ alignItems: 'center', py: 5, px: 2, maxWidth: 720, mx: 'auto', width: '100%' }}
+      sx={{
+        alignItems: 'center',
+        py: 5,
+        px: 2,
+        maxWidth: 720,
+        mx: 'auto',
+        width: '100%',
+      }}
     >
       <Logo size={40} />
       <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
@@ -97,7 +104,17 @@ export default function StatsPage(): React.ReactElement {
           color="success"
           variant="outlined"
           label="live"
-          icon={<Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'success.main', ml: 1 }} />}
+          icon={
+            <Box
+              sx={{
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                bgcolor: 'success.main',
+                ml: 1,
+              }}
+            />
+          }
         />
       </Stack>
 
@@ -126,7 +143,10 @@ export default function StatsPage(): React.ReactElement {
               color="success.main"
             />
             <StatCard label="Pizzas prepared" value={stats.channelsCreated} />
-            <StatCard label="Downloads started" value={stats.downloadsStarted} />
+            <StatCard
+              label="Downloads started"
+              value={stats.downloadsStarted}
+            />
             <StatCard
               label="Reported"
               value={stats.channelsReported}

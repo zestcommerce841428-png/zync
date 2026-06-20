@@ -17,7 +17,10 @@ import Logo from './Logo'
 import BuildInfo from './BuildInfo'
 import { brand } from '../brand'
 
-const COLUMNS: Array<{ title: string; links: Array<{ label: string; href: string }> }> = [
+const COLUMNS: Array<{
+  title: string
+  links: Array<{ label: string; href: string }>
+}> = [
   {
     title: 'Product',
     links: [

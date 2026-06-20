@@ -33,7 +33,11 @@ export function useUploaderChannel(
       const response = await fetch('/api/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uploaderPeerID, note: options?.note, ttl: options?.ttl }),
+        body: JSON.stringify({
+          uploaderPeerID,
+          note: options?.note,
+          ttl: options?.ttl,
+        }),
       })
       if (!response.ok) {
         console.error(

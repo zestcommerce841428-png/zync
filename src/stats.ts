@@ -113,7 +113,10 @@ class RedisStatsStore implements StatsStore {
     if (reported) await this.client.incr(KEYS.reported)
     const v = await this.client.decr(KEYS.active)
     if (v < 0) await this.client.set(KEYS.active, '0')
-    await this.push({ type: reported ? 'reported' : 'destroyed', at: Date.now() })
+    await this.push({
+      type: reported ? 'reported' : 'destroyed',
+      at: Date.now(),
+    })
   }
   async setActiveChannels(n: number): Promise<void> {
     await this.client.set(KEYS.active, String(Math.max(0, n)))

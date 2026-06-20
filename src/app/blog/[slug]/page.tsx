@@ -70,8 +70,18 @@ export default async function PostPage({
         '@type': 'BreadcrumbList',
         itemListElement: [
           { '@type': 'ListItem', position: 1, name: 'Home', item: brand.url },
-          { '@type': 'ListItem', position: 2, name: 'Blog', item: `${brand.url}/blog` },
-          { '@type': 'ListItem', position: 3, name: post.title, item: `${brand.url}/blog/${post.slug}` },
+          {
+            '@type': 'ListItem',
+            position: 2,
+            name: 'Blog',
+            item: `${brand.url}/blog`,
+          },
+          {
+            '@type': 'ListItem',
+            position: 3,
+            name: post.title,
+            item: `${brand.url}/blog/${post.slug}`,
+          },
         ],
       },
     ],
@@ -93,7 +103,13 @@ export default async function PostPage({
       </Button>
 
       <Stack spacing={1.5} sx={{ mb: 3 }}>
-        <Chip label={post.category} size="small" color="primary" variant="outlined" sx={{ alignSelf: 'flex-start' }} />
+        <Chip
+          label={post.category}
+          size="small"
+          color="primary"
+          variant="outlined"
+          sx={{ alignSelf: 'flex-start' }}
+        />
         <Typography variant="h3" component="h1" sx={{ fontWeight: 800 }}>
           {post.title}
         </Typography>

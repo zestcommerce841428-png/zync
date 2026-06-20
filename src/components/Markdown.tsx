@@ -10,7 +10,11 @@ import Divider from '@mui/material/Divider'
 import { Link as ViewTransitionLink } from 'next-view-transitions'
 
 // Renders post markdown with MUI-styled elements.
-export default function Markdown({ children }: { children: string }): React.ReactElement {
+export default function Markdown({
+  children,
+}: {
+  children: string
+}): React.ReactElement {
   return (
     <Box
       sx={{
@@ -24,16 +28,26 @@ export default function Markdown({ children }: { children: string }): React.Reac
         remarkPlugins={[remarkGfm]}
         components={{
           h2: ({ children }) => (
-            <Typography variant="h5" component="h2" sx={{ fontWeight: 800, mt: 5, mb: 1.5 }}>
+            <Typography
+              variant="h5"
+              component="h2"
+              sx={{ fontWeight: 800, mt: 5, mb: 1.5 }}
+            >
               {children}
             </Typography>
           ),
           h3: ({ children }) => (
-            <Typography variant="h6" component="h3" sx={{ fontWeight: 700, mt: 3, mb: 1 }}>
+            <Typography
+              variant="h6"
+              component="h3"
+              sx={{ fontWeight: 700, mt: 3, mb: 1 }}
+            >
               {children}
             </Typography>
           ),
-          p: ({ children }) => <Typography component="p">{children}</Typography>,
+          p: ({ children }) => (
+            <Typography component="p">{children}</Typography>
+          ),
           a: ({ href, children }) => {
             const internal = href?.startsWith('/')
             return internal ? (
@@ -41,7 +55,12 @@ export default function Markdown({ children }: { children: string }): React.Reac
                 {children}
               </Link>
             ) : (
-              <Link href={href} target="_blank" rel="noopener noreferrer" color="primary">
+              <Link
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                color="primary"
+              >
                 {children}
               </Link>
             )

@@ -15,7 +15,10 @@ import ListItemText from '@mui/material/ListItemText'
 import CancelButton from './CancelButton'
 
 const TERMS: Array<{ icon: string; text: string }> = [
-  { icon: '📤', text: 'Files are shared directly between browsers — no server storage' },
+  {
+    icon: '📤',
+    text: 'Files are shared directly between browsers — no server storage',
+  },
   { icon: '✅', text: 'Only upload files you have the right to share' },
   { icon: '🔒', text: 'Share download links only with known recipients' },
   { icon: '⚠️', text: 'No illegal or harmful content allowed' },
@@ -42,12 +45,19 @@ export default function TermsAcceptance(): JSX.Element {
         </Typography>
       </Box>
 
-      <Dialog open={showModal} onClose={() => setShowModal(false)} maxWidth="sm">
+      <Dialog
+        open={showModal}
+        onClose={() => setShowModal(false)}
+        maxWidth="sm"
+      >
         <DialogTitle sx={{ fontWeight: 700 }}>Zync Terms</DialogTitle>
         <DialogContent>
           <List>
             {TERMS.map((t) => (
-              <ListItem key={t.text} sx={{ bgcolor: 'action.hover', borderRadius: 2, mb: 1 }}>
+              <ListItem
+                key={t.text}
+                sx={{ bgcolor: 'action.hover', borderRadius: 2, mb: 1 }}
+              >
                 <ListItemIcon sx={{ minWidth: 36 }}>{t.icon}</ListItemIcon>
                 <ListItemText primary={t.text} />
               </ListItem>

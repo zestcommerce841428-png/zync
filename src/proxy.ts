@@ -3,12 +3,21 @@ import { createServerClient } from '@supabase/ssr'
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase/config'
 
 // Paths that require a signed-in account (when auth is configured).
-const PROTECTED = ['/send', '/download', '/stats', '/account', '/admin', '/tools']
+const PROTECTED = [
+  '/send',
+  '/download',
+  '/stats',
+  '/account',
+  '/admin',
+  '/tools',
+]
 
 // Refreshes the Supabase auth session on navigation and gates protected tools.
 // No-ops entirely when Supabase isn't configured.
 // (Next.js 16 "proxy" convention — replaces the deprecated "middleware" file.)
-export default async function proxy(request: NextRequest): Promise<NextResponse> {
+export default async function proxy(
+  request: NextRequest,
+): Promise<NextResponse> {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     return NextResponse.next()
   }
@@ -58,5 +67,13 @@ export default async function proxy(request: NextRequest): Promise<NextResponse>
 }
 
 export const config = {
-  matcher: ['/send/:path*', '/download/:path*', '/stats/:path*', '/account/:path*', '/admin/:path*', '/tools/:path*', '/auth/:path*'],
+  matcher: [
+    '/send/:path*',
+    '/download/:path*',
+    '/stats/:path*',
+    '/account/:path*',
+    '/admin/:path*',
+    '/tools/:path*',
+    '/auth/:path*',
+  ],
 }

@@ -34,7 +34,9 @@ async function getRecaptchaToken(): Promise<string | undefined> {
 }
 
 export default function ContactForm(): React.ReactElement {
-  const [status, setStatus] = React.useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [status, setStatus] = React.useState<
+    'idle' | 'sending' | 'sent' | 'error'
+  >('idle')
   const [errorMsg, setErrorMsg] = React.useState('')
 
   // Load reCAPTCHA v3 script if a site key is configured.
@@ -83,7 +85,8 @@ export default function ContactForm(): React.ReactElement {
   if (status === 'sent') {
     return (
       <Alert severity="success" sx={{ mt: 2 }}>
-        Thanks for reaching out! We’ll get back to you at the email you provided.
+        Thanks for reaching out! We’ll get back to you at the email you
+        provided.
       </Alert>
     )
   }
@@ -100,7 +103,13 @@ export default function ContactForm(): React.ReactElement {
           <TextField name="name" label="Your name" fullWidth required />
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
-          <TextField name="email" label="Email" type="email" fullWidth required />
+          <TextField
+            name="email"
+            label="Email"
+            type="email"
+            fullWidth
+            required
+          />
         </Grid>
         <Grid size={12}>
           <TextField name="subject" label="Subject" fullWidth />
@@ -133,7 +142,9 @@ export default function ContactForm(): React.ReactElement {
           variant="contained"
           size="large"
           disabled={status === 'sending'}
-          startIcon={status === 'sending' ? <CircularProgress size={18} /> : <SendIcon />}
+          startIcon={
+            status === 'sending' ? <CircularProgress size={18} /> : <SendIcon />
+          }
         >
           {status === 'sending' ? 'Sending…' : 'Send message'}
         </Button>

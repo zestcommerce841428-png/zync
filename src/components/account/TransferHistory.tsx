@@ -54,7 +54,9 @@ export default function TransferHistory(): React.ReactElement {
 
   const remove = async (id: string) => {
     setItems((prev) => prev?.filter((t) => t.id !== id) ?? null)
-    await fetch(`/api/transfers?id=${encodeURIComponent(id)}`, { method: 'DELETE' }).catch(() => {})
+    await fetch(`/api/transfers?id=${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    }).catch(() => {})
   }
 
   if (items === null) {
@@ -76,10 +78,22 @@ export default function TransferHistory(): React.ReactElement {
 
   if (items.length === 0) {
     return (
-      <Stack spacing={1} sx={{ alignItems: 'center', textAlign: 'center', py: 6, color: 'text.secondary' }}>
+      <Stack
+        spacing={1}
+        sx={{
+          alignItems: 'center',
+          textAlign: 'center',
+          py: 6,
+          color: 'text.secondary',
+        }}
+      >
         <HistoryIcon sx={{ fontSize: 44, opacity: 0.5 }} />
-        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>No transfers yet</Typography>
-        <Typography variant="body2">Files you send will appear here for your records.</Typography>
+        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+          No transfers yet
+        </Typography>
+        <Typography variant="body2">
+          Files you send will appear here for your records.
+        </Typography>
       </Stack>
     )
   }
@@ -95,16 +109,35 @@ export default function TransferHistory(): React.ReactElement {
                 <Typography variant="subtitle2" noWrap sx={{ fontWeight: 700 }}>
                   {t.title || t.files[0] || 'Transfer'}
                 </Typography>
-                <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', mt: 0.5 }}>
-                  <Chip size="small" label={`${t.file_count} file${t.file_count === 1 ? '' : 's'}`} />
-                  <Chip size="small" variant="outlined" label={formatBytes(t.total_bytes)} />
-                  <Typography variant="caption" color="text.secondary" sx={{ alignSelf: 'center' }}>
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  sx={{ flexWrap: 'wrap', mt: 0.5 }}
+                >
+                  <Chip
+                    size="small"
+                    label={`${t.file_count} file${t.file_count === 1 ? '' : 's'}`}
+                  />
+                  <Chip
+                    size="small"
+                    variant="outlined"
+                    label={formatBytes(t.total_bytes)}
+                  />
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ alignSelf: 'center' }}
+                  >
                     {new Date(t.created_at).toLocaleString()}
                   </Typography>
                 </Stack>
               </Box>
               <Tooltip title="Remove from history">
-                <IconButton size="small" onClick={() => remove(t.id)} aria-label="Delete entry">
+                <IconButton
+                  size="small"
+                  onClick={() => remove(t.id)}
+                  aria-label="Delete entry"
+                >
                   <DeleteOutlinedIcon fontSize="small" />
                 </IconButton>
               </Tooltip>

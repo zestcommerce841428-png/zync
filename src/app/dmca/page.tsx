@@ -19,7 +19,9 @@ export default function DmcaPage(): React.ReactElement {
         seriously and will act on valid reports.
       </Typography>
 
-      <Typography variant="h2" component="h2">How transfers work</Typography>
+      <Typography variant="h2" component="h2">
+        How transfers work
+      </Typography>
       <Typography component="p">
         A {brand.name} transfer is a live, peer-to-peer connection that exists
         only while the sender keeps their browser open. We cannot remove a file
@@ -27,7 +29,9 @@ export default function DmcaPage(): React.ReactElement {
         coordinate a transfer.
       </Typography>
 
-      <Typography variant="h2" component="h2">Submitting a notice</Typography>
+      <Typography variant="h2" component="h2">
+        Submitting a notice
+      </Typography>
       <Typography component="p">
         If you believe a transfer infringes your copyright, email{' '}
         <a href={`mailto:${brand.contact.email}`}>{brand.contact.email}</a> with
@@ -37,12 +41,19 @@ export default function DmcaPage(): React.ReactElement {
         <li>Your contact information.</li>
         <li>Identification of the copyrighted work.</li>
         <li>The transfer link or channel identifier in question.</li>
-        <li>A statement that you have a good-faith belief the use is unauthorized.</li>
-        <li>A statement, under penalty of perjury, that the information is accurate and you are authorized to act.</li>
+        <li>
+          A statement that you have a good-faith belief the use is unauthorized.
+        </li>
+        <li>
+          A statement, under penalty of perjury, that the information is
+          accurate and you are authorized to act.
+        </li>
         <li>Your physical or electronic signature.</li>
       </ul>
 
-      <Typography variant="h2" component="h2">Counter-notice & repeat infringers</Typography>
+      <Typography variant="h2" component="h2">
+        Counter-notice & repeat infringers
+      </Typography>
       <Typography component="p">
         We will disable identified channels promptly and may restrict access for
         repeat infringers. If you believe a channel was disabled in error, you
