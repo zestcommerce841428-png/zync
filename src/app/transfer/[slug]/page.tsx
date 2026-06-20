@@ -17,8 +17,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const t = await getTransfer(slug)
   if (!t || !t.completed) return { title: 'Transfer not found' }
+  const label = t.title || `${t.files.length} file${t.files.length !== 1 ? 's' : ''}`
   return {
-    title: `Download ${t.files.length} file${t.files.length !== 1 ? 's' : ''} · ${brand.name}`,
+    title: `Download ${label} · ${brand.name}`,
     description: t.message || `${t.files.length} file(s) shared via ${brand.name}`,
   }
 }
@@ -26,6 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function TransferDownloadPage({ params }: Props): Promise<React.ReactElement> {
   const { slug } = await params
   const transfer = await getTransfer(slug)
+  const expired = transfer && new Date(transfer.expiresAt) < new Date()
 
   return (
     <Container maxWidth="sm" sx={{ py: { xs: 6, md: 10 } }}>
@@ -44,7 +46,7 @@ export default async function TransferDownloadPage({ params }: Props): Promise<R
               </Stack>
             </Stack>
 
-            {!transfer || !transfer.completed ? (
+            {!transfer || !transfer.completed || expired ? (
               <Alert severity="error">
                 This transfer link is invalid or has expired.
               </Alert>
@@ -54,9 +56,11 @@ export default async function TransferDownloadPage({ params }: Props): Promise<R
                 files={transfer.files.map(({ name, size, type }) => ({ name, size, type }))}
                 totalSize={transfer.totalSize}
                 expiresAt={transfer.expiresAt}
+                title={transfer.title}
                 message={transfer.message}
                 downloadCount={transfer.downloadCount}
                 maxDownloads={transfer.maxDownloads}
+                passwordProtected={!!transfer.passwordHash}
               />
             )}
           </Stack>

@@ -3,17 +3,34 @@
 import * as React from 'react'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
+import IconButton from '@mui/material/IconButton'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 import List from '@mui/material/List'
 import ListItem from '@mui/material/ListItem'
 import ListItemText from '@mui/material/ListItemText'
+import ListItemIcon from '@mui/material/ListItemIcon'
 import Alert from '@mui/material/Alert'
 import Chip from '@mui/material/Chip'
 import CircularProgress from '@mui/material/CircularProgress'
+import TextField from '@mui/material/TextField'
+import Collapse from '@mui/material/Collapse'
+import Dialog from '@mui/material/Dialog'
+import DialogContent from '@mui/material/DialogContent'
 import DownloadIcon from '@mui/icons-material/Download'
 import FolderZipIcon from '@mui/icons-material/FolderZip'
 import AccessTimeIcon from '@mui/icons-material/AccessTime'
+import LockIcon from '@mui/icons-material/Lock'
+import LockOpenIcon from '@mui/icons-material/LockOpen'
+import VisibilityIcon from '@mui/icons-material/Visibility'
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
+import ImageIcon from '@mui/icons-material/Image'
+import VideoFileIcon from '@mui/icons-material/VideoFile'
+import AudioFileIcon from '@mui/icons-material/AudioFile'
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
+import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile'
+import CloseIcon from '@mui/icons-material/Close'
+import ZoomInIcon from '@mui/icons-material/ZoomIn'
 
 type FileInfo = { name: string; size: number; type: string }
 
@@ -23,8 +40,10 @@ type Props = {
   totalSize: number
   expiresAt: string
   message: string
+  title?: string
   downloadCount: number
   maxDownloads: number | null
+  passwordProtected?: boolean
 }
 
 function formatBytes(n: number): string {
@@ -34,24 +53,91 @@ function formatBytes(n: number): string {
   return `${n} B`
 }
 
+function fileIcon(type: string): React.ReactElement {
+  if (type.startsWith('image/')) return <ImageIcon fontSize="small" color="primary" />
+  if (type.startsWith('video/')) return <VideoFileIcon fontSize="small" color="secondary" />
+  if (type.startsWith('audio/')) return <AudioFileIcon fontSize="small" color="warning" />
+  if (type === 'application/pdf') return <PictureAsPdfIcon fontSize="small" color="error" />
+  return <InsertDriveFileIcon fontSize="small" color="action" />
+}
+
+function isPreviewable(type: string): boolean {
+  return type.startsWith('image/') || type.startsWith('video/') || type === 'application/pdf'
+}
+
 export default function DownloadCard({
   slug,
   files,
   totalSize,
   expiresAt,
   message,
+  title,
   downloadCount,
   maxDownloads,
+  passwordProtected,
 }: Props): React.ReactElement {
-  const [downloading, setDownloading] = React.useState<Set<number>>(new Set())
-  const [zipping, setZipping] = React.useState(false)
-  const [error, setError] = React.useState<string | null>(null)
-
   const [now, setNow] = React.useState<number | null>(null)
   React.useEffect(() => { setNow(Date.now()) }, [])
   const expiry = new Date(expiresAt)
   const daysLeft = now !== null ? Math.ceil((expiry.getTime() - now) / 86400000) : null
   const expired = daysLeft !== null && daysLeft <= 0
+
+  // Password gate
+  const [unlocked, setUnlocked] = React.useState(!passwordProtected)
+  const [passwordInput, setPasswordInput] = React.useState('')
+  const [showPw, setShowPw] = React.useState(false)
+  const [pwError, setPwError] = React.useState(false)
+  const [pwChecking, setPwChecking] = React.useState(false)
+
+  const verifyPassword = async () => {
+    if (!passwordInput) return
+    setPwChecking(true)
+    setPwError(false)
+    try {
+      const res = await fetch(`/api/transfer/${slug}/verify-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: passwordInput }),
+      })
+      const json = await res.json()
+      if (json.valid) {
+        setUnlocked(true)
+        try { sessionStorage.setItem(`transfer-pw-${slug}`, passwordInput) } catch {}
+      } else {
+        setPwError(true)
+      }
+    } catch {
+      setPwError(true)
+    } finally {
+      setPwChecking(false)
+    }
+  }
+
+  // Restore password from sessionStorage
+  React.useEffect(() => {
+    if (!passwordProtected) return
+    try {
+      const saved = sessionStorage.getItem(`transfer-pw-${slug}`)
+      if (saved) {
+        setPasswordInput(saved)
+        setUnlocked(true)
+      }
+    } catch {}
+  }, [slug, passwordProtected])
+
+  const [downloading, setDownloading] = React.useState<Set<number>>(new Set())
+  const [zipping, setZipping] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
+
+  // Preview
+  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null)
+  const [previewType, setPreviewType] = React.useState<string>('')
+  const [previewLoading, setPreviewLoading] = React.useState<number | null>(null)
+
+  const currentPassword = (): string | undefined => {
+    if (!passwordProtected) return undefined
+    try { return sessionStorage.getItem(`transfer-pw-${slug}`) ?? passwordInput } catch { return passwordInput }
+  }
 
   const downloadFile = async (index: number) => {
     setDownloading((prev) => new Set(prev).add(index))
@@ -60,7 +146,7 @@ export default function DownloadCard({
       const res = await fetch(`/api/transfer/${slug}/download`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fileIndex: index }),
+        body: JSON.stringify({ fileIndex: index, password: currentPassword() }),
       })
       if (!res.ok) {
         const json = await res.json().catch(() => ({}))
@@ -83,37 +169,48 @@ export default function DownloadCard({
     }
   }
 
-  const downloadAll = async () => {
-    if (files.length === 1) {
-      await downloadFile(0)
-      return
+  const previewFile = async (index: number) => {
+    setPreviewLoading(index)
+    try {
+      const res = await fetch(`/api/transfer/${slug}/download`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileIndex: index, preview: true, password: currentPassword() }),
+      })
+      if (!res.ok) return
+      const { url } = await res.json()
+      setPreviewType(files[index].type)
+      setPreviewUrl(url)
+    } catch {
+      // ignore
+    } finally {
+      setPreviewLoading(null)
     }
+  }
 
+  const downloadAll = async () => {
+    if (files.length === 1) { await downloadFile(0); return }
     setZipping(true)
     setError(null)
     try {
       const { Zip, AsyncZipDeflate } = await import('fflate')
       const zipChunks: Uint8Array[] = []
-
       await new Promise<void>((resolve, reject) => {
         const zip = new Zip((err, chunk, final) => {
           if (err) { reject(err); return }
           zipChunks.push(chunk)
           if (final) resolve()
         })
-
         let pending = files.length
         const finish = () => { if (--pending === 0) zip.end() }
-
         files.forEach(async (f, i) => {
           const res = await fetch(`/api/transfer/${slug}/download`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fileIndex: i }),
+            body: JSON.stringify({ fileIndex: i, password: currentPassword() }),
           })
           if (!res.ok) { reject(new Error('Failed to get download URL')); return }
           const { url } = await res.json()
-
           const fileRes = await fetch(url)
           const buf = new Uint8Array(await fileRes.arrayBuffer())
           const entry = new AsyncZipDeflate(f.name)
@@ -122,11 +219,10 @@ export default function DownloadCard({
           finish()
         })
       })
-
       const blob = new Blob(zipChunks, { type: 'application/zip' })
       const a = document.createElement('a')
       a.href = URL.createObjectURL(blob)
-      a.download = `zync-transfer-${slug}.zip`
+      a.download = `zync-${slug}.zip`
       a.click()
       setTimeout(() => URL.revokeObjectURL(a.href), 60000)
     } catch {
@@ -140,18 +236,60 @@ export default function DownloadCard({
     return <Alert severity="warning">This transfer has expired. The files have been deleted.</Alert>
   }
 
+  // Password gate
+  if (!unlocked) {
+    return (
+      <Stack spacing={2}>
+        <Stack spacing={0.5} sx={{ alignItems: 'center', py: 2 }}>
+          <LockIcon sx={{ fontSize: 48, color: 'text.secondary' }} />
+          <Typography variant="h6" sx={{ fontWeight: 700 }}>Password required</Typography>
+          <Typography variant="body2" color="text.secondary">
+            This transfer is password protected.
+          </Typography>
+        </Stack>
+        <TextField
+          label="Password"
+          type={showPw ? 'text' : 'password'}
+          value={passwordInput}
+          onChange={(e) => setPasswordInput(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') verifyPassword() }}
+          error={pwError}
+          helperText={pwError ? 'Incorrect password. Try again.' : ''}
+          size="small"
+          fullWidth
+          slotProps={{
+            input: {
+              endAdornment: (
+                <IconButton size="small" onClick={() => setShowPw((p) => !p)} edge="end">
+                  {showPw ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
+                </IconButton>
+              ),
+            },
+          }}
+        />
+        <Button
+          variant="contained"
+          onClick={verifyPassword}
+          disabled={!passwordInput || pwChecking}
+          startIcon={pwChecking ? <CircularProgress size={16} color="inherit" /> : <LockOpenIcon />}
+          fullWidth
+        >
+          {pwChecking ? 'Checking…' : 'Unlock transfer'}
+        </Button>
+      </Stack>
+    )
+  }
+
   return (
     <Stack spacing={2}>
+      {title && (
+        <Typography variant="h6" sx={{ fontWeight: 700 }}>
+          {title}
+        </Typography>
+      )}
+
       {message && (
-        <Box
-          sx={{
-            p: 2,
-            bgcolor: 'action.hover',
-            borderRadius: 1,
-            borderLeft: '4px solid',
-            borderColor: 'primary.main',
-          }}
-        >
+        <Box sx={{ p: 2, bgcolor: 'action.hover', borderRadius: 1, borderLeft: '4px solid', borderColor: 'primary.main' }}>
           <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
             "{message}"
           </Typography>
@@ -163,12 +301,17 @@ export default function DownloadCard({
       <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
         <Chip
           icon={<AccessTimeIcon />}
-          label={daysLeft === null ? 'Checking expiry…' : `Expires in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`}
+          label={
+            daysLeft === null
+              ? 'Checking expiry…'
+              : `Expires in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`
+          }
           size="small"
           color={daysLeft !== null && daysLeft <= 2 ? 'warning' : 'default'}
         />
         <Chip label={`${files.length} file${files.length !== 1 ? 's' : ''}`} size="small" />
         <Chip label={formatBytes(totalSize)} size="small" />
+        {passwordProtected && <Chip icon={<LockIcon />} label="Password protected" size="small" color="info" />}
         {maxDownloads && (
           <Chip
             label={`${downloadCount}/${maxDownloads} downloads`}
@@ -183,26 +326,36 @@ export default function DownloadCard({
           <ListItem
             key={i}
             disableGutters
+            sx={{ py: 0.5 }}
             secondaryAction={
-              <Button
-                size="small"
-                variant="outlined"
-                startIcon={
-                  downloading.has(i)
-                    ? <CircularProgress size={14} />
-                    : <DownloadIcon />
-                }
-                onClick={() => downloadFile(i)}
-                disabled={downloading.has(i) || zipping}
-              >
-                {downloading.has(i) ? 'Downloading…' : 'Download'}
-              </Button>
+              <Stack direction="row" spacing={0.5}>
+                {isPreviewable(f.type) && (
+                  <IconButton
+                    size="small"
+                    onClick={() => previewFile(i)}
+                    disabled={previewLoading === i}
+                    title="Preview"
+                  >
+                    {previewLoading === i ? <CircularProgress size={16} /> : <ZoomInIcon fontSize="small" />}
+                  </IconButton>
+                )}
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={downloading.has(i) ? <CircularProgress size={14} /> : <DownloadIcon />}
+                  onClick={() => downloadFile(i)}
+                  disabled={downloading.has(i) || zipping}
+                >
+                  {downloading.has(i) ? 'Downloading…' : 'Download'}
+                </Button>
+              </Stack>
             }
           >
+            <ListItemIcon sx={{ minWidth: 36 }}>{fileIcon(f.type)}</ListItemIcon>
             <ListItemText
               primary={f.name}
               secondary={formatBytes(f.size)}
-              slotProps={{ primary: { noWrap: true, sx: { maxWidth: '55%' } } }}
+              slotProps={{ primary: { noWrap: true, sx: { maxWidth: '45%' } } }}
             />
           </ListItem>
         ))}
@@ -222,6 +375,26 @@ export default function DownloadCard({
           ? 'Download file'
           : 'Download all as ZIP'}
       </Button>
+
+      {/* Preview dialog */}
+      <Dialog open={!!previewUrl} onClose={() => setPreviewUrl(null)} maxWidth="lg" fullWidth>
+        <Box sx={{ position: 'absolute', top: 8, right: 8, zIndex: 1 }}>
+          <IconButton onClick={() => setPreviewUrl(null)}>
+            <CloseIcon />
+          </IconButton>
+        </Box>
+        <DialogContent sx={{ p: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 300 }}>
+          {previewUrl && previewType.startsWith('image/') && (
+            <Box component="img" src={previewUrl} sx={{ maxWidth: '100%', maxHeight: '80vh', objectFit: 'contain' }} />
+          )}
+          {previewUrl && previewType.startsWith('video/') && (
+            <Box component="video" src={previewUrl} controls sx={{ maxWidth: '100%', maxHeight: '80vh' }} />
+          )}
+          {previewUrl && previewType === 'application/pdf' && (
+            <Box component="iframe" src={previewUrl} sx={{ width: '100%', height: '80vh', border: 'none' }} title="PDF preview" />
+          )}
+        </DialogContent>
+      </Dialog>
     </Stack>
   )
 }

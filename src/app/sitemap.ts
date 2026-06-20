@@ -10,6 +10,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '',
     '/send',
     '/transfer',
+    '/transfer/history',
     '/welcome',
     '/tools',
     '/blog',

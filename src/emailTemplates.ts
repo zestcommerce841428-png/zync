@@ -197,6 +197,57 @@ export function tplContactAdmin(d: {
   }
 }
 
+export function tplTransferReady(d: {
+  title: string
+  url: string
+  senderMessage: string
+  fileCount: number
+  totalSize: string
+  expiresAt: string
+}): { subject: string; html: string; text: string } {
+  const expiry = new Date(d.expiresAt).toLocaleDateString('en-US', {
+    month: 'long', day: 'numeric', year: 'numeric',
+  })
+  return {
+    subject: d.title
+      ? `${d.title} — file transfer via ${brand.name}`
+      : `Someone sent you ${d.fileCount} file${d.fileCount !== 1 ? 's' : ''} via ${brand.name}`,
+    text: `You have a file transfer waiting. Download it at: ${d.url}\nExpires: ${expiry}`,
+    html: baseLayout({
+      preheader: `You have ${d.fileCount} file${d.fileCount !== 1 ? 's' : ''} waiting for you.`,
+      heading: d.title || `You have files waiting`,
+      intro: d.senderMessage || `Someone shared files with you via ${brand.name}.`,
+      bodyHtml:
+        kv([
+          ['Files', `${d.fileCount} file${d.fileCount !== 1 ? 's' : ''}`],
+          ['Total size', d.totalSize],
+          ['Expires', expiry],
+        ]),
+      button: { label: 'Download files', url: d.url },
+      footerNote: `This link expires on ${expiry}. Files are stored securely on Cloudflare R2.`,
+    }),
+  }
+}
+
+export function tplTransferDownloaded(d: {
+  title: string
+  url: string
+  downloadCount: number
+}): { subject: string; html: string; text: string } {
+  return {
+    subject: `Your transfer was downloaded — ${brand.name}`,
+    text: `Your transfer${d.title ? ` "${d.title}"` : ''} was just downloaded (${d.downloadCount} total). View: ${d.url}`,
+    html: baseLayout({
+      preheader: `Someone downloaded your transfer.`,
+      heading: `Your transfer was downloaded!`,
+      intro: `Your file transfer${d.title ? ` "${d.title}"` : ''} was just downloaded for the first time.`,
+      bodyHtml: kv([['Downloads so far', String(d.downloadCount)]]),
+      button: { label: 'View transfer', url: d.url },
+      footerNote: `You received this because you enabled download notifications for this transfer.`,
+    }),
+  }
+}
+
 export function tplCriticalAlert(d: { event: string; detail: string }): {
   subject: string
   html: string

@@ -21,6 +21,7 @@ import AccountButton from './AccountButton'
 const NAV: Array<{ label: string; href: string }> = [
   { label: 'Send', href: '/send' },
   { label: 'Transfer', href: '/transfer' },
+  { label: 'My Transfers', href: '/transfer/history' },
   { label: 'Tools', href: '/tools' },
   { label: 'Features', href: '/#features' },
   { label: 'Blog', href: '/blog' },
