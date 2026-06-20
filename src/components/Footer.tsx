@@ -25,6 +25,7 @@ const COLUMNS: Array<{
     title: 'Product',
     links: [
       { label: 'Send a file', href: '/send' },
+      { label: 'Transfer files', href: '/transfer' },
       { label: 'Free tools', href: '/tools' },
       { label: 'Features', href: '/#features' },
       { label: 'Welcome', href: '/welcome' },
