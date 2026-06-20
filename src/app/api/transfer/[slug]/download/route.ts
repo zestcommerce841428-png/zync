@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { GetObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { getR2Client, R2_BUCKET } from '../../../../../lib/r2'
-import { getTransfer, updateTransfer, hashPassword } from '../../../../../lib/transfer'
+import { getTransfer, updateTransfer, hashPassword, sweepExpiredTransfers } from '../../../../../lib/transfer'
 import { sendMail } from '../../../../../email'
 import { tplTransferDownloaded } from '../../../../../emailTemplates'
 import { brand } from '../../../../../brand'
@@ -21,6 +21,7 @@ export async function POST(
   { params }: { params: Promise<{ slug: string }> },
 ): Promise<NextResponse> {
   const { slug } = await params
+  void sweepExpiredTransfers()
   const transfer = await getTransfer(slug)
   if (!transfer || !transfer.completed)
     return NextResponse.json({ error: 'Not found.' }, { status: 404 })

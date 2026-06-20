@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { PutObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-import { getR2Client, R2_BUCKET, ensureLifecycleRule } from '../../../../lib/r2'
+import { getR2Client, R2_BUCKET } from '../../../../lib/r2'
 import {
   saveTransfer,
   expiryDate,
   defaultExpiryDays,
   hashPassword,
   addUserTransferIndex,
+  sweepExpiredTransfers,
 } from '../../../../lib/transfer'
 import { getSupabaseServerClient } from '../../../../supabase/server'
 import { generateShortSlug } from '../../../../slugs'
@@ -59,8 +60,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const slug = await generateShortSlug()
   const r2 = getR2Client()
 
-  // Fire-and-forget lifecycle rule setup (idempotent, cost saving)
-  void ensureLifecycleRule()
+  // Sweep expired transfers in background (deletes R2 objects on expiry)
+  void sweepExpiredTransfers()
 
   const uploadUrls: string[] = []
   const fileRecords: Array<{ key: string; name: string; size: number; type: string }> = []

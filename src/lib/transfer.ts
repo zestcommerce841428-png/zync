@@ -1,6 +1,8 @@
 import 'server-only'
 import { createHash } from 'crypto'
 import { getRedisClient } from '../redisClient'
+import { DeleteObjectsCommand } from '@aws-sdk/client-s3'
+import { getR2Client, R2_BUCKET } from './r2'
 
 export type TransferFile = {
   key: string   // R2 object key
@@ -30,6 +32,8 @@ export type TransferRecord = {
 
 const KEY = (slug: string) => `transfer:${slug}`
 const USER_KEY = (ownerId: string) => `transfer:user:${ownerId}`
+// Cleanup queue: sorted set of {slug, keys} JSON values scored by expiresAt ms
+const CLEANUP_KEY = 'transfer:cleanup'
 
 export function hashPassword(password: string): string {
   return createHash('sha256').update(password).digest('hex')
@@ -47,11 +51,15 @@ export function defaultExpiryDays(loggedIn: boolean): number {
 
 export async function saveTransfer(record: TransferRecord): Promise<void> {
   const redis = getRedisClient()
-  const ttl = Math.ceil(
-    (new Date(record.expiresAt).getTime() - Date.now()) / 1000,
-  )
+  const expiresMs = new Date(record.expiresAt).getTime()
+  const ttl = Math.ceil((expiresMs - Date.now()) / 1000)
   if (ttl <= 0) return
   await redis.set(KEY(record.slug), JSON.stringify(record), 'EX', ttl)
+  // Register R2 keys in cleanup queue so they're deleted exactly at expiry
+  const entry = JSON.stringify({ slug: record.slug, keys: record.files.map((f) => f.key) })
+  await redis.zadd(CLEANUP_KEY, expiresMs, entry)
+  // Keep the cleanup queue alive for 32 days (longer than max expiry)
+  await redis.expire(CLEANUP_KEY, 32 * 24 * 3600)
 }
 
 export async function getTransfer(slug: string): Promise<TransferRecord | null> {
@@ -83,6 +91,61 @@ export async function updateTransfer(
 export async function deleteTransfer(slug: string): Promise<void> {
   const redis = getRedisClient()
   await redis.del(KEY(slug))
+  // Remove all cleanup-queue entries for this slug (match by slug prefix)
+  await purgeCleanupEntries(slug)
+}
+
+// Remove cleanup-queue entries whose slug matches (used on manual delete)
+async function purgeCleanupEntries(slug: string): Promise<void> {
+  const redis = getRedisClient()
+  // Scan all entries and remove those matching the slug
+  const all = await redis.zrange(CLEANUP_KEY, 0, -1)
+  const toRemove = all.filter((entry) => {
+    try { return JSON.parse(entry).slug === slug } catch { return false }
+  })
+  if (toRemove.length > 0) {
+    await redis.zrem(CLEANUP_KEY, ...toRemove)
+  }
+}
+
+// ── Cleanup sweep — call this on any API route to delete expired R2 objects ──
+// Processes up to `limit` expired entries per call (keeps each request fast)
+
+export async function sweepExpiredTransfers(limit = 20): Promise<void> {
+  const redis = getRedisClient()
+  const now = Date.now()
+  // Get entries whose score (expiresAt ms) has passed
+  const expired = await redis.zrangebyscore(CLEANUP_KEY, '-inf', now, 'LIMIT', 0, limit)
+  if (expired.length === 0) return
+
+  const r2Keys: string[] = []
+  const entries: string[] = []
+
+  for (const entry of expired) {
+    entries.push(entry)
+    try {
+      const { keys } = JSON.parse(entry) as { slug: string; keys: string[] }
+      r2Keys.push(...keys)
+    } catch {}
+  }
+
+  // Delete R2 objects in one batch call (max 1000 per S3 request)
+  if (r2Keys.length > 0) {
+    try {
+      const r2 = getR2Client()
+      await r2.send(
+        new DeleteObjectsCommand({
+          Bucket: R2_BUCKET,
+          Delete: { Objects: r2Keys.map((Key) => ({ Key })), Quiet: true },
+        }),
+      )
+    } catch {
+      // best-effort — lifecycle rule is a safety net
+    }
+  }
+
+  // Remove processed entries from the queue
+  await redis.zrem(CLEANUP_KEY, ...entries)
 }
 
 // ── User transfer index (sorted set: score = expiresAt ms) ──────────────────
@@ -95,7 +158,6 @@ export async function addUserTransferIndex(
   const redis = getRedisClient()
   const score = new Date(expiresAt).getTime()
   await redis.zadd(USER_KEY(ownerId), score, slug)
-  // Keep the sorted set alive 31 days beyond the longest possible transfer
   await redis.expire(USER_KEY(ownerId), 31 * 24 * 3600)
 }
 
@@ -109,17 +171,10 @@ export async function removeUserTransferIndex(
 
 export async function listUserTransfers(ownerId: string): Promise<TransferRecord[]> {
   const redis = getRedisClient()
-  // Get all slugs whose expiry score is in the future
-  const slugs = await redis.zrangebyscore(
-    USER_KEY(ownerId),
-    Date.now(),
-    '+inf',
-  )
+  const slugs = await redis.zrangebyscore(USER_KEY(ownerId), Date.now(), '+inf')
   if (slugs.length === 0) return []
   const records = await Promise.all(slugs.map(getTransfer))
-  // Filter nulls (Redis key expired but sorted set member lingered)
   const valid = records.filter((r): r is TransferRecord => r !== null && r.completed)
-  // Clean up expired members from the sorted set
   await redis.zremrangebyscore(USER_KEY(ownerId), '-inf', Date.now() - 1)
   return valid.sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
