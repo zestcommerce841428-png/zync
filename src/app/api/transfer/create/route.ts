@@ -13,6 +13,8 @@ import {
 } from '../../../../lib/transfer'
 import { getSupabaseServerClient } from '../../../../supabase/server'
 import { generateShortSlug } from '../../../../slugs'
+import { rateLimit, getClientIp } from '../../../../rateLimit'
+import { tooManyRequests, ok, err } from '../../../../lib/apiResponse'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,15 +39,18 @@ const BodySchema = z.object({
 })
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
+  // 10 transfer creations per 10 min per IP (generous for legit users, blocks bulk abuse)
+  const ip = getClientIp(req)
+  const rl = await rateLimit(`transfer-create:${ip}`, { limit: 10, windowSeconds: 600 })
+  if (!rl.success) return tooManyRequests(rl)
+
   const body = BodySchema.safeParse(await req.json().catch(() => null))
-  if (!body.success)
-    return NextResponse.json({ error: 'Invalid payload.' }, { status: 400 })
+  if (!body.success) return err('Invalid payload.')
 
   const { files, title, message, password, maxDownloads, notifyEmail, recipientEmails } =
     body.data
   const totalSize = files.reduce((s, f) => s + f.size, 0)
-  if (totalSize > MAX_BYTES)
-    return NextResponse.json({ error: 'Total size exceeds 2 GB limit.' }, { status: 400 })
+  if (totalSize > MAX_BYTES) return err('Total size exceeds 2 GB limit.')
 
   const supabase = await getSupabaseServerClient()
   const user = supabase ? (await supabase.auth.getUser()).data.user : null
@@ -104,5 +109,5 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     await addUserTransferIndex(ownerId, slug, expires)
   }
 
-  return NextResponse.json({ slug, uploadUrls, expiresAt: expires })
+  return ok({ slug, uploadUrls, expiresAt: expires }, { status: 201, rl })
 }

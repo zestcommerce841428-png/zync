@@ -7,12 +7,14 @@ import { getTransfer, updateTransfer, hashPassword, sweepExpiredTransfers } from
 import { sendMail } from '../../../../../email'
 import { tplTransferDownloaded } from '../../../../../emailTemplates'
 import { brand } from '../../../../../brand'
+import { rateLimit, getClientIp } from '../../../../../rateLimit'
+import { tooManyRequests, notFound, gone, err, ok } from '../../../../../lib/apiResponse'
 
 export const dynamic = 'force-dynamic'
 
 const BodySchema = z.object({
-  fileIndex: z.number().int().nonnegative(),
-  password: z.string().optional(),
+  fileIndex: z.number().int().nonnegative().max(19),
+  password: z.string().max(200).optional(),
   preview: z.boolean().default(false),
 })
 
@@ -21,34 +23,37 @@ export async function POST(
   { params }: { params: Promise<{ slug: string }> },
 ): Promise<NextResponse> {
   const { slug } = await params
-  void sweepExpiredTransfers()
-  const transfer = await getTransfer(slug)
-  if (!transfer || !transfer.completed)
-    return NextResponse.json({ error: 'Not found.' }, { status: 404 })
 
-  if (new Date(transfer.expiresAt) < new Date())
-    return NextResponse.json({ error: 'Transfer has expired.' }, { status: 410 })
+  // Brute-force protection: 15 downloads per 5 min per IP
+  const ip = getClientIp(req)
+  const rl = await rateLimit(`transfer-download:${ip}`, { limit: 15, windowSeconds: 300 })
+  if (!rl.success) return tooManyRequests(rl)
+
+  void sweepExpiredTransfers()
+
+  const transfer = await getTransfer(slug)
+  if (!transfer || !transfer.completed) return notFound('Transfer not found.')
+
+  if (new Date(transfer.expiresAt) < new Date()) return gone('Transfer has expired.')
 
   if (
     transfer.maxDownloads !== null &&
     transfer.downloadCount >= transfer.maxDownloads
   )
-    return NextResponse.json({ error: 'Download limit reached.' }, { status: 410 })
+    return gone('Download limit reached.')
 
   const body = BodySchema.safeParse(await req.json().catch(() => null))
-  if (!body.success)
-    return NextResponse.json({ error: 'Invalid payload.' }, { status: 400 })
+  if (!body.success) return err('Invalid payload.')
 
   // Password check
   if (transfer.passwordHash) {
     const supplied = body.data.password
     if (!supplied || hashPassword(supplied) !== transfer.passwordHash)
-      return NextResponse.json({ error: 'Incorrect password.' }, { status: 403 })
+      return err('Incorrect password.', { status: 403 })
   }
 
   const file = transfer.files[body.data.fileIndex]
-  if (!file)
-    return NextResponse.json({ error: 'File not found.' }, { status: 404 })
+  if (!file) return notFound('File not found.')
 
   const r2 = getR2Client()
   const isPreview = body.data.preview
@@ -57,7 +62,6 @@ export async function POST(
     new GetObjectCommand({
       Bucket: R2_BUCKET,
       Key: file.key,
-      // For preview, serve inline; for download, force attachment
       ...(isPreview
         ? { ResponseContentType: file.type || 'application/octet-stream' }
         : { ResponseContentDisposition: `attachment; filename="${encodeURIComponent(file.name)}"` }),
@@ -65,12 +69,12 @@ export async function POST(
     { expiresIn: isPreview ? 300 : 900 },
   )
 
-  // Increment download count only on first file of each batch (not for previews)
+  // Increment download count on first file of batch (not for previews)
   if (!isPreview && body.data.fileIndex === 0) {
     const newCount = transfer.downloadCount + 1
     await updateTransfer(slug, { downloadCount: newCount })
 
-    // Notify sender on first ever download
+    // Notify sender on first ever download (fire-and-forget)
     if (transfer.notifyEmail && !transfer.notifiedAt) {
       void updateTransfer(slug, { notifiedAt: new Date().toISOString() })
       const tpl = tplTransferDownloaded({
@@ -78,14 +82,9 @@ export async function POST(
         url: `${brand.url}/transfer/${slug}`,
         downloadCount: newCount,
       })
-      void sendMail({
-        to: transfer.notifyEmail,
-        subject: tpl.subject,
-        html: tpl.html,
-        text: tpl.text,
-      })
+      void sendMail({ to: transfer.notifyEmail, subject: tpl.subject, html: tpl.html, text: tpl.text })
     }
   }
 
-  return NextResponse.json({ url, name: file.name, size: file.size })
+  return ok({ url, name: file.name, size: file.size }, { rl })
 }
