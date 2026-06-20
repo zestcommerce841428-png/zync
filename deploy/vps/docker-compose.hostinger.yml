@@ -55,11 +55,7 @@ services:
       - redis_data:/data
 
   app:
-    build:
-      context: "https://github.com/zestcommerce841428-png/zync.git#main"
-      dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_SITE_URL: "https://videodownloaders.cloud"
+    image: ghcr.io/zestcommerce841428-png/zync:latest
     restart: unless-stopped
     environment:
       - PORT=3000
@@ -70,8 +66,20 @@ services:
       - VIRTUAL_PORT=3000
       - LETSENCRYPT_HOST=videodownloaders.cloud
       # FILEPIZZA_SECRET is injected via the project environment (not committed)
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     depends_on:
       - redis
+
+  watchtower:
+    image: containrrr/watchtower:latest
+    restart: unless-stopped
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_POLL_INTERVAL=60
+      - WATCHTOWER_LABEL_ENABLE=true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
 
 volumes:
   certs:
