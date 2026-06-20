@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { GetObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { getR2Client, R2_BUCKET } from '../../../../../lib/r2'
-import { getTransfer, updateTransfer, hashPassword, sweepExpiredTransfers } from '../../../../../lib/transfer'
+import { getTransfer, updateTransfer, hashPassword, sweepExpiredTransfers, scheduleBurn } from '../../../../../lib/transfer'
 import { sendMail } from '../../../../../email'
 import { tplTransferDownloaded } from '../../../../../emailTemplates'
 import { brand } from '../../../../../brand'
@@ -83,6 +83,14 @@ export async function POST(
         downloadCount: newCount,
       })
       void sendMail({ to: transfer.notifyEmail, subject: tpl.subject, html: tpl.html, text: tpl.text })
+    }
+
+    // Burn-after-read: schedule R2 deletion 30 s from now so ZIP builders
+    // can still fetch all file URLs within the grace window.
+    if (transfer.burnAfterRead) {
+      void scheduleBurn(slug, transfer.files.map((f) => f.key))
+      // Guarantee cleanup even if no further API traffic arrives
+      setTimeout(() => void sweepExpiredTransfers(), 32_000)
     }
   }
 

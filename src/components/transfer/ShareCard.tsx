@@ -18,9 +18,10 @@ type Props = {
   expiresAt: string
   title?: string
   passwordProtected?: boolean
+  burnAfterRead?: boolean
 }
 
-export default function ShareCard({ slug, expiresAt, title, passwordProtected }: Props): React.ReactElement {
+export default function ShareCard({ slug, expiresAt, title, passwordProtected, burnAfterRead }: Props): React.ReactElement {
   const [origin, setOrigin] = React.useState('')
   React.useEffect(() => { setOrigin(window.location.origin) }, [])
   const url = `${origin}/transfer/${slug}`
@@ -108,6 +109,9 @@ export default function ShareCard({ slug, expiresAt, title, passwordProtected }:
         )}
         {passwordProtected && (
           <Chip label="Password protected" size="small" color="info" />
+        )}
+        {burnAfterRead && (
+          <Chip label="Deletes after download" size="small" color="error" variant="outlined" />
         )}
       </Stack>
 

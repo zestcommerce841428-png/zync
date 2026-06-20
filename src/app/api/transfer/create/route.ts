@@ -36,6 +36,7 @@ const BodySchema = z.object({
   maxDownloads: z.number().int().positive().nullable().default(null),
   notifyEmail: z.string().email().optional().or(z.literal('')),
   recipientEmails: z.array(z.string().email()).max(20).default([]),
+  burnAfterRead: z.boolean().default(false),
 })
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
@@ -47,7 +48,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const body = BodySchema.safeParse(await req.json().catch(() => null))
   if (!body.success) return err('Invalid payload.')
 
-  const { files, title, message, password, maxDownloads, notifyEmail, recipientEmails } =
+  const { files, title, message, password, maxDownloads, notifyEmail, recipientEmails, burnAfterRead } =
     body.data
   const totalSize = files.reduce((s, f) => s + f.size, 0)
   if (totalSize > MAX_BYTES) return err('Total size exceeds 2 GB limit.')
@@ -101,6 +102,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     notifyEmail: notifyEmail || null,
     notifiedAt: null,
     recipientEmails,
+    burnAfterRead,
     createdAt: new Date().toISOString(),
     completed: false,
   })

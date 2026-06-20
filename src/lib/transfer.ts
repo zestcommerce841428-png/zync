@@ -28,6 +28,7 @@ export type TransferRecord = {
   recipientEmails: string[]   // emails to send link to on complete
   createdAt: string
   completed: boolean
+  burnAfterRead: boolean        // delete files from R2 after first download
 }
 
 const KEY = (slug: string) => `transfer:${slug}`
@@ -179,4 +180,22 @@ export async function listUserTransfers(ownerId: string): Promise<TransferRecord
   return valid.sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   )
+}
+
+// ── Burn-after-read: schedule R2 deletion 30 s from now ─────────────────────
+// The 30-second grace allows ZIP builders to fetch all presigned URLs before
+// the objects are removed. The transfer Redis key TTL is also set to 30 s so
+// no new downloads are accepted after the window.
+
+export async function scheduleBurn(slug: string, keys: string[]): Promise<void> {
+  const redis = getRedisClient()
+  const burnAt = Date.now() + 30_000
+
+  // Replace the existing cleanup-queue entry with one that fires in 30 s
+  await purgeCleanupEntries(slug)
+  const entry = JSON.stringify({ slug, keys })
+  await redis.zadd(CLEANUP_KEY, burnAt, entry)
+
+  // Shorten the Redis TTL so the record disappears naturally after 30 s
+  await redis.expire(KEY(slug), 30)
 }

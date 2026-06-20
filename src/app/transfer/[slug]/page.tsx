@@ -61,6 +61,7 @@ export default async function TransferDownloadPage({ params }: Props): Promise<R
                 downloadCount={transfer.downloadCount}
                 maxDownloads={transfer.maxDownloads}
                 passwordProtected={!!transfer.passwordHash}
+                burnAfterRead={!!transfer.burnAfterRead}
               />
             )}
           </Stack>

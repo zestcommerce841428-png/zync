@@ -49,12 +49,14 @@ export default function TransferPage(): React.ReactElement {
   const [recipientEmails, setRecipientEmails] = React.useState<string[]>([])
   const [notifyMe, setNotifyMe] = React.useState(false)
   const [notifyEmail, setNotifyEmail] = React.useState('')
+  const [burnAfterRead, setBurnAfterRead] = React.useState(false)
   const [stage, setStage] = React.useState<Stage>('idle')
   const [fileProgress, setFileProgress] = React.useState<FileProgress[]>([])
   const [error, setError] = React.useState<string | null>(null)
   const [resultSlug, setResultSlug] = React.useState('')
   const [resultExpiry, setResultExpiry] = React.useState('')
   const [resultTitle, setResultTitle] = React.useState('')
+  const [resultBurn, setResultBurn] = React.useState(false)
 
   const totalSize = files.reduce((s, f) => s + f.size, 0)
   const overLimit = totalSize > 2 * 1024 * 1024 * 1024
@@ -92,6 +94,7 @@ export default function TransferPage(): React.ReactElement {
           maxDownloads: limitDownloads ? maxDownloads : null,
           notifyEmail: notifyMe && notifyEmail ? notifyEmail : undefined,
           recipientEmails,
+          burnAfterRead,
         }),
       })
       if (!createRes.ok) {
@@ -155,6 +158,7 @@ export default function TransferPage(): React.ReactElement {
       setResultSlug(slug)
       setResultExpiry(expiresAt)
       setResultTitle(title)
+      setResultBurn(burnAfterRead)
       setStage('done')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed.')
@@ -179,6 +183,7 @@ export default function TransferPage(): React.ReactElement {
     setRecipientInput('')
     setNotifyMe(false)
     setNotifyEmail('')
+    setBurnAfterRead(false)
     setStage('idle')
     setFileProgress([])
     setError(null)
@@ -208,7 +213,7 @@ export default function TransferPage(): React.ReactElement {
         <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
           {stage === 'done' ? (
             <Stack spacing={3}>
-              <ShareCard slug={resultSlug} expiresAt={resultExpiry} title={resultTitle} />
+              <ShareCard slug={resultSlug} expiresAt={resultExpiry} title={resultTitle} burnAfterRead={resultBurn} />
               <Button variant="outlined" onClick={reset}>
                 Send another transfer
               </Button>
@@ -362,6 +367,26 @@ export default function TransferPage(): React.ReactElement {
                             </Stack>
                           )}
                         </Stack>
+
+                        {/* Burn after read */}
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={burnAfterRead}
+                              onChange={(e) => setBurnAfterRead(e.target.checked)}
+                              size="small"
+                              color="error"
+                            />
+                          }
+                          label={
+                            <Stack>
+                              <Typography variant="body2">Delete files after first download</Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                Files are permanently removed 30 s after the first download starts
+                              </Typography>
+                            </Stack>
+                          }
+                        />
 
                         {/* Notify me on download */}
                         <Stack spacing={1}>

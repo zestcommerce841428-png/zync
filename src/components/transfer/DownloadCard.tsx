@@ -44,6 +44,7 @@ type Props = {
   downloadCount: number
   maxDownloads: number | null
   passwordProtected?: boolean
+  burnAfterRead?: boolean
 }
 
 function formatBytes(n: number): string {
@@ -75,6 +76,7 @@ export default function DownloadCard({
   downloadCount,
   maxDownloads,
   passwordProtected,
+  burnAfterRead,
 }: Props): React.ReactElement {
   const [now, setNow] = React.useState<number | null>(null)
   React.useEffect(() => { setNow(Date.now()) }, [])
@@ -294,6 +296,12 @@ export default function DownloadCard({
             "{message}"
           </Typography>
         </Box>
+      )}
+
+      {burnAfterRead && (
+        <Alert severity="warning" icon="🔥">
+          <strong>Burn after read</strong> — these files will be permanently deleted from storage 30 seconds after the first download starts.
+        </Alert>
       )}
 
       {error && <Alert severity="error">{error}</Alert>}

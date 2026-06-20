@@ -48,6 +48,7 @@ export async function GET(
     passwordProtected: !!passwordHash,
     files: files.map(({ name, size, type }) => ({ name, size, type })),
   })
+  // Note: burnAfterRead is included in ...rest so recipients can see the warning
 }
 
 export async function DELETE(
