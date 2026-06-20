@@ -316,7 +316,7 @@ function SignInForm({ next }: { next: string }): React.ReactElement {
     if (error) setError(error.message)
     else {
       setOtpSent(true)
-      setInfo('We emailed you a 6-digit code. Check your inbox.')
+      setInfo('We emailed you an 8-digit code. Check your inbox.')
     }
   }
 
@@ -358,10 +358,10 @@ function SignInForm({ next }: { next: string }): React.ReactElement {
 
         {useOtp && otpSent && (
           <TextField
-            label="6-digit code"
+            label="8-digit code"
             value={otp}
             onChange={(e) => setOtp(e.target.value)}
-            slotProps={{ htmlInput: { inputMode: 'numeric', maxLength: 6 } }}
+            slotProps={{ htmlInput: { inputMode: 'numeric', maxLength: 8 } }}
             fullWidth
           />
         )}
@@ -528,7 +528,7 @@ function SignUpForm({ next }: { next: string }): React.ReactElement {
 
     setBusy(false)
     setOtpSent(true)
-    setInfo('We emailed you a 6-digit confirmation code. Enter it below.')
+    setInfo('We emailed you an 8-digit confirmation code. Enter it below.')
   }
 
   if (otpSent) {
@@ -537,10 +537,10 @@ function SignUpForm({ next }: { next: string }): React.ReactElement {
         {error && <Alert severity="error">{error}</Alert>}
         {info && <Alert severity="success">{info}</Alert>}
         <TextField
-          label="6-digit confirmation code"
+          label="8-digit confirmation code"
           value={otp}
           onChange={(e) => setOtp(e.target.value)}
-          slotProps={{ htmlInput: { inputMode: 'numeric', maxLength: 6 } }}
+          slotProps={{ htmlInput: { inputMode: 'numeric', maxLength: 8 } }}
           fullWidth
           autoFocus
         />
@@ -548,7 +548,7 @@ function SignUpForm({ next }: { next: string }): React.ReactElement {
           onClick={verifyAndFinish}
           variant="contained"
           size="large"
-          disabled={busy || otp.trim().length !== 6}
+          disabled={busy || otp.trim().length !== 8}
         >
           {busy ? <CircularProgress size={22} /> : 'Confirm & create account'}
         </Button>

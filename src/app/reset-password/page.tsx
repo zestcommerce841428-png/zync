@@ -162,16 +162,16 @@ export default function ResetPasswordPage(): React.ReactElement {
                   color="text.secondary"
                   sx={{ textAlign: 'left' }}
                 >
-                  We sent a 6-digit code to <strong>{email}</strong>. Enter it
+                  We sent an 8-digit code to <strong>{email}</strong>. Enter it
                   below.
                 </Typography>
                 {error && <Alert severity="error">{error}</Alert>}
                 <TextField
-                  label="6-digit code"
+                  label="8-digit code"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
                   slotProps={{
-                    htmlInput: { inputMode: 'numeric', maxLength: 6 },
+                    htmlInput: { inputMode: 'numeric', maxLength: 8 },
                   }}
                   fullWidth
                   autoFocus
@@ -180,7 +180,7 @@ export default function ResetPasswordPage(): React.ReactElement {
                   type="submit"
                   variant="contained"
                   size="large"
-                  disabled={busy || otp.trim().length !== 6}
+                  disabled={busy || otp.trim().length !== 8}
                   fullWidth
                 >
                   {busy ? <CircularProgress size={22} /> : 'Verify code'}
