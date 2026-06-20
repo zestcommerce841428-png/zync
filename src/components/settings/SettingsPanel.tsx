@@ -18,10 +18,7 @@ import MenuItem from '@mui/material/MenuItem'
 import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
 import Divider from '@mui/material/Divider'
-import Fab from '@mui/material/Fab'
 import CloseIcon from '@mui/icons-material/Close'
-import TuneIcon from '@mui/icons-material/Tune'
-import AccessibilityNewIcon from '@mui/icons-material/AccessibilityNew'
 import RestartAltIcon from '@mui/icons-material/RestartAlt'
 import { useColorScheme } from '@mui/material/styles'
 import Chip from '@mui/material/Chip'
@@ -93,54 +90,16 @@ function ReadingGuide(): React.ReactElement {
 }
 
 export default function SettingsPanel(): React.ReactElement {
-  const { settings, update, reset } = useSettings()
-  const [open, setOpen] = React.useState(false)
-  const [tab, setTab] = React.useState(0)
+  const { settings, update, reset, panelOpen, setPanelOpen, panelTab } = useSettings()
+  const [tab, setTab] = React.useState(panelTab)
   const [mounted, setMounted] = React.useState(false)
   React.useEffect(() => setMounted(true), [])
-
-  const openTo = (t: number) => {
-    setTab(t)
-    setOpen(true)
-  }
+  // Sync tab when opened from header buttons
+  React.useEffect(() => { if (panelOpen) setTab(panelTab) }, [panelOpen, panelTab])
 
   return (
     <>
-      {mounted && (
-        <Stack
-          spacing={1.25}
-          sx={{
-            position: 'fixed',
-            right: 16,
-            bottom: 16,
-            alignItems: 'center',
-            zIndex: (t) => t.zIndex.speedDial,
-          }}
-        >
-          <Tooltip title="Appearance & themes" placement="left">
-            <Fab
-              size="medium"
-              color="default"
-              aria-label="Open appearance settings"
-              onClick={() => openTo(0)}
-            >
-              <TuneIcon />
-            </Fab>
-          </Tooltip>
-          <Tooltip title="Accessibility" placement="left">
-            <Fab
-              size="medium"
-              color="primary"
-              aria-label="Open accessibility settings"
-              onClick={() => openTo(1)}
-            >
-              <AccessibilityNewIcon />
-            </Fab>
-          </Tooltip>
-        </Stack>
-      )}
-
-      <Drawer anchor="right" open={open} onClose={() => setOpen(false)}>
+      <Drawer anchor="right" open={panelOpen} onClose={() => setPanelOpen(false)}>
         <Box
           sx={{
             width: { xs: 300, sm: 360 },
@@ -156,7 +115,7 @@ export default function SettingsPanel(): React.ReactElement {
             <Typography variant="h6" sx={{ fontWeight: 700 }}>
               Personalize
             </Typography>
-            <IconButton onClick={() => setOpen(false)} aria-label="Close">
+            <IconButton onClick={() => setPanelOpen(false)} aria-label="Close">
               <CloseIcon />
             </IconButton>
           </Stack>

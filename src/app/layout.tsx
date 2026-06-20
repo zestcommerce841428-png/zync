@@ -13,6 +13,7 @@ import BackToTop from '../components/BackToTop'
 import WhatsAppFab from '../components/WhatsAppFab'
 import CookieConsent from '../components/consent/CookieConsent'
 import { ConsentProvider } from '../components/consent/ConsentContext'
+import WelcomeDialog from '../components/WelcomeDialog'
 
 // Pre-hydration color-scheme init. Mirrors MUI's class-based color scheme
 // (storage key: mui-mode; classes: light / dark) and runs before paint to
@@ -117,6 +118,7 @@ export default function RootLayout({
                 <WhatsAppFab />
                 <BackToTop />
                 <CookieConsent />
+                <WelcomeDialog />
               </FilePizzaQueryClientProvider>
               <Analytics />
             </ConsentProvider>

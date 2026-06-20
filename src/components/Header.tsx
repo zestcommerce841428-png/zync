@@ -13,10 +13,14 @@ import ListItemButton from '@mui/material/ListItemButton'
 import ListItemText from '@mui/material/ListItemText'
 import Container from '@mui/material/Container'
 import MenuIcon from '@mui/icons-material/Menu'
+import TuneIcon from '@mui/icons-material/Tune'
+import AccessibilityNewIcon from '@mui/icons-material/AccessibilityNew'
+import Tooltip from '@mui/material/Tooltip'
 import { Link as ViewTransitionLink } from 'next-view-transitions'
 import Logo from './Logo'
 import ModeToggle from './ModeToggle'
 import AccountButton from './AccountButton'
+import { useSettings } from './settings/SettingsContext'
 
 const NAV: Array<{ label: string; href: string }> = [
   { label: 'Send', href: '/send' },
@@ -31,6 +35,7 @@ const NAV: Array<{ label: string; href: string }> = [
 
 export default function Header(): React.ReactElement {
   const [open, setOpen] = React.useState(false)
+  const { openPanel } = useSettings()
 
   return (
     <AppBar
@@ -71,6 +76,16 @@ export default function Header(): React.ReactElement {
             ))}
           </Box>
 
+          <Tooltip title="Appearance & themes">
+            <IconButton size="small" aria-label="Open appearance settings" onClick={() => openPanel(0)}>
+              <TuneIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Accessibility">
+            <IconButton size="small" aria-label="Open accessibility settings" onClick={() => openPanel(1)}>
+              <AccessibilityNewIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
           <ModeToggle />
           <AccountButton />
 

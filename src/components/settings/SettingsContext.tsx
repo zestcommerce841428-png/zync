@@ -142,6 +142,10 @@ type SettingsContextValue = {
   settings: Settings
   update: <K extends keyof Settings>(key: K, value: Settings[K]) => void
   reset: () => void
+  openPanel: (tab?: number) => void
+  panelOpen: boolean
+  setPanelOpen: (v: boolean) => void
+  panelTab: number
 }
 
 const SettingsContext = React.createContext<SettingsContextValue | null>(null)
@@ -209,9 +213,16 @@ export function SettingsProvider({
 
   const reset = React.useCallback(() => setSettings(DEFAULT_SETTINGS), [])
 
+  const [panelOpen, setPanelOpen] = React.useState(false)
+  const [panelTab, setPanelTab] = React.useState(0)
+  const openPanel = React.useCallback((tab = 0) => {
+    setPanelTab(tab)
+    setPanelOpen(true)
+  }, [])
+
   const value = React.useMemo(
-    () => ({ settings, update, reset }),
-    [settings, update, reset],
+    () => ({ settings, update, reset, openPanel, panelOpen, setPanelOpen, panelTab }),
+    [settings, update, reset, openPanel, panelOpen, panelTab],
   )
 
   return (
