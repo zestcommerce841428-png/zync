@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
-// Routes that require a logged-in Supabase user
-const PROTECTED_PATHS = ['/transfer', '/account', '/profile']
+// Exact paths that require auth (no sub-path matching)
+const PROTECTED_EXACT = new Set(['/transfer', '/send'])
+// Prefix paths — the path itself AND all sub-paths require auth
+// Note: /transfer/[slug] (download) is intentionally PUBLIC — share links must work without login
+const PROTECTED_PREFIX = ['/transfer/history', '/account', '/profile', '/admin']
 
 export async function middleware(request: NextRequest): Promise<NextResponse> {
   const { pathname, host } = request.nextUrl
@@ -15,9 +18,9 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   }
 
   // ── 2. Auth guard for protected routes ─────────────────────────────────────
-  const isProtected = PROTECTED_PATHS.some(
-    (p) => pathname === p || pathname.startsWith(p + '/'),
-  )
+  const isProtected =
+    PROTECTED_EXACT.has(pathname) ||
+    PROTECTED_PREFIX.some((p) => pathname === p || pathname.startsWith(p + '/'))
 
   // Generate a unique request ID for tracing (visible in response headers, useful for support)
   const requestId = crypto.randomUUID()

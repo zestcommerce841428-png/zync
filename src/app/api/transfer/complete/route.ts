@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { getTransfer, updateTransfer } from '../../../../lib/transfer'
 import { getSupabaseServerClient } from '../../../../supabase/server'
 import { sendMail } from '../../../../email'
-import { tplTransferReady } from '../../../../emailTemplates'
+import { tplTransferReady, tplTransferSent } from '../../../../emailTemplates'
 import { brand } from '../../../../brand'
 
 export const dynamic = 'force-dynamic'
@@ -38,6 +38,32 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // Send to each recipient (fire-and-forget)
     for (const to of t.recipientEmails) {
       void sendMail({ to, subject: tpl.subject, html: tpl.html, text: tpl.text })
+    }
+  }
+
+  // Send "transfer ready" confirmation to sender (fire-and-forget)
+  if (t) {
+    const url = `${brand.url}/transfer/${t.slug}`
+    let senderEmail: string | null = null
+    try {
+      const supabase = await getSupabaseServerClient()
+      if (supabase) {
+        const { data: { user } } = await supabase.auth.getUser()
+        senderEmail = user?.email ?? null
+      }
+    } catch { /* ignore */ }
+    // Fall back to notifyEmail if no account email
+    senderEmail = senderEmail ?? t.notifyEmail
+    if (senderEmail) {
+      const tpl = tplTransferSent({
+        title: t.title,
+        url,
+        fileCount: t.files.length,
+        totalSize: formatBytes(t.totalSize),
+        expiresAt: t.expiresAt,
+        recipientCount: t.recipientEmails.length,
+      })
+      void sendMail({ to: senderEmail, subject: tpl.subject, html: tpl.html, text: tpl.text })
     }
   }
 

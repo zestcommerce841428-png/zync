@@ -197,6 +197,39 @@ export function tplContactAdmin(d: {
   }
 }
 
+export function tplTransferSent(d: {
+  title: string
+  url: string
+  fileCount: number
+  totalSize: string
+  expiresAt: string
+  recipientCount: number
+}): { subject: string; html: string; text: string } {
+  const expiry = new Date(d.expiresAt).toLocaleDateString('en-US', {
+    month: 'long', day: 'numeric', year: 'numeric',
+  })
+  return {
+    subject: d.title
+      ? `Your transfer "${d.title}" is ready`
+      : `Your transfer is ready — ${brand.name}`,
+    text: `Your transfer is ready to share: ${d.url}\nExpires: ${expiry}`,
+    html: baseLayout({
+      preheader: `Your files are uploaded and ready to share.`,
+      heading: d.title ? `"${d.title}" is ready!` : `Your transfer is ready!`,
+      intro: `Your files have been uploaded successfully and are ready to share.`,
+      bodyHtml:
+        kv([
+          ['Files', `${d.fileCount} file${d.fileCount !== 1 ? 's' : ''}`],
+          ['Total size', d.totalSize],
+          ['Expires', expiry],
+          ...(d.recipientCount > 0 ? [['Recipients notified', String(d.recipientCount)] as [string, string]] : []),
+        ]),
+      button: { label: 'View your transfer', url: d.url },
+      footerNote: `Share this link with anyone: ${d.url}`,
+    }),
+  }
+}
+
 export function tplTransferReady(d: {
   title: string
   url: string

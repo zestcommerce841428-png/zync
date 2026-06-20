@@ -112,12 +112,12 @@ async function purgeCleanupEntries(slug: string): Promise<void> {
 // ── Cleanup sweep — call this on any API route to delete expired R2 objects ──
 // Processes up to `limit` expired entries per call (keeps each request fast)
 
-export async function sweepExpiredTransfers(limit = 20): Promise<void> {
+export async function sweepExpiredTransfers(limit = 20): Promise<number> {
   const redis = getRedisClient()
   const now = Date.now()
   // Get entries whose score (expiresAt ms) has passed
   const expired = await redis.zrangebyscore(CLEANUP_KEY, '-inf', now, 'LIMIT', 0, limit)
-  if (expired.length === 0) return
+  if (expired.length === 0) return 0
 
   const r2Keys: string[] = []
   const entries: string[] = []
@@ -147,6 +147,7 @@ export async function sweepExpiredTransfers(limit = 20): Promise<void> {
 
   // Remove processed entries from the queue
   await redis.zrem(CLEANUP_KEY, ...entries)
+  return entries.length
 }
 
 // ── User transfer index (sorted set: score = expiresAt ms) ──────────────────

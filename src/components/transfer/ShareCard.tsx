@@ -5,12 +5,19 @@ import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
+import IconButton from '@mui/material/IconButton'
 import Stack from '@mui/material/Stack'
 import Alert from '@mui/material/Alert'
 import Chip from '@mui/material/Chip'
+import Divider from '@mui/material/Divider'
+import Tooltip from '@mui/material/Tooltip'
 import CheckIcon from '@mui/icons-material/Check'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
-import LinkIcon from '@mui/icons-material/Link'
+import ShareIcon from '@mui/icons-material/Share'
+import WhatsAppIcon from '@mui/icons-material/WhatsApp'
+import TwitterIcon from '@mui/icons-material/X'
+import EmailIcon from '@mui/icons-material/Email'
+import TelegramIcon from '@mui/icons-material/Telegram'
 import QRCode from 'react-qr-code'
 
 type Props = {
@@ -23,30 +30,27 @@ type Props = {
 
 export default function ShareCard({ slug, expiresAt, title, passwordProtected, burnAfterRead }: Props): React.ReactElement {
   const [origin, setOrigin] = React.useState('')
-  React.useEffect(() => { setOrigin(window.location.origin) }, [])
+  const [canShare, setCanShare] = React.useState(false)
+  React.useEffect(() => {
+    setOrigin(window.location.origin)
+    setCanShare(typeof navigator.share === 'function')
+  }, [])
   const url = `${origin}/transfer/${slug}`
+  const shareText = title ? `"${title}" — download via Zync` : 'Here are your files — download via Zync'
 
   const [copied, setCopied] = React.useState(false)
-  const [copiedDirect, setCopiedDirect] = React.useState(false)
-
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(url)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
-    } catch {
-      // ignore
-    }
+    } catch { /* ignore */ }
   }
 
-  const copyDirect = async () => {
+  const nativeShare = async () => {
     try {
-      await navigator.clipboard.writeText(url)
-      setCopiedDirect(true)
-      setTimeout(() => setCopiedDirect(false), 2000)
-    } catch {
-      // ignore
-    }
+      await navigator.share({ title: shareText, url })
+    } catch { /* user cancelled */ }
   }
 
   const [daysLeft, setDaysLeft] = React.useState<number | null>(null)
@@ -58,6 +62,36 @@ export default function ShareCard({ slug, expiresAt, title, passwordProtected, b
   const expiryStr = new Date(expiresAt).toLocaleDateString('en-US', {
     month: 'short', day: 'numeric', year: 'numeric',
   })
+
+  const encoded = encodeURIComponent(url)
+  const encodedText = encodeURIComponent(shareText)
+
+  const socialLinks = [
+    {
+      label: 'WhatsApp',
+      icon: <WhatsAppIcon fontSize="small" />,
+      href: `https://wa.me/?text=${encodedText}%20${encoded}`,
+      color: '#25D366',
+    },
+    {
+      label: 'X / Twitter',
+      icon: <TwitterIcon fontSize="small" />,
+      href: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encoded}`,
+      color: '#000',
+    },
+    {
+      label: 'Telegram',
+      icon: <TelegramIcon fontSize="small" />,
+      href: `https://t.me/share/url?url=${encoded}&text=${encodedText}`,
+      color: '#229ED9',
+    },
+    {
+      label: 'Email',
+      icon: <EmailIcon fontSize="small" />,
+      href: `mailto:?subject=${encodedText}&body=${encoded}`,
+      color: undefined,
+    },
+  ]
 
   return (
     <Stack spacing={2}>
@@ -86,17 +120,46 @@ export default function ShareCard({ slug, expiresAt, title, passwordProtected, b
           >
             {copied ? 'Copied!' : 'Copy link'}
           </Button>
-          <Button
-            variant="outlined"
-            size="small"
-            startIcon={copiedDirect ? <CheckIcon /> : <LinkIcon />}
-            onClick={copyDirect}
-            color={copiedDirect ? 'success' : 'inherit'}
-            fullWidth
-          >
-            {copiedDirect ? 'Copied!' : 'Copy direct link'}
-          </Button>
+          {canShare && (
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<ShareIcon />}
+              onClick={nativeShare}
+              fullWidth
+            >
+              Share…
+            </Button>
+          )}
         </Stack>
+      </Stack>
+
+      <Divider>
+        <Typography variant="caption" color="text.secondary">Share via</Typography>
+      </Divider>
+
+      <Stack direction="row" spacing={1} sx={{ justifyContent: 'center' }}>
+        {socialLinks.map(({ label, icon, href, color }) => (
+          <Tooltip key={label} title={label}>
+            <IconButton
+              component="a"
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              size="small"
+              sx={{
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 1.5,
+                p: 1,
+                color: color ?? 'text.primary',
+                '&:hover': { borderColor: color ?? 'primary.main', bgcolor: 'action.hover' },
+              }}
+            >
+              {icon}
+            </IconButton>
+          </Tooltip>
+        ))}
       </Stack>
 
       <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>

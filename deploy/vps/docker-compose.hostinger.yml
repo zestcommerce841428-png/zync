@@ -77,6 +77,19 @@ services:
     depends_on:
       - redis
 
+  # Cron runner: calls /api/cron/cleanup every 5 minutes to delete expired R2
+  # objects. Uses alpine's crond — no extra deps, trivial memory footprint.
+  cron:
+    image: alpine:3.19
+    restart: unless-stopped
+    environment:
+      - CRON_SECRET=${CRON_SECRET}
+      - APP_URL=http://app:3000
+    command: >
+      sh -c "echo '*/5 * * * * wget -q -O- --header=\"Authorization: Bearer $$CRON_SECRET\" --post-data=\"\" $$APP_URL/api/cron/cleanup || true' | crontab - && crond -f -L /dev/stdout"
+    depends_on:
+      - app
+
   watchtower:
     image: containrrr/watchtower:latest
     restart: unless-stopped

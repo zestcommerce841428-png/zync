@@ -11,8 +11,9 @@ import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction'
 import DeleteIcon from '@mui/icons-material/Delete'
 import UploadFileIcon from '@mui/icons-material/UploadFile'
 import Button from '@mui/material/Button'
+import Stack from '@mui/material/Stack'
 
-const MAX_FILES = 10
+const MAX_FILES = 20
 const MAX_BYTES = Number(process.env.NEXT_PUBLIC_TRANSFER_MAX_BYTES ?? 2 * 1024 * 1024 * 1024)
 
 function formatBytes(n: number): string {
@@ -31,6 +32,11 @@ type Props = {
 export default function UploadZone({ files, onChange, disabled }: Props): React.ReactElement {
   const [dragging, setDragging] = React.useState(false)
   const inputRef = React.useRef<HTMLInputElement>(null)
+  const folderElRef = React.useRef<HTMLInputElement | null>(null)
+  const folderInputRef = React.useCallback((el: HTMLInputElement | null) => {
+    folderElRef.current = el
+    if (el) el.setAttribute('webkitdirectory', '')
+  }, [])
 
   const addFiles = (incoming: FileList | null) => {
     if (!incoming) return
@@ -59,7 +65,36 @@ export default function UploadZone({ files, onChange, disabled }: Props): React.
         onDrop={(e) => {
           e.preventDefault()
           setDragging(false)
-          addFiles(e.dataTransfer.files)
+          // Use items API to support folder drops (flattens to files)
+          if (e.dataTransfer.items) {
+            const flat: File[] = []
+            const entries: FileSystemEntry[] = []
+            for (const item of Array.from(e.dataTransfer.items)) {
+              const entry = item.webkitGetAsEntry?.()
+              if (entry) entries.push(entry)
+            }
+            const readEntry = (entry: FileSystemEntry): Promise<void> => {
+              if (entry.isFile) {
+                return new Promise((res) => {
+                  ;(entry as FileSystemFileEntry).file((f) => { flat.push(f); res() })
+                })
+              }
+              const reader = (entry as FileSystemDirectoryEntry).createReader()
+              return new Promise((res) => {
+                reader.readEntries(async (sub) => {
+                  await Promise.all(sub.map(readEntry))
+                  res()
+                })
+              })
+            }
+            Promise.all(entries.map(readEntry)).then(() => {
+              const dt = new DataTransfer()
+              flat.forEach((f) => dt.items.add(f))
+              addFiles(dt.files)
+            })
+          } else {
+            addFiles(e.dataTransfer.files)
+          }
         }}
         onClick={() => !disabled && inputRef.current?.click()}
         sx={{
@@ -91,7 +126,17 @@ export default function UploadZone({ files, onChange, disabled }: Props): React.
           aria-label="Choose files to upload"
           title="Choose files to upload"
           sx={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => addFiles(e.target.files)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => { addFiles(e.target.files); e.target.value = '' }}
+          disabled={disabled}
+        />
+        <Box
+          component="input"
+          ref={folderInputRef}
+          type="file"
+          multiple
+          aria-label="Choose folder to upload"
+          sx={{ position: 'absolute', width: 0, height: 0, opacity: 0, pointerEvents: 'none' }}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => { addFiles(e.target.files); e.target.value = '' }}
           disabled={disabled}
         />
       </Box>
@@ -131,13 +176,14 @@ export default function UploadZone({ files, onChange, disabled }: Props): React.
       )}
 
       {files.length > 0 && files.length < MAX_FILES && !disabled && (
-        <Button
-          size="small"
-          onClick={() => inputRef.current?.click()}
-          sx={{ mt: 1 }}
-        >
-          + Add more files
-        </Button>
+        <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+          <Button size="small" onClick={() => inputRef.current?.click()}>
+            + Add more files
+          </Button>
+          <Button size="small" onClick={() => folderElRef.current?.click()}>
+            + Add folder
+          </Button>
+        </Stack>
       )}
     </Box>
   )

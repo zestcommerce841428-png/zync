@@ -127,11 +127,31 @@ export default function DownloadCard({
     } catch {}
   }, [slug, passwordProtected])
 
+  // Fetch inline thumbnails for image files once unlocked
+  React.useEffect(() => {
+    if (!unlocked) return
+    files.forEach((f, i) => {
+      if (!f.type.startsWith('image/')) return
+      fetch(`/api/transfer/${slug}/download`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileIndex: i, preview: true, password: currentPassword() }),
+      })
+        .then((r) => r.ok ? r.json() : null)
+        .then((json) => { if (json?.url) setThumbnails((prev) => ({ ...prev, [i]: json.url })) })
+        .catch(() => {})
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [unlocked, slug])
+
   const [downloading, setDownloading] = React.useState<Set<number>>(new Set())
   const [zipping, setZipping] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 
-  // Preview
+  // Inline thumbnails: map fileIndex → presigned URL
+  const [thumbnails, setThumbnails] = React.useState<Record<number, string>>({})
+
+  // Preview dialog
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(null)
   const [previewType, setPreviewType] = React.useState<string>('')
   const [previewLoading, setPreviewLoading] = React.useState<number | null>(null)
@@ -359,7 +379,22 @@ export default function DownloadCard({
               </Stack>
             }
           >
-            <ListItemIcon sx={{ minWidth: 36 }}>{fileIcon(f.type)}</ListItemIcon>
+            <ListItemIcon sx={{ minWidth: 44 }}>
+              {thumbnails[i] ? (
+                <Box
+                  component="img"
+                  src={thumbnails[i]}
+                  alt={f.name}
+                  onClick={() => { setPreviewType(f.type); setPreviewUrl(thumbnails[i]) }}
+                  sx={{
+                    width: 36, height: 36, objectFit: 'cover', borderRadius: 1,
+                    cursor: 'pointer', border: '1px solid', borderColor: 'divider',
+                  }}
+                />
+              ) : (
+                fileIcon(f.type)
+              )}
+            </ListItemIcon>
             <ListItemText
               primary={f.name}
               secondary={formatBytes(f.size)}

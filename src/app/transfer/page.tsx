@@ -52,6 +52,8 @@ export default function TransferPage(): React.ReactElement {
   const [burnAfterRead, setBurnAfterRead] = React.useState(false)
   const [stage, setStage] = React.useState<Stage>('idle')
   const [fileProgress, setFileProgress] = React.useState<FileProgress[]>([])
+  const [speedBps, setSpeedBps] = React.useState(0)
+  const [etaSeconds, setEtaSeconds] = React.useState<number | null>(null)
   const [error, setError] = React.useState<string | null>(null)
   const [resultSlug, setResultSlug] = React.useState('')
   const [resultExpiry, setResultExpiry] = React.useState('')
@@ -79,7 +81,36 @@ export default function TransferPage(): React.ReactElement {
     if (files.length === 0 || overLimit) return
     setStage('uploading')
     setError(null)
-    setFileProgress(files.map((f) => ({ name: f.name, progress: 0, done: false, error: false })))
+    setSpeedBps(0)
+    setEtaSeconds(null)
+    setFileProgress(files.map((f) => ({ name: f.name, size: f.size, loaded: 0, progress: 0, done: false, error: false })))
+
+    // Speed tracking: sliding window over last 3 seconds
+    const startTime = Date.now()
+    const loadedPerFile = new Array<number>(files.length).fill(0)
+    const samples: Array<{ t: number; bytes: number }> = [{ t: startTime, bytes: 0 }]
+
+    const onProgress = (i: number, loaded: number) => {
+      loadedPerFile[i] = loaded
+      const totalLoaded = loadedPerFile.reduce((a, b) => a + b, 0)
+      const now = Date.now()
+      samples.push({ t: now, bytes: totalLoaded })
+      // Keep only last 3 s of samples
+      const cutoff = now - 3000
+      while (samples.length > 1 && samples[0].t < cutoff) samples.shift()
+      const dt = (now - samples[0].t) / 1000
+      const db = totalLoaded - samples[0].bytes
+      const bps = dt > 0 ? db / dt : 0
+      const remaining = totalSize - totalLoaded
+      setSpeedBps(Math.round(bps))
+      setEtaSeconds(bps > 0 ? remaining / bps : null)
+      const pct = (loaded / files[i].size) * 100
+      setFileProgress((prev) => {
+        const next = [...prev]
+        next[i] = { ...next[i], loaded, progress: pct }
+        return next
+      })
+    }
 
     try {
       const createRes = await fetch('/api/transfer/create', {
@@ -110,17 +141,11 @@ export default function TransferPage(): React.ReactElement {
             xhr.open('PUT', uploadUrls[i])
             xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream')
             xhr.upload.addEventListener('progress', (e) => {
-              if (e.lengthComputable) {
-                const pct = (e.loaded / e.total) * 100
-                setFileProgress((prev) => {
-                  const next = [...prev]
-                  next[i] = { ...next[i], progress: pct }
-                  return next
-                })
-              }
+              if (e.lengthComputable) onProgress(i, e.loaded)
             })
             xhr.addEventListener('load', () => {
               if (xhr.status >= 200 && xhr.status < 300) {
+                onProgress(i, file.size)
                 setFileProgress((prev) => {
                   const next = [...prev]
                   next[i] = { ...next[i], progress: 100, done: true }
@@ -169,7 +194,8 @@ export default function TransferPage(): React.ReactElement {
   const overallProgress =
     fileProgress.length === 0
       ? 0
-      : fileProgress.reduce((s, f) => s + f.progress, 0) / fileProgress.length
+      : fileProgress.reduce((s, f) => s + f.loaded, 0) /
+        Math.max(1, fileProgress.reduce((s, f) => s + f.size, 0)) * 100
 
   const reset = () => {
     setFiles([])
@@ -186,6 +212,8 @@ export default function TransferPage(): React.ReactElement {
     setBurnAfterRead(false)
     setStage('idle')
     setFileProgress([])
+    setSpeedBps(0)
+    setEtaSeconds(null)
     setError(null)
     setResultSlug('')
     setResultExpiry('')
@@ -223,7 +251,7 @@ export default function TransferPage(): React.ReactElement {
               <UploadZone files={files} onChange={setFiles} disabled={stage === 'uploading'} />
 
               {stage === 'uploading' && (
-                <UploadProgress files={fileProgress} overallProgress={overallProgress} />
+                <UploadProgress files={fileProgress} overallProgress={overallProgress} speedBps={speedBps} etaSeconds={etaSeconds} />
               )}
 
               {stage !== 'uploading' && files.length > 0 && (
