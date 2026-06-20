@@ -57,6 +57,9 @@ jobs:
             NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR3aml6bnp3dGd6Y2FhY3FxeXlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3ODg0MjYsImV4cCI6MjA5NzM2NDQyNn0.RO2GMtvqO4cIDCuSQrE3kiC59sII8yNbcIrDsZN1vSw
             NEXT_PUBLIC_GA_ID=G-9ZB3KPK6Z8
             NEXT_PUBLIC_RECAPTCHA_SITE_KEY=6LduoCYtAAAAADrExlYimeg5jfHls8Yqs5a52Zu0
+            NEXT_PUBLIC_BUILD_TIME=${{ github.event.head_commit.timestamp }}
+            NEXT_PUBLIC_COMMIT_SHA=${{ github.sha }}
+            NEXT_PUBLIC_APP_VERSION=${{ github.ref_name }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           # Watchtower on the VPS polls GHCR every 60s and restarts only the
