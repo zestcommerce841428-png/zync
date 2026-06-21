@@ -23,7 +23,7 @@ export async function GET(): Promise<NextResponse> {
   // Mask sensitive values — return placeholder so the UI can show "••••••"
   // without leaking the actual secret. The UI only sends back values that changed.
   const masked = { ...settings }
-  const secretKeys: SettingKey[] = ['smtp_pass', 'r2_secret_access_key']
+  const secretKeys: SettingKey[] = ['smtp_pass', 'r2_secret_access_key', 's3_secret_access_key']
   for (const k of secretKeys) {
     if (masked[k]) masked[k] = '__masked__'
   }
@@ -37,10 +37,16 @@ const PatchSchema = z.object({
   smtp_user: z.string().max(200).optional(),
   smtp_pass: z.string().max(200).optional(),
   smtp_from: z.string().max(200).optional(),
+  storage_provider: z.enum(['r2', 's3']).optional(),
   r2_account_id: z.string().max(200).optional(),
   r2_access_key_id: z.string().max(200).optional(),
   r2_secret_access_key: z.string().max(200).optional(),
   r2_bucket_name: z.string().max(200).optional(),
+  s3_access_key_id: z.string().max(200).optional(),
+  s3_secret_access_key: z.string().max(200).optional(),
+  s3_region: z.string().max(50).optional(),
+  s3_bucket: z.string().max(200).optional(),
+  s3_storage_class: z.enum(['STANDARD', 'INTELLIGENT_TIERING', 'STANDARD_IA', 'GLACIER_IR']).optional(),
   feature_email_notifications: z.enum(['true', 'false']).optional(),
   feature_transfer_tracking: z.enum(['true', 'false']).optional(),
   feature_recaptcha: z.enum(['true', 'false']).optional(),

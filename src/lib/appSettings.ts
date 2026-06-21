@@ -10,11 +10,21 @@ export type SettingKey =
   | 'smtp_user'
   | 'smtp_pass'
   | 'smtp_from'
-  // R2 / storage
+  // Storage — provider selector ('r2' | 's3'; empty = auto-detect from env)
+  | 'storage_provider'
+  // Cloudflare R2
   | 'r2_account_id'
   | 'r2_access_key_id'
   | 'r2_secret_access_key'
   | 'r2_bucket_name'
+  // AWS S3
+  | 's3_access_key_id'
+  | 's3_secret_access_key'
+  | 's3_region'
+  | 's3_bucket'
+  // S3 cost-savings options
+  | 's3_storage_class'        // INTELLIGENT_TIERING | STANDARD | STANDARD_IA | GLACIER_IR
+  | 's3_lifecycle_days'       // move to Glacier IR after N days (informational — set via AWS console)
   // Feature flags
   | 'feature_email_notifications'
   | 'feature_transfer_tracking'

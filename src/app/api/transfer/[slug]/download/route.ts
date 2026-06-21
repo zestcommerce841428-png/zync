@@ -61,8 +61,8 @@ export async function POST(
   const file = transfer.files[body.data.fileIndex]
   if (!file) return notFound('File not found.')
 
-  const storage = getStorageClient()
-  const bucket = getStorageBucket()
+  const storage = await getStorageClient()
+  const bucket = await getStorageBucket()
   const isPreview = body.data.preview
 
   const url = await getSignedUrl(

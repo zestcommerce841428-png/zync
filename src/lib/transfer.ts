@@ -141,10 +141,10 @@ export async function sweepExpiredTransfers(limit = 20): Promise<number> {
 
   if (storageKeys.length > 0) {
     try {
-      const client = getStorageClient()
+      const client = await getStorageClient()
       await client.send(
         new DeleteObjectsCommand({
-          Bucket: getStorageBucket(),
+          Bucket: await getStorageBucket(),
           Delete: { Objects: storageKeys.map((Key) => ({ Key })), Quiet: true },
         }),
       )

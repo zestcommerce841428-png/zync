@@ -27,10 +27,16 @@ type Settings = {
   smtp_user?: string
   smtp_pass?: string
   smtp_from?: string
+  storage_provider?: string
   r2_account_id?: string
   r2_access_key_id?: string
   r2_secret_access_key?: string
   r2_bucket_name?: string
+  s3_access_key_id?: string
+  s3_secret_access_key?: string
+  s3_region?: string
+  s3_bucket?: string
+  s3_storage_class?: string
   feature_email_notifications?: string
   feature_transfer_tracking?: string
   feature_recaptcha?: string
@@ -250,38 +256,92 @@ export default function SettingsManager(): React.ReactElement {
           )}
 
           {tab === 1 && (
-            <Stack spacing={2} sx={{ maxWidth: 520 }}>
+            <Stack spacing={2} sx={{ maxWidth: 560 }}>
               <Typography variant="body2" color="text.secondary">
-                Cloudflare R2 credentials for file storage. Changes apply within 30 seconds.
+                Choose your storage provider. Changes apply within 30 seconds — no redeploy needed.
               </Typography>
               <Divider />
-              <TextField
-                label="R2 Account ID"
-                fullWidth
-                size="small"
-                value={s.r2_account_id ?? ''}
-                onChange={(e) => patch({ r2_account_id: e.target.value })}
-              />
-              <TextField
-                label="R2 Access Key ID"
-                fullWidth
-                size="small"
-                value={s.r2_access_key_id ?? ''}
-                onChange={(e) => patch({ r2_access_key_id: e.target.value })}
-              />
-              <SecretField
-                label="R2 Secret Access Key"
-                value={s.r2_secret_access_key ?? ''}
-                onChange={(v) => patch({ r2_secret_access_key: v })}
-              />
-              <TextField
-                label="R2 Bucket Name"
-                fullWidth
-                size="small"
-                value={s.r2_bucket_name ?? ''}
-                onChange={(e) => patch({ r2_bucket_name: e.target.value })}
-                placeholder="zync-transfers"
-              />
+
+              {/* Provider selector */}
+              <Stack direction="row" spacing={1}>
+                {(['r2', 's3'] as const).map((p) => (
+                  <Button
+                    key={p}
+                    variant={s.storage_provider === p ? 'contained' : 'outlined'}
+                    size="small"
+                    onClick={() => patch({ storage_provider: p })}
+                  >
+                    {p === 'r2' ? 'Cloudflare R2' : 'AWS S3'}
+                  </Button>
+                ))}
+              </Stack>
+
+              {/* R2 fields */}
+              {(s.storage_provider === 'r2' || !s.storage_provider) && (
+                <Stack spacing={2}>
+                  <Alert severity="info" sx={{ py: 0.5 }}>
+                    R2 has <strong>zero egress fees</strong> and flat storage pricing (~$0.015/GB/mo). Best choice for most deployments.
+                  </Alert>
+                  <TextField label="R2 Account ID" fullWidth size="small"
+                    value={s.r2_account_id ?? ''} onChange={(e) => patch({ r2_account_id: e.target.value })} />
+                  <TextField label="R2 Access Key ID" fullWidth size="small"
+                    value={s.r2_access_key_id ?? ''} onChange={(e) => patch({ r2_access_key_id: e.target.value })} />
+                  <SecretField label="R2 Secret Access Key"
+                    value={s.r2_secret_access_key ?? ''} onChange={(v) => patch({ r2_secret_access_key: v })} />
+                  <TextField label="Bucket Name" fullWidth size="small" placeholder="zync-transfers"
+                    value={s.r2_bucket_name ?? ''} onChange={(e) => patch({ r2_bucket_name: e.target.value })} />
+                </Stack>
+              )}
+
+              {/* S3 fields */}
+              {s.storage_provider === 's3' && (
+                <Stack spacing={2}>
+                  <Alert severity="info" sx={{ py: 0.5 }}>
+                    S3 charges egress fees. Use <strong>Intelligent-Tiering</strong> to auto-move objects to cheaper tiers after 30/90 days. <strong>Standard-IA</strong> saves ~45% for files accessed rarely. <strong>Glacier IR</strong> saves ~68% with instant retrieval.
+                  </Alert>
+                  <TextField label="AWS Access Key ID" fullWidth size="small"
+                    value={s.s3_access_key_id ?? ''} onChange={(e) => patch({ s3_access_key_id: e.target.value })} />
+                  <SecretField label="AWS Secret Access Key"
+                    value={s.s3_secret_access_key ?? ''} onChange={(v) => patch({ s3_secret_access_key: v })} />
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                    <TextField label="Region" fullWidth size="small" placeholder="us-east-1"
+                      value={s.s3_region ?? ''} onChange={(e) => patch({ s3_region: e.target.value })} />
+                    <TextField label="Bucket Name" fullWidth size="small" placeholder="zync-transfers"
+                      value={s.s3_bucket ?? ''} onChange={(e) => patch({ s3_bucket: e.target.value })} />
+                  </Stack>
+
+                  {/* Storage class picker with cost context */}
+                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, mt: 1 }}>
+                    Storage Class (cost savings)
+                  </Typography>
+                  <Stack spacing={1}>
+                    {([
+                      { value: 'STANDARD', label: 'Standard', desc: 'Full price. Use for frequently accessed files only.' },
+                      { value: 'INTELLIGENT_TIERING', label: 'Intelligent-Tiering (recommended)', desc: 'Auto-tiers to Infrequent Access after 30 days, Archive after 90 days. ~$0.023→$0.0125/GB.' },
+                      { value: 'STANDARD_IA', label: 'Standard-IA', desc: '~45% cheaper than Standard. Best for files accessed < once/month. Min 30-day charge.' },
+                      { value: 'GLACIER_IR', label: 'Glacier Instant Retrieval', desc: '~68% cheaper. 1–5ms retrieval. Best for archive transfers rarely downloaded.' },
+                    ] as const).map((opt) => (
+                      <Box
+                        key={opt.value}
+                        onClick={() => patch({ s3_storage_class: opt.value })}
+                        sx={{
+                          border: 1,
+                          borderColor: s.s3_storage_class === opt.value ? 'primary.main' : 'divider',
+                          borderRadius: 1,
+                          px: 1.5,
+                          py: 1,
+                          cursor: 'pointer',
+                          bgcolor: s.s3_storage_class === opt.value ? 'primary.50' : 'transparent',
+                          '&:hover': { borderColor: 'primary.main' },
+                        }}
+                      >
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>{opt.label}</Typography>
+                        <Typography variant="caption" color="text.secondary">{opt.desc}</Typography>
+                      </Box>
+                    ))}
+                  </Stack>
+                </Stack>
+              )}
             </Stack>
           )}
 

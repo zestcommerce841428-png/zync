@@ -49,7 +49,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const rl = await rateLimit(`transfer-create:${ip}`, { limit: 10, windowSeconds: 600 })
   if (!rl.success) return tooManyRequests(rl)
 
-  if (!isStorageConfigured()) {
+  if (!await isStorageConfigured()) {
     return err('Cloud transfers are not configured on this server.', { status: 503 })
   }
 
@@ -78,9 +78,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const expiryDays = Math.min(days, maxDays)
 
     const slug = await generateShortSlug()
-    const storage = getStorageClient()
-    const bucket = getStorageBucket()
-    const storageClass = getStorageClass()
+    const storage = await getStorageClient()
+    const bucket = await getStorageBucket()
+    const storageClass = await getStorageClass()
 
     void sweepExpiredTransfers()
 
