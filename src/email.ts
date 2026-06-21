@@ -2,40 +2,86 @@ import 'server-only'
 import nodemailer from 'nodemailer'
 import { brand } from './brand'
 import { getAdminEmails } from './supabase/config'
+import { getAllSettings, isFeatureEnabled } from './lib/appSettings'
 
-// Email delivery via Hostinger SMTP (or any SMTP provider). Configured purely
-// through environment variables; if SMTP isn't configured the helper logs the
-// message and reports success=false so callers can degrade gracefully.
+// Email delivery via Hostinger SMTP (or any SMTP provider).
+// Config is read from the app_settings DB table first, falling back to env vars.
+// If neither is present, messages are logged and skipped gracefully.
 //
-// Required env:
-//   SMTP_HOST     (e.g. smtp.hostinger.com)
-//   SMTP_PORT     (465 for SSL, 587 for STARTTLS)
-//   SMTP_USER     (e.g. contact@zestcommere.in)
-//   SMTP_PASS
-//   SMTP_FROM     (optional; defaults to SMTP_USER)
+// Env var fallbacks:
+//   SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM
 
-export function isEmailConfigured(): boolean {
-  return Boolean(
-    process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS,
-  )
+type SmtpConfig = {
+  host: string
+  port: number
+  user: string
+  pass: string
+  from: string
 }
 
-let transporter: nodemailer.Transporter | null = null
-
-function getTransporter(): nodemailer.Transporter {
-  if (!transporter) {
-    const port = Number(process.env.SMTP_PORT || 465)
-    transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port,
-      secure: port === 465,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    })
+async function getSmtpConfig(): Promise<SmtpConfig | null> {
+  // Try DB settings first (allows changing without redeploy).
+  try {
+    const s = await getAllSettings()
+    const host = s.smtp_host || process.env.SMTP_HOST
+    const user = s.smtp_user || process.env.SMTP_USER
+    const pass = s.smtp_pass || process.env.SMTP_PASS
+    if (host && user && pass) {
+      return {
+        host,
+        port: Number(s.smtp_port || process.env.SMTP_PORT || 465),
+        user,
+        pass,
+        from: s.smtp_from || process.env.SMTP_FROM || user,
+      }
+    }
+  } catch {
+    // DB unavailable — fall through to env vars only.
   }
-  return transporter
+
+  // Pure env-var fallback.
+  const host = process.env.SMTP_HOST
+  const user = process.env.SMTP_USER
+  const pass = process.env.SMTP_PASS
+  if (!host || !user || !pass) return null
+  return {
+    host,
+    port: Number(process.env.SMTP_PORT || 465),
+    user,
+    pass,
+    from: process.env.SMTP_FROM || user,
+  }
+}
+
+export async function isEmailConfigured(): Promise<boolean> {
+  return (await getSmtpConfig()) !== null
+}
+
+// Transporter is rebuilt whenever config changes (DB values may update).
+// We don't cache it indefinitely to ensure fresh credentials are always used.
+let _transporter: { config: SmtpConfig; transport: nodemailer.Transporter } | null = null
+
+async function getTransporter(): Promise<nodemailer.Transporter | null> {
+  const cfg = await getSmtpConfig()
+  if (!cfg) return null
+
+  if (
+    _transporter &&
+    _transporter.config.host === cfg.host &&
+    _transporter.config.user === cfg.user &&
+    _transporter.config.pass === cfg.pass
+  ) {
+    return _transporter.transport
+  }
+
+  const transport = nodemailer.createTransport({
+    host: cfg.host,
+    port: cfg.port,
+    secure: cfg.port === 465,
+    auth: { user: cfg.user, pass: cfg.pass },
+  })
+  _transporter = { config: cfg, transport }
+  return transport
 }
 
 export type SendResult = { success: boolean; reason?: string }
@@ -53,17 +99,23 @@ export async function sendMail({
   html?: string
   replyTo?: string
 }): Promise<SendResult> {
-  if (!isEmailConfigured()) {
-    console.warn('[email] SMTP not configured — message not sent:', {
-      subject,
-      text,
-    })
+  const enabled = await isFeatureEnabled('feature_email_notifications', true)
+  if (!enabled) {
+    console.info('[email] notifications disabled — skipping:', { subject })
+    return { success: false, reason: 'disabled' }
+  }
+
+  const cfg = await getSmtpConfig()
+  if (!cfg) {
+    console.warn('[email] SMTP not configured — message not sent:', { subject })
     return { success: false, reason: 'not_configured' }
   }
 
   try {
-    await getTransporter().sendMail({
-      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+    const transport = await getTransporter()
+    if (!transport) return { success: false, reason: 'not_configured' }
+    await transport.sendMail({
+      from: cfg.from,
       to: to || brand.contact.email,
       subject,
       text,
@@ -77,7 +129,6 @@ export async function sendMail({
   }
 }
 
-// Fan out an operational/critical notification to every admin in ADMIN_EMAILS.
 export async function notifyAdmins(msg: {
   subject: string
   text: string
@@ -88,7 +139,6 @@ export async function notifyAdmins(msg: {
   await Promise.allSettled(admins.map((to) => sendMail({ to, ...msg })))
 }
 
-// Best-effort fire-and-forget send (won't block or throw in request handlers).
 export function sendMailBg(args: Parameters<typeof sendMail>[0]): void {
   sendMail(args).catch((e) => console.error('[email] bg send failed:', e))
 }

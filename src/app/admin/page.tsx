@@ -13,6 +13,7 @@ import { isSupabaseConfigured, isAdminEmail } from '../../supabase/config'
 import { getStatsStore } from '../../stats'
 import AdminTools from '../../components/AdminTools'
 import BlogManager from '../../components/admin/BlogManager'
+import SettingsManager from '../../components/admin/SettingsManager'
 
 export const metadata: Metadata = {
   title: 'Admin',
@@ -72,6 +73,10 @@ export default async function AdminPage(): Promise<React.ReactElement> {
 
       <Box sx={{ mt: 2 }}>
         <BlogManager />
+      </Box>
+
+      <Box sx={{ mt: 6 }}>
+        <SettingsManager />
       </Box>
     </Container>
   )

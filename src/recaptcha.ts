@@ -1,11 +1,15 @@
 import 'server-only'
+import { isFeatureEnabled } from './lib/appSettings'
 
-// Google reCAPTCHA v3 server-side verification. If no secret is configured the
-// check is skipped (returns true) so the app works in development.
+// Google reCAPTCHA v3 server-side verification. If no secret is configured,
+// or if the feature_recaptcha flag is off, the check is skipped (returns ok).
 export async function verifyRecaptcha(
   token: string | undefined,
   { minScore = 0.5 }: { minScore?: number } = {},
 ): Promise<{ ok: boolean; score?: number; reason?: string }> {
+  const enabled = await isFeatureEnabled('feature_recaptcha', true)
+  if (!enabled) return { ok: true, reason: 'disabled' }
+
   const secret = process.env.RECAPTCHA_SECRET_KEY
   if (!secret) return { ok: true, reason: 'not_configured' }
   if (!token) return { ok: false, reason: 'missing_token' }
