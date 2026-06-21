@@ -14,9 +14,10 @@ import Button from '@mui/material/Button'
 import Stack from '@mui/material/Stack'
 
 const MAX_FILES = 20
-const MAX_BYTES = Number(process.env.NEXT_PUBLIC_TRANSFER_MAX_BYTES ?? 2 * 1024 * 1024 * 1024)
+const MAX_BYTES = Number(process.env.NEXT_PUBLIC_TRANSFER_MAX_BYTES ?? 200 * 1024 * 1024 * 1024)
 
 function formatBytes(n: number): string {
+  if (n >= 1e12) return `${(n / 1e12).toFixed(1)} TB`
   if (n >= 1e9) return `${(n / 1e9).toFixed(1)} GB`
   if (n >= 1e6) return `${(n / 1e6).toFixed(1)} MB`
   if (n >= 1e3) return `${(n / 1e3).toFixed(1)} KB`
@@ -116,7 +117,7 @@ export default function UploadZone({ files, onChange, disabled }: Props): React.
             : `${files.length} file${files.length !== 1 ? 's' : ''} selected`}
         </Typography>
         <Typography variant="caption" color="text.secondary">
-          Up to {MAX_FILES} files · max 2 GB total
+          Up to {MAX_FILES} files · max {formatBytes(MAX_BYTES)} total
         </Typography>
         <Box
           component="input"
@@ -170,7 +171,7 @@ export default function UploadZone({ files, onChange, disabled }: Props): React.
             sx={{ pl: 0.5 }}
           >
             Total: {formatBytes(totalSize)}
-            {overLimit ? ' — exceeds 2 GB limit' : ''}
+            {overLimit ? ` — exceeds ${formatBytes(MAX_BYTES)} limit` : ''}
           </Typography>
         </Box>
       )}

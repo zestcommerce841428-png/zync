@@ -24,8 +24,8 @@ const CSP = [
   "font-src 'self' https://fonts.gstatic.com data:",
   // Avatars, OG images, inline data URIs, blob URLs for ZIP downloads
   "img-src 'self' data: blob: https:",
-  // API calls: Supabase, R2 uploads/downloads, GA, PeerJS signaling, Cloudflare Insights, reCAPTCHA
-  "connect-src 'self' wss: https://*.supabase.co https://*.r2.cloudflarestorage.com https://www.google-analytics.com https://www.googletagmanager.com https://analytics.google.com https://cloudflareinsights.com https://*.peerjs.com wss://*.peerjs.com https://www.google.com/recaptcha/ https://recaptchaenterprise.googleapis.com",
+  // API calls: Supabase, R2/S3 uploads/downloads, GA, PeerJS, Cloudflare Insights, reCAPTCHA
+  "connect-src 'self' wss: https://*.supabase.co https://*.r2.cloudflarestorage.com https://*.amazonaws.com https://*.s3.amazonaws.com https://www.google-analytics.com https://www.googletagmanager.com https://analytics.google.com https://cloudflareinsights.com https://*.peerjs.com wss://*.peerjs.com https://www.google.com/recaptcha/ https://recaptchaenterprise.googleapis.com",
   // PDF/video previews from R2 presigned URLs
   "media-src 'self' blob: https://*.r2.cloudflarestorage.com",
   // PDF iframe previews from R2

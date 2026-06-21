@@ -2,8 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { GetObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-import { getR2Client, R2_BUCKET } from '../../../../../lib/r2'
-import { getTransfer, updateTransfer, hashPassword, sweepExpiredTransfers, scheduleBurn } from '../../../../../lib/transfer'
+import { getStorageClient, getStorageBucket } from '../../../../../lib/storage'
+import {
+  getTransfer,
+  updateTransfer,
+  hashPassword,
+  hashIp,
+  sweepExpiredTransfers,
+  scheduleBurn,
+  recordDownloadEvent,
+} from '../../../../../lib/transfer'
 import { sendMail } from '../../../../../email'
 import { tplTransferDownloaded } from '../../../../../emailTemplates'
 import { brand } from '../../../../../brand'
@@ -24,7 +32,6 @@ export async function POST(
 ): Promise<NextResponse> {
   const { slug } = await params
 
-  // Brute-force protection: 15 downloads per 5 min per IP
   const ip = getClientIp(req)
   const rl = await rateLimit(`transfer-download:${ip}`, { limit: 15, windowSeconds: 300 })
   if (!rl.success) return tooManyRequests(rl)
@@ -45,7 +52,6 @@ export async function POST(
   const body = BodySchema.safeParse(await req.json().catch(() => null))
   if (!body.success) return err('Invalid payload.')
 
-  // Password check
   if (transfer.passwordHash) {
     const supplied = body.data.password
     if (!supplied || hashPassword(supplied) !== transfer.passwordHash)
@@ -55,12 +61,14 @@ export async function POST(
   const file = transfer.files[body.data.fileIndex]
   if (!file) return notFound('File not found.')
 
-  const r2 = getR2Client()
+  const storage = getStorageClient()
+  const bucket = getStorageBucket()
   const isPreview = body.data.preview
+
   const url = await getSignedUrl(
-    r2,
+    storage,
     new GetObjectCommand({
-      Bucket: R2_BUCKET,
+      Bucket: bucket,
       Key: file.key,
       ...(isPreview
         ? { ResponseContentType: file.type || 'application/octet-stream' }
@@ -69,12 +77,20 @@ export async function POST(
     { expiresIn: isPreview ? 300 : 900 },
   )
 
-  // Increment download count on first file of batch (not for previews)
+  // On first file of a batch download (not previews): update count, record event, send email
   if (!isPreview && body.data.fileIndex === 0) {
     const newCount = transfer.downloadCount + 1
     await updateTransfer(slug, { downloadCount: newCount })
 
-    // Notify sender on first ever download (fire-and-forget)
+    // Record tracking event (privacy-preserving: IP is hashed, never stored raw)
+    const country = req.headers.get('cf-ipcountry') ?? 'XX'
+    void recordDownloadEvent(slug, {
+      at: new Date().toISOString(),
+      ipHash: hashIp(ip),
+      country,
+    })
+
+    // Notify sender on first ever download
     if (transfer.notifyEmail && !transfer.notifiedAt) {
       void updateTransfer(slug, { notifiedAt: new Date().toISOString() })
       const tpl = tplTransferDownloaded({
@@ -85,11 +101,8 @@ export async function POST(
       void sendMail({ to: transfer.notifyEmail, subject: tpl.subject, html: tpl.html, text: tpl.text })
     }
 
-    // Burn-after-read: schedule R2 deletion 30 s from now so ZIP builders
-    // can still fetch all file URLs within the grace window.
     if (transfer.burnAfterRead) {
       void scheduleBurn(slug, transfer.files.map((f) => f.key))
-      // Guarantee cleanup even if no further API traffic arrives
       setTimeout(() => void sweepExpiredTransfers(), 32_000)
     }
   }

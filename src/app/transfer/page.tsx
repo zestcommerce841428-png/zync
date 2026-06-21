@@ -24,16 +24,41 @@ import FormControl from '@mui/material/FormControl'
 import Accordion from '@mui/material/Accordion'
 import AccordionSummary from '@mui/material/AccordionSummary'
 import AccordionDetails from '@mui/material/AccordionDetails'
+import Tooltip from '@mui/material/Tooltip'
 import CloudUploadIcon from '@mui/icons-material/CloudUpload'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
 import AddIcon from '@mui/icons-material/Add'
 import CloseIcon from '@mui/icons-material/Close'
+import CheckIcon from '@mui/icons-material/Check'
 import { useRecaptcha } from '../../hooks/useRecaptcha'
 import UploadZone from '../../components/transfer/UploadZone'
 import UploadProgress, { FileProgress } from '../../components/transfer/UploadProgress'
 import ShareCard from '../../components/transfer/ShareCard'
+
+// 200 GB total per transfer (individual files ≤ 5 GB via single presigned PUT)
+const MAX_BYTES = Number(process.env.NEXT_PUBLIC_TRANSFER_MAX_BYTES ?? 200 * 1024 * 1024 * 1024)
+
+function formatBytes(n: number): string {
+  if (n >= 1e12) return `${(n / 1e12).toFixed(0)} TB`
+  if (n >= 1e9) return `${(n / 1e9).toFixed(0)} GB`
+  if (n >= 1e6) return `${(n / 1e6).toFixed(0)} MB`
+  return `${n} B`
+}
+
+const BACKGROUND_PRESETS: { label: string; value: string }[] = [
+  { label: 'Default', value: '' },
+  { label: 'Midnight', value: 'linear-gradient(135deg,#0c0c1d 0%,#1a1a4e 100%)' },
+  { label: 'Sunset', value: 'linear-gradient(135deg,#f093fb 0%,#f5576c 100%)' },
+  { label: 'Ocean', value: 'linear-gradient(135deg,#4facfe 0%,#00f2fe 100%)' },
+  { label: 'Forest', value: 'linear-gradient(135deg,#43e97b 0%,#38f9d7 100%)' },
+  { label: 'Dusk', value: 'linear-gradient(135deg,#667eea 0%,#764ba2 100%)' },
+  { label: 'Amber', value: 'linear-gradient(135deg,#f7971e 0%,#ffd200 100%)' },
+  { label: 'Rose', value: 'linear-gradient(135deg,#f953c6 0%,#b91d73 100%)' },
+  { label: 'Slate', value: '#1e293b' },
+  { label: 'Carbon', value: '#111111' },
+]
 
 type Stage = 'idle' | 'uploading' | 'done' | 'error'
 
@@ -51,6 +76,7 @@ export default function TransferPage(): React.ReactElement {
   const [notifyMe, setNotifyMe] = React.useState(false)
   const [notifyEmail, setNotifyEmail] = React.useState('')
   const [burnAfterRead, setBurnAfterRead] = React.useState(false)
+  const [background, setBackground] = React.useState('')
   const [stage, setStage] = React.useState<Stage>('idle')
   const [fileProgress, setFileProgress] = React.useState<FileProgress[]>([])
   const [speedBps, setSpeedBps] = React.useState(0)
@@ -64,7 +90,7 @@ export default function TransferPage(): React.ReactElement {
   const { getToken } = useRecaptcha()
 
   const totalSize = files.reduce((s, f) => s + f.size, 0)
-  const overLimit = totalSize > 2 * 1024 * 1024 * 1024
+  const overLimit = totalSize > MAX_BYTES
 
   const addRecipient = () => {
     const emails = recipientInput
@@ -88,7 +114,6 @@ export default function TransferPage(): React.ReactElement {
     setEtaSeconds(null)
     setFileProgress(files.map((f) => ({ name: f.name, size: f.size, loaded: 0, progress: 0, done: false, error: false })))
 
-    // Speed tracking: sliding window over last 3 seconds
     const startTime = Date.now()
     const loadedPerFile = new Array<number>(files.length).fill(0)
     const samples: Array<{ t: number; bytes: number }> = [{ t: startTime, bytes: 0 }]
@@ -98,7 +123,6 @@ export default function TransferPage(): React.ReactElement {
       const totalLoaded = loadedPerFile.reduce((a, b) => a + b, 0)
       const now = Date.now()
       samples.push({ t: now, bytes: totalLoaded })
-      // Keep only last 3 s of samples
       const cutoff = now - 3000
       while (samples.length > 1 && samples[0].t < cutoff) samples.shift()
       const dt = (now - samples[0].t) / 1000
@@ -130,6 +154,7 @@ export default function TransferPage(): React.ReactElement {
           notifyEmail: notifyMe && notifyEmail ? notifyEmail : undefined,
           recipientEmails,
           burnAfterRead,
+          background: background || undefined,
           recaptchaToken,
         }),
       })
@@ -215,6 +240,7 @@ export default function TransferPage(): React.ReactElement {
     setNotifyMe(false)
     setNotifyEmail('')
     setBurnAfterRead(false)
+    setBackground('')
     setStage('idle')
     setFileProgress([])
     setSpeedBps(0)
@@ -235,10 +261,10 @@ export default function TransferPage(): React.ReactElement {
           Upload files and share a link — no account needed, always free.
         </Typography>
         <Stack direction="row" spacing={1} sx={{ justifyContent: 'center', flexWrap: 'wrap' }}>
-          <Chip label="Up to 2 GB" size="small" />
+          <Chip label={`Up to ${formatBytes(MAX_BYTES)}`} size="small" />
           <Chip label="20 files per transfer" size="small" />
           <Chip label="Zero egress fees" size="small" />
-          <Chip label="30-day links when signed in" size="small" variant="outlined" />
+          <Chip label="1-year links when signed in" size="small" variant="outlined" />
         </Stack>
       </Stack>
 
@@ -263,7 +289,6 @@ export default function TransferPage(): React.ReactElement {
                 <>
                   <Divider />
 
-                  {/* Title */}
                   <TextField
                     label="Transfer name (optional)"
                     placeholder="e.g. Project files, Holiday photos…"
@@ -274,7 +299,6 @@ export default function TransferPage(): React.ReactElement {
                     fullWidth
                   />
 
-                  {/* Message */}
                   <TextField
                     label="Message to recipient (optional)"
                     multiline
@@ -287,12 +311,10 @@ export default function TransferPage(): React.ReactElement {
                     fullWidth
                   />
 
-                  {/* Advanced options accordion */}
+                  {/* Options */}
                   <Accordion disableGutters elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, '&:before': { display: 'none' } }}>
                     <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        Options
-                      </Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>Options</Typography>
                     </AccordionSummary>
                     <AccordionDetails>
                       <Stack spacing={2.5}>
@@ -307,8 +329,10 @@ export default function TransferPage(): React.ReactElement {
                             <MenuItem value={1}>1 day</MenuItem>
                             <MenuItem value={3}>3 days</MenuItem>
                             <MenuItem value={7}>7 days</MenuItem>
-                            <MenuItem value={14}>14 days (sign in required)</MenuItem>
                             <MenuItem value={30}>30 days (sign in required)</MenuItem>
+                            <MenuItem value={90}>90 days (sign in required)</MenuItem>
+                            <MenuItem value={180}>180 days (sign in required)</MenuItem>
+                            <MenuItem value={365}>1 year (sign in required)</MenuItem>
                           </Select>
                         </FormControl>
 
@@ -447,12 +471,89 @@ export default function TransferPage(): React.ReactElement {
                       </Stack>
                     </AccordionDetails>
                   </Accordion>
+
+                  {/* Background / Customize */}
+                  <Accordion disableGutters elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, '&:before': { display: 'none' } }}>
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                      <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>Customize background</Typography>
+                        {background && (
+                          <Box
+                            sx={{
+                              width: 16, height: 16, borderRadius: '50%',
+                              background, border: '1px solid', borderColor: 'divider',
+                              flexShrink: 0,
+                            }}
+                          />
+                        )}
+                      </Stack>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      <Stack spacing={1.5}>
+                        <Typography variant="caption" color="text.secondary">
+                          Choose a background for your download page
+                        </Typography>
+                        <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1 }}>
+                          {BACKGROUND_PRESETS.map((preset) => (
+                            <Tooltip key={preset.label} title={preset.label} arrow>
+                              <Box
+                                onClick={() => setBackground(preset.value)}
+                                sx={{
+                                  width: 36,
+                                  height: 36,
+                                  borderRadius: '50%',
+                                  cursor: 'pointer',
+                                  background: preset.value || 'transparent',
+                                  border: '2px solid',
+                                  borderColor: background === preset.value ? 'primary.main' : 'divider',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  transition: 'border-color 0.15s',
+                                  '&:hover': { borderColor: 'primary.light' },
+                                  ...(preset.value === '' && {
+                                    background: 'repeating-conic-gradient(#e0e0e0 0% 25%, #fff 0% 50%) 0 0 / 12px 12px',
+                                  }),
+                                }}
+                              >
+                                {background === preset.value && (
+                                  <CheckIcon
+                                    sx={{
+                                      fontSize: 16,
+                                      color: preset.value && !preset.value.includes('ffd200') && !preset.value.includes('43e97b') && !preset.value.includes('4facfe')
+                                        ? '#fff'
+                                        : 'text.primary',
+                                    }}
+                                  />
+                                )}
+                              </Box>
+                            </Tooltip>
+                          ))}
+                        </Stack>
+                        {/* Custom color input */}
+                        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                          <Box
+                            component="input"
+                            type="color"
+                            value={background.startsWith('#') && !BACKGROUND_PRESETS.find(p => p.value === background) ? background : '#667eea'}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setBackground(e.target.value)}
+                            sx={{ width: 36, height: 36, border: 'none', borderRadius: 1, cursor: 'pointer', p: 0 }}
+                          />
+                          <Typography variant="caption" color="text.secondary">
+                            Or pick a custom solid colour
+                          </Typography>
+                        </Stack>
+                      </Stack>
+                    </AccordionDetails>
+                  </Accordion>
                 </>
               )}
 
               {error && <Alert severity="error">{error}</Alert>}
               {overLimit && (
-                <Alert severity="warning">Total size exceeds the 2 GB limit.</Alert>
+                <Alert severity="warning">
+                  Total size exceeds the {formatBytes(MAX_BYTES)} limit.
+                </Alert>
               )}
 
               <Button
@@ -477,7 +578,7 @@ export default function TransferPage(): React.ReactElement {
                 <Box component="a" href="/acceptable-use" sx={{ color: 'inherit' }}>
                   Acceptable Use Policy
                 </Box>
-                . Files are stored on Cloudflare R2 and automatically deleted on expiry.
+                . Files are stored securely and automatically deleted on expiry.
               </Typography>
             </Stack>
           )}

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { PutObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-import { getR2Client, R2_BUCKET } from '../../../../lib/r2'
+import { getStorageClient, getStorageBucket, getStorageClass, isStorageConfigured } from '../../../../lib/storage'
 import {
   saveTransfer,
   expiryDate,
@@ -19,7 +19,9 @@ import { verifyRecaptcha } from '../../../../recaptcha'
 
 export const dynamic = 'force-dynamic'
 
-const MAX_BYTES = Number(process.env.NEXT_PUBLIC_TRANSFER_MAX_BYTES ?? 2 * 1024 * 1024 * 1024)
+// 200 GB total per transfer; individual files are limited by S3/R2 single-PUT cap (~5 GB).
+// For > 5 GB single files, multipart upload support can be added as a future enhancement.
+const MAX_BYTES = Number(process.env.NEXT_PUBLIC_TRANSFER_MAX_BYTES ?? 200 * 1024 * 1024 * 1024)
 const MAX_FILES = 20
 
 const FileSchema = z.object({
@@ -33,35 +35,37 @@ const BodySchema = z.object({
   title: z.string().max(200).default(''),
   message: z.string().max(1000).default(''),
   password: z.string().max(200).optional(),
-  expiryDays: z.number().int().min(1).max(30).optional(),
+  expiryDays: z.number().int().min(1).max(365).optional(),
   maxDownloads: z.number().int().positive().nullable().default(null),
   notifyEmail: z.string().email().optional().or(z.literal('')),
   recipientEmails: z.array(z.string().email()).max(20).default([]),
   burnAfterRead: z.boolean().default(false),
+  background: z.string().max(500).optional(),
   recaptchaToken: z.string().optional(),
 })
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
-  // 10 transfer creations per 10 min per IP (generous for legit users, blocks bulk abuse)
   const ip = getClientIp(req)
   const rl = await rateLimit(`transfer-create:${ip}`, { limit: 10, windowSeconds: 600 })
   if (!rl.success) return tooManyRequests(rl)
 
-  if (!process.env.R2_ACCOUNT_ID) {
+  if (!isStorageConfigured()) {
     return err('Cloud transfers are not configured on this server.', { status: 503 })
   }
 
   const body = BodySchema.safeParse(await req.json().catch(() => null))
   if (!body.success) return err('Invalid payload.')
 
-  const { files, title, message, password, maxDownloads, notifyEmail, recipientEmails, burnAfterRead, recaptchaToken } =
-    body.data
+  const {
+    files, title, message, password, maxDownloads,
+    notifyEmail, recipientEmails, burnAfterRead, background, recaptchaToken,
+  } = body.data
 
   const captcha = await verifyRecaptcha(recaptchaToken, { minScore: 0.3 })
   if (!captcha.ok) return err('Spam check failed. Please try again.', { status: 400 })
 
   const totalSize = files.reduce((s, f) => s + f.size, 0)
-  if (totalSize > MAX_BYTES) return err('Total size exceeds 2 GB limit.')
+  if (totalSize > MAX_BYTES) return err(`Total size exceeds ${formatBytes(MAX_BYTES)} limit.`)
 
   try {
     const supabase = await getSupabaseServerClient()
@@ -69,11 +73,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const ownerId = user?.id ?? null
 
     const days = body.data.expiryDays ?? defaultExpiryDays(!!ownerId)
-    const maxDays = ownerId ? 30 : 7
+    // Guests: max 7 days. Logged-in: max 365 days (1 year, WeTransfer Pro parity)
+    const maxDays = ownerId ? 365 : 7
     const expiryDays = Math.min(days, maxDays)
 
     const slug = await generateShortSlug()
-    const r2 = getR2Client()
+    const storage = getStorageClient()
+    const bucket = getStorageBucket()
+    const storageClass = getStorageClass()
 
     void sweepExpiredTransfers()
 
@@ -83,12 +90,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     for (const f of files) {
       const key = `${slug}/${crypto.randomUUID()}_${f.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`
       const cmd = new PutObjectCommand({
-        Bucket: R2_BUCKET,
+        Bucket: bucket,
         Key: key,
         ContentType: f.type || 'application/octet-stream',
         ContentLength: f.size,
+        // S3: use Intelligent-Tiering for cost savings on infrequently accessed files
+        ...(storageClass ? { StorageClass: storageClass } : {}),
       })
-      const url = await getSignedUrl(r2, cmd, { expiresIn: 3600 })
+      // 4-hour window gives enough time for large file uploads to start
+      const url = await getSignedUrl(storage, cmd, { expiresIn: 14400 })
       uploadUrls.push(url)
       fileRecords.push({ key, name: f.name, size: f.size, type: f.type })
     }
@@ -104,6 +114,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       expiryDays,
       maxDownloads,
       downloadCount: 0,
+      downloadEvents: [],
       title,
       message,
       passwordHash: password ? hashPassword(password) : null,
@@ -111,6 +122,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       notifiedAt: null,
       recipientEmails,
       burnAfterRead,
+      background: background || null,
       createdAt: new Date().toISOString(),
       completed: false,
     })
@@ -124,4 +136,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     console.error('[transfer/create]', e)
     return err('Failed to create transfer. Please try again.', { status: 500 })
   }
+}
+
+function formatBytes(n: number): string {
+  if (n >= 1e12) return `${(n / 1e12).toFixed(0)} TB`
+  if (n >= 1e9) return `${(n / 1e9).toFixed(0)} GB`
+  if (n >= 1e6) return `${(n / 1e6).toFixed(0)} MB`
+  return `${n} B`
 }
