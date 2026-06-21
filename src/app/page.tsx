@@ -40,79 +40,88 @@ export const metadata: Metadata = {
 const FEATURES = [
   {
     icon: CloudOffIcon,
-    title: 'No server storage',
-    body: 'Files stream directly browser-to-browser over WebRTC. They never touch our servers, so there is nothing to leak, subpoena, or breach.',
+    title: ‘No server storage (P2P)’,
+    body: ‘Files stream directly browser-to-browser over WebRTC. They never touch our servers, so there is nothing to leak, subpoena, or breach.’,
   },
   {
     icon: LockIcon,
-    title: 'Encrypted end-to-end',
-    body: 'Every transfer rides on WebRTC’s mandatory DTLS encryption. Add an optional password for a second lock on the door.',
+    title: ‘Encrypted end-to-end’,
+    body: ‘Every P2P transfer rides on WebRTC’s mandatory DTLS encryption. Cloud transfers use password protection with SHA-256 hashing and rate-limited verify endpoints.’,
   },
   {
     icon: BoltIcon,
-    title: 'Blazing fast',
-    body: 'Direct peer connections mean no upload-then-download round trip. Transfers move at the speed of your network.',
+    title: ‘Blazing fast’,
+    body: ‘P2P transfers move at full network speed with no round trip. Cloud transfers go browser → R2 → browser via presigned URLs — the VPS never touches your file bytes.’,
   },
   {
     icon: DevicesIcon,
-    title: 'Any device, any size',
-    body: 'Works in any modern browser on desktop or mobile. No app install and no arbitrary file-size caps — just one free account.',
+    title: ‘Any device, any size’,
+    body: ‘Works in any modern browser on desktop or mobile. P2P has no size cap. Cloud transfers support up to 200 GB per transfer across up to 20 files.’,
   },
   {
     icon: PublicIcon,
-    title: 'Share with a link or QR',
-    body: 'Generate a short link or scan a QR code. Multiple people can receive the same file from a single room.',
+    title: ‘Share with a link or QR’,
+    body: ‘Every transfer — P2P or cloud — gets a short link and scannable QR code. Add recipient emails and we’ll notify them the moment your transfer is ready.’,
   },
   {
     icon: VpnKeyIcon,
-    title: 'You stay in control',
-    body: 'Set download limits, password-protect, and stop a transfer at any time. Resumable transfers survive flaky networks.',
+    title: ‘You stay in control’,
+    body: ‘Password-protect, set a download limit, or burn-after-read (auto-deletes 30 s after first download). Cloud links expire after up to 1 year for signed-in users.’,
   },
   {
     icon: AllInclusiveIcon,
-    title: 'Truly unlimited',
-    body: 'No file-size caps and no upload or download limits — ever. Files are streamed and chunked with backpressure, so even multi-gigabyte transfers stay fast and memory-light.',
+    title: ‘200 GB cloud transfers’,
+    body: ‘Cloud transfers (WeTransfer-style) support up to 200 GB per transfer and up to 1 year expiry for registered users — full WeTransfer Pro parity, for free.’,
   },
   {
     icon: SensorsIcon,
-    title: 'Live presence & status',
-    body: 'See in real time when the uploader is online, how many people are viewing, and how many downloads have started — streamed over Server-Sent Events.',
+    title: ‘Live presence & status’,
+    body: ‘See in real time when the uploader is online, how many people are viewing, and how many downloads have started — streamed over Server-Sent Events.’,
   },
   {
     icon: QrCode2Icon,
-    title: 'Instant QR sharing',
-    body: 'Every transfer gets a scannable QR code, perfect for moving files from a computer to a phone in one tap.',
+    title: ‘Email & download alerts’,
+    body: ‘Send a transfer link directly to recipient emails. Get notified the moment your file is downloaded. All powered by transactional email via SMTP.’,
   },
   {
     icon: ReplayIcon,
-    title: 'Resumable transfers',
-    body: 'Dropped connection? Zync remembers the last acknowledged byte and resumes from there instead of starting over.',
+    title: ‘Resumable transfers’,
+    body: ‘Dropped connection? Zync remembers the last acknowledged byte and resumes from there instead of starting over. Works for both P2P and cloud modes.’,
+  },
+  {
+    icon: AutoDeleteIcon,
+    title: ‘Automatic cleanup’,
+    body: ‘Expired cloud transfers are batch-deleted every 5 minutes via a cron container. Burn-after-read links are wiped within 30 seconds of first download.’,
+  },
+  {
+    icon: CloudUploadIcon,
+    title: ‘Flexible cloud storage’,
+    body: ‘Store files on Cloudflare R2 (zero egress fees) or AWS S3 with Intelligent-Tiering, Standard-IA, or Glacier IR for up to 68% cost savings. Switch providers from the admin panel.’,
   },
 ]
 
 const HIGHLIGHTS: Array<{ stat: string; label: string }> = [
-  { stat: '∞', label: 'Unlimited file size' },
-  { stat: '0', label: 'Bytes stored on a server' },
+  { stat: '∞', label: 'P2P file size limit' },
+  { stat: '200 GB', label: 'Cloud transfer cap' },
   { stat: 'E2E', label: 'Encrypted by default' },
-  { stat: '1×', label: 'One-time free sign-up' },
+  { stat: '1 yr', label: 'Max link lifetime' },
 ]
 
 const TECH: Array<{ name: string; role: string }> = [
-  {
-    name: 'Next.js 16',
-    role: 'App Router + Turbopack for a fast, SEO-ready frontend & API',
-  },
-  { name: 'React 19', role: 'Modern UI with Server Components' },
-  { name: 'TypeScript', role: 'End-to-end type safety' },
-  { name: 'Material UI', role: 'Accessible, themeable design system' },
-  { name: 'WebRTC', role: 'Encrypted peer-to-peer data channels' },
-  { name: 'PeerJS', role: 'Peer discovery & connection handling' },
-  { name: 'Server-Sent Events', role: 'Real-time presence & live stats' },
-  { name: 'Redis', role: 'Optional horizontal scaling & coordination' },
-  { name: 'Supabase', role: 'Optional auth, Google login & storage' },
-  { name: 'Zod', role: 'Runtime schema validation at the edges' },
-  { name: 'Emotion', role: 'CSS-in-JS powering the theme engine' },
-  { name: 'StreamSaver', role: 'Streams huge downloads straight to disk' },
+  { name: 'Next.js 16', role: 'App Router + Turbopack — fast, SEO-ready frontend & API' },
+  { name: 'React 19', role: 'Modern UI with Server Components & Server Actions' },
+  { name: 'TypeScript 5', role: 'End-to-end type safety across all layers' },
+  { name: 'Material UI v9', role: 'Accessible, themeable design system with dark mode' },
+  { name: 'WebRTC + PeerJS', role: 'Encrypted peer-to-peer data channels with STUN/TURN' },
+  { name: 'Server-Sent Events', role: 'Real-time live presence, download counts & stats' },
+  { name: 'Redis 7', role: 'Rate limiting, cleanup queue, presence coordination' },
+  { name: 'Cloudflare R2 / AWS S3', role: 'Cloud file storage — zero R2 egress, S3 Intelligent-Tiering' },
+  { name: 'Supabase', role: 'Auth (Google OAuth, TOTP 2FA), DB for history & runtime settings' },
+  { name: 'Nodemailer', role: 'Transactional email — transfer notifications, download alerts' },
+  { name: 'Zod', role: 'Runtime schema validation at all API boundaries' },
+  { name: 'fflate', role: 'Client-side ZIP of multi-file transfers — no server needed' },
+  { name: 'Docker + Watchtower', role: 'Containerised VPS deploy with zero-downtime auto-updates' },
+  { name: 'GitHub Actions', role: 'CI/CD — build, type-check, test, push to GHCR on every commit' },
 ]
 
 const STEPS = [
@@ -501,7 +510,7 @@ export default function LandingPage(): React.ReactElement {
               }}
             >
               <Chip
-                label="Cloudflare R2 · Cloud"
+                label="R2 / S3 · Cloud"
                 color="secondary"
                 size="small"
                 icon={<CloudUploadIcon />}
@@ -509,23 +518,23 @@ export default function LandingPage(): React.ReactElement {
               />
               <CardContent sx={{ p: 3, pt: 4 }}>
                 <Typography variant="h5" sx={{ fontWeight: 800, mb: 0.5 }}>
-                  Cloud Transfer (WeTransfer-style)
+                  Cloud Transfer (WeTransfer Pro-style)
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                  Files are stored on Cloudflare R2 for the link lifetime, then automatically deleted.
+                  Files stored on Cloudflare R2 or AWS S3 for the link lifetime, then automatically deleted.
                 </Typography>
                 <Stack spacing={1.5}>
                   {[
-                    { ok: true,  text: 'Works asynchronously — recipient downloads later' },
-                    { ok: true,  text: 'Persistent link (1 – 30 days) with QR code' },
-                    { ok: true,  text: 'Password protection & download cap' },
+                    { ok: true,  text: 'Works asynchronously — recipient downloads any time' },
+                    { ok: true,  text: 'Up to 200 GB per transfer across up to 20 files' },
+                    { ok: true,  text: 'Link valid up to 1 year (signed-in) · 7 days (guest)' },
+                    { ok: true,  text: 'Send to recipient emails — they get notified instantly' },
+                    { ok: true,  text: 'Download alert email on first download' },
+                    { ok: true,  text: 'Password protection & per-link download cap' },
                     { ok: true,  text: 'Burn-after-read: auto-deleted 30 s after first download' },
-                    { ok: true,  text: 'Auto-deleted at expiry — cron cleanup every 5 min' },
-                    { ok: true,  text: 'Inline image thumbnails + full-screen preview' },
-                    { ok: true,  text: 'Social share: WhatsApp, Telegram, X, Email, Web Share' },
-                    { ok: true,  text: 'Sender confirmation email + download notification' },
-                    { ok: false, text: 'Up to 2 GB per transfer (cloud storage limit)' },
-                    { ok: false, text: 'Files are transiently stored on a server (encrypted R2)' },
+                    { ok: true,  text: 'Inline preview (images, video, PDF) + download-all ZIP' },
+                    { ok: true,  text: 'Social share: WhatsApp · Telegram · X · Email · Web Share' },
+                    { ok: false, text: 'Files transiently stored on cloud storage (encrypted)' },
                   ].map(({ ok, text }) => (
                     <Stack key={text} direction="row" spacing={1} sx={{ alignItems: 'flex-start' }}>
                       {ok
