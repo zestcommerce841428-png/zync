@@ -28,6 +28,7 @@ const FileSchema = z.object({
   name: z.string().min(1).max(500),
   size: z.number().int().nonnegative(),
   type: z.string().max(200),
+  path: z.string().max(1000).optional(),
 })
 
 const BodySchema = z.object({
@@ -100,7 +101,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       // 4-hour window gives enough time for large file uploads to start
       const url = await getSignedUrl(storage, cmd, { expiresIn: 14400 })
       uploadUrls.push(url)
-      fileRecords.push({ key, name: f.name, size: f.size, type: f.type })
+      fileRecords.push({ key, name: f.name, size: f.size, type: f.type, ...(f.path ? { path: f.path } : {}) })
     }
 
     const expires = expiryDate(expiryDays)

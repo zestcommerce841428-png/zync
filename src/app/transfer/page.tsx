@@ -64,6 +64,7 @@ type Stage = 'idle' | 'uploading' | 'done' | 'error'
 
 export default function TransferPage(): React.ReactElement {
   const [files, setFiles] = React.useState<File[]>([])
+  const [filePaths, setFilePaths] = React.useState<string[]>([])
   const [title, setTitle] = React.useState('')
   const [message, setMessage] = React.useState('')
   const [password, setPassword] = React.useState('')
@@ -73,6 +74,7 @@ export default function TransferPage(): React.ReactElement {
   const [maxDownloads, setMaxDownloads] = React.useState(5)
   const [recipientInput, setRecipientInput] = React.useState('')
   const [recipientEmails, setRecipientEmails] = React.useState<string[]>([])
+  const [savedContacts, setSavedContacts] = React.useState<string[]>([])
   const [notifyMe, setNotifyMe] = React.useState(false)
   const [notifyEmail, setNotifyEmail] = React.useState('')
   const [burnAfterRead, setBurnAfterRead] = React.useState(false)
@@ -88,6 +90,14 @@ export default function TransferPage(): React.ReactElement {
   const [resultBurn, setResultBurn] = React.useState(false)
 
   const { getToken } = useRecaptcha()
+
+  // Load saved contacts
+  React.useEffect(() => {
+    fetch('/api/contacts')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => { if (j?.contacts) setSavedContacts(j.contacts.map((c: { email: string }) => c.email)) })
+      .catch(() => {})
+  }, [])
 
   const totalSize = files.reduce((s, f) => s + f.size, 0)
   const overLimit = totalSize > MAX_BYTES
@@ -145,7 +155,7 @@ export default function TransferPage(): React.ReactElement {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          files: files.map((f) => ({ name: f.name, size: f.size, type: f.type })),
+          files: files.map((f, i) => ({ name: f.name, size: f.size, type: f.type, path: filePaths[i] || f.name })),
           title,
           message,
           password: password || undefined,
@@ -229,6 +239,7 @@ export default function TransferPage(): React.ReactElement {
 
   const reset = () => {
     setFiles([])
+    setFilePaths([])
     setTitle('')
     setMessage('')
     setPassword('')
@@ -279,7 +290,7 @@ export default function TransferPage(): React.ReactElement {
             </Stack>
           ) : (
             <Stack spacing={3}>
-              <UploadZone files={files} onChange={setFiles} disabled={stage === 'uploading'} />
+              <UploadZone files={files} onChange={setFiles} onPaths={setFilePaths} paths={filePaths} disabled={stage === 'uploading'} />
 
               {stage === 'uploading' && (
                 <UploadProgress files={fileProgress} overallProgress={overallProgress} speedBps={speedBps} etaSeconds={etaSeconds} />
@@ -410,6 +421,36 @@ export default function TransferPage(): React.ReactElement {
                               <AddIcon fontSize="small" />
                             </Button>
                           </Stack>
+                          {/* Contact suggestions */}
+                          {savedContacts.length > 0 && (() => {
+                            const q = recipientInput.toLowerCase()
+                            const suggestions = savedContacts.filter(
+                              (c) => !recipientEmails.includes(c) && (q.length < 2 || c.toLowerCase().includes(q))
+                            ).slice(0, 8)
+                            if (suggestions.length === 0) return null
+                            return (
+                              <Stack spacing={0.5}>
+                                <Typography variant="caption" color="text.secondary">
+                                  {q.length >= 2 ? 'Matching contacts' : 'Recent contacts'}
+                                </Typography>
+                                <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 0.5 }}>
+                                  {suggestions.map((email) => (
+                                    <Chip
+                                      key={email}
+                                      label={email}
+                                      size="small"
+                                      variant="outlined"
+                                      onClick={() => {
+                                        setRecipientEmails((prev) => [...new Set([...prev, email])].slice(0, 20))
+                                        setRecipientInput('')
+                                      }}
+                                      icon={<AddIcon />}
+                                    />
+                                  ))}
+                                </Stack>
+                              </Stack>
+                            )
+                          })()}
                           {recipientEmails.length > 0 && (
                             <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 0.5 }}>
                               {recipientEmails.map((email) => (

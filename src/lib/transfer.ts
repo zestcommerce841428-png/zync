@@ -9,6 +9,7 @@ export type TransferFile = {
   name: string
   size: number
   type: string
+  path?: string  // relative path including folders, e.g. "folder/subfolder/file.txt"
 }
 
 export type DownloadEvent = {

@@ -15,7 +15,7 @@ import { getTransfer } from '../../../lib/transfer'
 import { getSupabaseServerClient } from '../../../supabase/server'
 import { brand } from '../../../brand'
 
-type Props = { params: Promise<{ slug: string }> }
+type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ direct?: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
@@ -35,8 +35,10 @@ function formatDate(iso: string): string {
   })
 }
 
-export default async function TransferDownloadPage({ params }: Props): Promise<React.ReactElement> {
+export default async function TransferDownloadPage({ params, searchParams }: Props): Promise<React.ReactElement> {
   const { slug } = await params
+  const { direct } = await searchParams
+  const autoDownload = direct === '1' || direct === 'true'
   const transfer = await getTransfer(slug)
   const expired = transfer && new Date(transfer.expiresAt) < new Date()
 
@@ -79,7 +81,7 @@ export default async function TransferDownloadPage({ params }: Props): Promise<R
                 <>
                   <DownloadCard
                     slug={transfer.slug}
-                    files={transfer.files.map(({ name, size, type }) => ({ name, size, type }))}
+                    files={transfer.files.map(({ name, size, type, path }) => ({ name, size, type, ...(path ? { path } : {}) }))}
                     totalSize={transfer.totalSize}
                     expiresAt={transfer.expiresAt}
                     title={transfer.title}
@@ -88,6 +90,7 @@ export default async function TransferDownloadPage({ params }: Props): Promise<R
                     maxDownloads={transfer.maxDownloads}
                     passwordProtected={!!transfer.passwordHash}
                     burnAfterRead={!!transfer.burnAfterRead}
+                    autoDownload={autoDownload}
                   />
 
                   {/* Transfer tracking — only visible to the owner */}

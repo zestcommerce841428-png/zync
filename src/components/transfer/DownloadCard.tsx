@@ -32,7 +32,7 @@ import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile'
 import CloseIcon from '@mui/icons-material/Close'
 import ZoomInIcon from '@mui/icons-material/ZoomIn'
 
-type FileInfo = { name: string; size: number; type: string }
+type FileInfo = { name: string; size: number; type: string; path?: string }
 
 type Props = {
   slug: string
@@ -45,6 +45,7 @@ type Props = {
   maxDownloads: number | null
   passwordProtected?: boolean
   burnAfterRead?: boolean
+  autoDownload?: boolean
 }
 
 function formatBytes(n: number): string {
@@ -77,6 +78,7 @@ export default function DownloadCard({
   maxDownloads,
   passwordProtected,
   burnAfterRead,
+  autoDownload,
 }: Props): React.ReactElement {
   const [now, setNow] = React.useState<number | null>(null)
   React.useEffect(() => { setNow(Date.now()) }, [])
@@ -147,6 +149,15 @@ export default function DownloadCard({
   const [downloading, setDownloading] = React.useState<Set<number>>(new Set())
   const [zipping, setZipping] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+
+  // Auto-trigger download when ?direct=1 and card is unlocked and not expired
+  const autoTriggered = React.useRef(false)
+  React.useEffect(() => {
+    if (!autoDownload || !unlocked || expired || autoTriggered.current) return
+    autoTriggered.current = true
+    void downloadAll()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoDownload, unlocked, expired])
 
   // Inline thumbnails: map fileIndex → presigned URL
   const [thumbnails, setThumbnails] = React.useState<Record<number, string>>({})
@@ -235,7 +246,8 @@ export default function DownloadCard({
           const { url } = await res.json()
           const fileRes = await fetch(url)
           const buf = new Uint8Array(await fileRes.arrayBuffer())
-          const entry = new AsyncZipDeflate(f.name)
+          const zipPath = f.path && f.path !== f.name ? f.path : f.name
+          const entry = new AsyncZipDeflate(zipPath)
           zip.add(entry)
           entry.push(buf, true)
           finish()
@@ -396,7 +408,7 @@ export default function DownloadCard({
               )}
             </ListItemIcon>
             <ListItemText
-              primary={f.name}
+              primary={f.path && f.path !== f.name ? f.path : f.name}
               secondary={formatBytes(f.size)}
               slotProps={{ primary: { noWrap: true, sx: { maxWidth: '45%' } } }}
             />

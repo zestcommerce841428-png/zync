@@ -5,6 +5,7 @@ import { getSupabaseServerClient } from '../../../../supabase/server'
 import { sendMail } from '../../../../email'
 import { tplTransferReady, tplTransferSent } from '../../../../emailTemplates'
 import { brand } from '../../../../brand'
+import { getRedisClient } from '../../../../redisClient'
 
 export const dynamic = 'force-dynamic'
 
@@ -65,6 +66,18 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       })
       void sendMail({ to: senderEmail, subject: tpl.subject, html: tpl.html, text: tpl.text })
     }
+  }
+
+  // Save recipient emails to address book (fire-and-forget)
+  if (t && t.recipientEmails.length > 0 && t.ownerId) {
+    void (async () => {
+      try {
+        const redis = getRedisClient()
+        const key = `contacts:${t.ownerId}`
+        for (const email of t.recipientEmails) await redis.zincrby(key, 1, email)
+        await redis.expire(key, 365 * 24 * 3600)
+      } catch { /* best-effort */ }
+    })()
   }
 
   // Record in Supabase history (best-effort)

@@ -182,6 +182,38 @@ export default function ShareCard({ slug, expiresAt, title, passwordProtected, b
         Anyone with this link can download the files.
         {daysLeft !== null && daysLeft <= 7 ? ' Sign in to get links up to 30 days.' : ''}
       </Typography>
+
+      {/* Direct download link */}
+      {origin && (
+        <>
+          <Divider />
+          <Stack spacing={0.5}>
+            <Typography variant="caption" sx={{ fontWeight: 600 }}>Direct download link</Typography>
+            <Typography variant="caption" color="text.secondary">
+              Opening this link auto-starts the download — useful for email or automation.
+            </Typography>
+            <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+              <TextField
+                value={`${origin}/transfer/${slug}?direct=1`}
+                size="small"
+                fullWidth
+                slotProps={{ input: { readOnly: true, sx: { fontSize: '0.75rem' } } }}
+                onClick={(e) => (e.target as HTMLInputElement).select()}
+              />
+              <Tooltip title="Copy direct link">
+                <IconButton
+                  size="small"
+                  onClick={() => {
+                    void navigator.clipboard.writeText(`${origin}/transfer/${slug}?direct=1`)
+                  }}
+                >
+                  <ContentCopyIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Stack>
+          </Stack>
+        </>
+      )}
     </Stack>
   )
 }

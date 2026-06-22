@@ -27,10 +27,12 @@ function formatBytes(n: number): string {
 type Props = {
   files: File[]
   onChange: (files: File[]) => void
+  onPaths?: (paths: string[]) => void
+  paths?: string[]
   disabled?: boolean
 }
 
-export default function UploadZone({ files, onChange, disabled }: Props): React.ReactElement {
+export default function UploadZone({ files, onChange, onPaths, paths, disabled }: Props): React.ReactElement {
   const [dragging, setDragging] = React.useState(false)
   const inputRef = React.useRef<HTMLInputElement>(null)
   const folderElRef = React.useRef<HTMLInputElement | null>(null)
@@ -39,20 +41,31 @@ export default function UploadZone({ files, onChange, disabled }: Props): React.
     if (el) el.setAttribute('webkitdirectory', '')
   }, [])
 
-  const addFiles = (incoming: FileList | null) => {
-    if (!incoming) return
+  const addFiles = (incoming: File[], incomingPaths?: string[]) => {
     const merged = [...files]
-    for (const f of Array.from(incoming)) {
+    const mergedPaths = [...(paths ?? [])]
+    for (let i = 0; i < incoming.length; i++) {
       if (merged.length >= MAX_FILES) break
+      const f = incoming[i]
       if (!merged.find((e) => e.name === f.name && e.size === f.size)) {
         merged.push(f)
+        mergedPaths.push(incomingPaths?.[i] ?? f.name)
       }
     }
     onChange(merged)
+    onPaths?.(mergedPaths)
+  }
+
+  const addFromFileList = (list: FileList | null, getPaths?: () => string[]) => {
+    if (!list) return
+    const arr = Array.from(list)
+    const pathArr = getPaths ? getPaths() : arr.map((f) => (f as File & { webkitRelativePath?: string }).webkitRelativePath || f.name)
+    addFiles(arr, pathArr)
   }
 
   const remove = (idx: number) => {
     onChange(files.filter((_, i) => i !== idx))
+    onPaths?.((paths ?? []).filter((_, i) => i !== idx))
   }
 
   const totalSize = files.reduce((s, f) => s + f.size, 0)
@@ -66,35 +79,40 @@ export default function UploadZone({ files, onChange, disabled }: Props): React.
         onDrop={(e) => {
           e.preventDefault()
           setDragging(false)
-          // Use items API to support folder drops (flattens to files)
           if (e.dataTransfer.items) {
             const flat: File[] = []
+            const flatPaths: string[] = []
             const entries: FileSystemEntry[] = []
             for (const item of Array.from(e.dataTransfer.items)) {
               const entry = item.webkitGetAsEntry?.()
               if (entry) entries.push(entry)
             }
-            const readEntry = (entry: FileSystemEntry): Promise<void> => {
+            const readEntry = (entry: FileSystemEntry, basePath = ''): Promise<void> => {
               if (entry.isFile) {
                 return new Promise((res) => {
-                  ;(entry as FileSystemFileEntry).file((f) => { flat.push(f); res() })
+                  ;(entry as FileSystemFileEntry).file((f) => {
+                    flat.push(f)
+                    // fullPath starts with '/', strip it; use basePath if available
+                    const rel = basePath ? `${basePath}/${entry.name}` : entry.name
+                    flatPaths.push(rel)
+                    res()
+                  })
                 })
               }
               const reader = (entry as FileSystemDirectoryEntry).createReader()
               return new Promise((res) => {
                 reader.readEntries(async (sub) => {
-                  await Promise.all(sub.map(readEntry))
+                  const childBase = basePath ? `${basePath}/${entry.name}` : entry.name
+                  await Promise.all(sub.map((s) => readEntry(s, childBase)))
                   res()
                 })
               })
             }
-            Promise.all(entries.map(readEntry)).then(() => {
-              const dt = new DataTransfer()
-              flat.forEach((f) => dt.items.add(f))
-              addFiles(dt.files)
+            Promise.all(entries.map((e) => readEntry(e))).then(() => {
+              addFiles(flat, flatPaths)
             })
           } else {
-            addFiles(e.dataTransfer.files)
+            addFromFileList(e.dataTransfer.files)
           }
         }}
         onClick={() => !disabled && inputRef.current?.click()}
@@ -127,7 +145,10 @@ export default function UploadZone({ files, onChange, disabled }: Props): React.
           aria-label="Choose files to upload"
           title="Choose files to upload"
           sx={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => { addFiles(e.target.files); e.target.value = '' }}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+            addFromFileList(e.target.files)
+            e.target.value = ''
+          }}
           disabled={disabled}
         />
         <Box
@@ -137,7 +158,10 @@ export default function UploadZone({ files, onChange, disabled }: Props): React.
           multiple
           aria-label="Choose folder to upload"
           sx={{ position: 'absolute', width: 0, height: 0, opacity: 0, pointerEvents: 'none' }}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => { addFiles(e.target.files); e.target.value = '' }}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+            addFromFileList(e.target.files)
+            e.target.value = ''
+          }}
           disabled={disabled}
         />
       </Box>
@@ -148,7 +172,7 @@ export default function UploadZone({ files, onChange, disabled }: Props): React.
             {files.map((f, i) => (
               <ListItem key={i} disableGutters>
                 <ListItemText
-                  primary={f.name}
+                  primary={paths?.[i] ?? f.name}
                   secondary={formatBytes(f.size)}
                   slotProps={{ primary: { noWrap: true, sx: { maxWidth: '80%' } } }}
                 />

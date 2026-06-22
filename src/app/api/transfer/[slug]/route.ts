@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getTransfer, deleteTransfer, removeUserTransferIndex } from '../../../../lib/transfer'
+import { z } from 'zod'
+import { getTransfer, deleteTransfer, removeUserTransferIndex, updateTransfer, hashPassword, expiryDate } from '../../../../lib/transfer'
 import { DeleteObjectsCommand } from '@aws-sdk/client-s3'
 import { getR2Client, R2_BUCKET } from '../../../../lib/r2'
 import { getSupabaseServerClient } from '../../../../supabase/server'
@@ -46,7 +47,7 @@ export async function GET(
   return NextResponse.json({
     ...rest,
     passwordProtected: !!passwordHash,
-    files: files.map(({ name, size, type }) => ({ name, size, type })),
+    files: files.map(({ name, size, type, path }) => ({ name, size, type, ...(path ? { path } : {}) })),
   })
   // Note: burnAfterRead is included in ...rest so recipients can see the warning
 }
@@ -73,3 +74,57 @@ export async function DELETE(
 
   return NextResponse.json({ ok: true })
 }
+
+const PatchSchema = z.object({
+  title: z.string().max(200).optional(),
+  message: z.string().max(1000).optional(),
+  extendDays: z.number().int().min(1).max(365).optional(),
+  maxDownloads: z.number().int().positive().nullable().optional(),
+  password: z.string().max(200).optional(),
+  clearPassword: z.boolean().optional(),
+  notifyEmail: z.string().email().optional().or(z.literal('')),
+})
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ slug: string }> },
+): Promise<NextResponse> {
+  const { slug } = await params
+  const transfer = await getTransfer(slug)
+  if (!transfer) return NextResponse.json({ error: 'Not found.' }, { status: 404 })
+
+  const supabase = await getSupabaseServerClient()
+  const user = supabase ? (await supabase.auth.getUser()).data.user : null
+  if (!transfer.ownerId || transfer.ownerId !== user?.id)
+    return NextResponse.json({ error: 'Forbidden.' }, { status: 403 })
+
+  const body = PatchSchema.safeParse(await req.json().catch(() => null))
+  if (!body.success) return NextResponse.json({ error: 'Invalid payload.' }, { status: 400 })
+
+  const { title, message, extendDays, maxDownloads, password, clearPassword, notifyEmail } = body.data
+  const patch: Partial<Parameters<typeof updateTransfer>[1]> = {}
+
+  if (title !== undefined) patch.title = title
+  if (message !== undefined) patch.message = message
+  if (maxDownloads !== undefined) patch.maxDownloads = maxDownloads
+  if (notifyEmail !== undefined) patch.notifyEmail = notifyEmail || null
+
+  if (clearPassword) {
+    patch.passwordHash = null
+  } else if (password) {
+    patch.passwordHash = hashPassword(password)
+  }
+
+  if (extendDays !== undefined) {
+    const current = new Date(transfer.expiresAt)
+    const extended = new Date(current.getTime() + extendDays * 86400000)
+    const maxExpiry = new Date(transfer.createdAt)
+    maxExpiry.setFullYear(maxExpiry.getFullYear() + 1)
+    patch.expiresAt = (extended > maxExpiry ? maxExpiry : extended).toISOString()
+  }
+
+  await updateTransfer(slug, patch)
+  const updated = await getTransfer(slug)
+  return NextResponse.json({ ok: true, transfer: updated })
+}
+

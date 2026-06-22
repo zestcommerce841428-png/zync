@@ -26,6 +26,7 @@ const NAV: Array<{ label: string; href: string }> = [
   { label: 'Send', href: '/send' },
   { label: 'Transfer', href: '/transfer' },
   { label: 'My Transfers', href: '/transfer/history' },
+  { label: 'Collect', href: '/collect' },
   { label: 'Tools', href: '/tools' },
   { label: 'Features', href: '/#features' },
   { label: 'Blog', href: '/blog' },

@@ -15,6 +15,17 @@ import CircularProgress from '@mui/material/CircularProgress'
 import Box from '@mui/material/Box'
 import Tooltip from '@mui/material/Tooltip'
 import Snackbar from '@mui/material/Snackbar'
+import Collapse from '@mui/material/Collapse'
+import Dialog from '@mui/material/Dialog'
+import DialogTitle from '@mui/material/DialogTitle'
+import DialogContent from '@mui/material/DialogContent'
+import DialogActions from '@mui/material/DialogActions'
+import TextField from '@mui/material/TextField'
+import MenuItem from '@mui/material/MenuItem'
+import Select from '@mui/material/Select'
+import InputLabel from '@mui/material/InputLabel'
+import FormControl from '@mui/material/FormControl'
+import LinearProgress from '@mui/material/LinearProgress'
 import LinkIcon from '@mui/icons-material/Link'
 import DeleteIcon from '@mui/icons-material/Delete'
 import CheckIcon from '@mui/icons-material/Check'
@@ -22,6 +33,10 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime'
 import LockIcon from '@mui/icons-material/Lock'
 import FolderIcon from '@mui/icons-material/Folder'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew'
+import BarChartIcon from '@mui/icons-material/BarChart'
+import EditIcon from '@mui/icons-material/Edit'
+import PublicIcon from '@mui/icons-material/Public'
+import DownloadIcon from '@mui/icons-material/Download'
 
 type TransferSummary = {
   slug: string
@@ -37,6 +52,15 @@ type TransferSummary = {
   createdAt: string
 }
 
+type DownloadEvent = { at: string; ipHash: string; country: string }
+type CountryEntry = { country: string; count: number }
+
+type Analytics = {
+  downloadCount: number
+  downloadEvents: DownloadEvent[]
+  countries: CountryEntry[]
+}
+
 function formatBytes(n: number): string {
   if (n >= 1e9) return `${(n / 1e9).toFixed(1)} GB`
   if (n >= 1e6) return `${(n / 1e6).toFixed(1)} MB`
@@ -44,12 +68,236 @@ function formatBytes(n: number): string {
   return `${n} B`
 }
 
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+}
+
+// ─── Edit Dialog ───────────────────────────────────────────────────────────────
+type EditDialogProps = {
+  open: boolean
+  transfer: TransferSummary
+  onClose: () => void
+  onSaved: (slug: string, patch: Partial<TransferSummary>) => void
+}
+
+function EditDialog({ open, transfer, onClose, onSaved }: EditDialogProps): React.ReactElement {
+  const [title, setTitle] = React.useState(transfer.title)
+  const [message, setMessage] = React.useState(transfer.message)
+  const [maxDownloads, setMaxDownloads] = React.useState<string>(
+    transfer.maxDownloads !== null ? String(transfer.maxDownloads) : '',
+  )
+  const [extendDays, setExtendDays] = React.useState('')
+  const [password, setPassword] = React.useState('')
+  const [clearPassword, setClearPassword] = React.useState(false)
+  const [saving, setSaving] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
+
+  const save = async () => {
+    setSaving(true)
+    setError(null)
+    try {
+      const body: Record<string, unknown> = {}
+      if (title !== transfer.title) body.title = title
+      if (message !== transfer.message) body.message = message
+      if (maxDownloads !== '' && Number(maxDownloads) !== transfer.maxDownloads)
+        body.maxDownloads = Number(maxDownloads)
+      if (maxDownloads === '' && transfer.maxDownloads !== null) body.maxDownloads = null
+      if (extendDays) body.extendDays = Number(extendDays)
+      if (password) body.password = password
+      if (clearPassword) body.clearPassword = true
+
+      const res = await fetch(`/api/transfer/${transfer.slug}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const json = await res.json()
+      if (!res.ok) { setError(json.error ?? 'Save failed.'); return }
+
+      const patchedSummary: Partial<TransferSummary> = {}
+      if (title !== transfer.title) patchedSummary.title = title
+      if (message !== transfer.message) patchedSummary.message = message
+      if (maxDownloads !== '') patchedSummary.maxDownloads = Number(maxDownloads)
+      else if (transfer.maxDownloads !== null) patchedSummary.maxDownloads = null
+      if (clearPassword) patchedSummary.passwordProtected = false
+      else if (password) patchedSummary.passwordProtected = true
+      if (extendDays && json.transfer?.expiresAt) patchedSummary.expiresAt = json.transfer.expiresAt
+
+      onSaved(transfer.slug, patchedSummary)
+      onClose()
+    } catch {
+      setError('Network error.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle>Edit transfer</DialogTitle>
+      <DialogContent>
+        <Stack spacing={2} sx={{ pt: 1 }}>
+          {error && <Alert severity="error">{error}</Alert>}
+          <TextField
+            label="Title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            size="small"
+            fullWidth
+          />
+          <TextField
+            label="Message"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            size="small"
+            fullWidth
+            multiline
+            rows={2}
+          />
+          <TextField
+            label="Max downloads (blank = unlimited)"
+            value={maxDownloads}
+            onChange={(e) => setMaxDownloads(e.target.value.replace(/\D/, ''))}
+            size="small"
+            fullWidth
+            placeholder="Unlimited"
+          />
+          <FormControl size="small" fullWidth>
+            <InputLabel>Extend expiry</InputLabel>
+            <Select
+              label="Extend expiry"
+              value={extendDays}
+              onChange={(e) => setExtendDays(e.target.value as string)}
+            >
+              <MenuItem value="">No change</MenuItem>
+              <MenuItem value="7">+7 days</MenuItem>
+              <MenuItem value="14">+14 days</MenuItem>
+              <MenuItem value="30">+30 days</MenuItem>
+              <MenuItem value="90">+90 days</MenuItem>
+              <MenuItem value="180">+180 days</MenuItem>
+              <MenuItem value="365">+365 days</MenuItem>
+            </Select>
+          </FormControl>
+          <TextField
+            label={transfer.passwordProtected ? 'Change password (blank = keep current)' : 'Add password (blank = no password)'}
+            value={password}
+            onChange={(e) => { setPassword(e.target.value); if (e.target.value) setClearPassword(false) }}
+            size="small"
+            fullWidth
+            type="password"
+          />
+          {transfer.passwordProtected && (
+            <Button
+              size="small"
+              color={clearPassword ? 'error' : 'inherit'}
+              variant={clearPassword ? 'contained' : 'outlined'}
+              onClick={() => { setClearPassword((p) => !p); setPassword('') }}
+            >
+              {clearPassword ? 'Will remove password' : 'Remove password'}
+            </Button>
+          )}
+        </Stack>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>Cancel</Button>
+        <Button variant="contained" onClick={save} disabled={saving}>
+          {saving ? 'Saving…' : 'Save'}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  )
+}
+
+// ─── Analytics Panel ──────────────────────────────────────────────────────────
+function AnalyticsPanel({ slug }: { slug: string }): React.ReactElement {
+  const [analytics, setAnalytics] = React.useState<Analytics | null>(null)
+  const [loading, setLoading] = React.useState(true)
+  const [error, setError] = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    fetch(`/api/transfer/${slug}/analytics`)
+      .then((r) => (r.ok ? r.json() : r.json().then((j) => Promise.reject(j.error ?? 'Failed'))))
+      .then(setAnalytics)
+      .catch((e) => setError(String(e)))
+      .finally(() => setLoading(false))
+  }, [slug])
+
+  if (loading) return <LinearProgress sx={{ my: 1 }} />
+  if (error) return <Alert severity="error" sx={{ mt: 1 }}>{error}</Alert>
+  if (!analytics) return <></>
+
+  const maxCount = analytics.countries[0]?.count ?? 1
+
+  return (
+    <Stack spacing={1.5} sx={{ mt: 1 }}>
+      <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+        <DownloadIcon fontSize="small" color="action" />
+        <Typography variant="caption" color="text.secondary">
+          {analytics.downloadCount} total download{analytics.downloadCount !== 1 ? 's' : ''}
+        </Typography>
+      </Stack>
+
+      {analytics.countries.length > 0 && (
+        <Box>
+          <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 0.75 }}>
+            <PublicIcon fontSize="small" color="action" />
+            <Typography variant="caption" sx={{ fontWeight: 600 }}>Country breakdown</Typography>
+          </Stack>
+          <Stack spacing={0.5}>
+            {analytics.countries.slice(0, 10).map(({ country, count }) => (
+              <Stack key={country} direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                <Typography variant="caption" sx={{ width: 80, flexShrink: 0 }}>{country}</Typography>
+                <Box sx={{ flex: 1, bgcolor: 'action.hover', borderRadius: 0.5, height: 8, overflow: 'hidden' }}>
+                  <Box
+                    sx={{ height: '100%', bgcolor: 'primary.main', borderRadius: 0.5, width: `${(count / maxCount) * 100}%` }}
+                  />
+                </Box>
+                <Typography variant="caption" color="text.secondary" sx={{ width: 24, textAlign: 'right', flexShrink: 0 }}>
+                  {count}
+                </Typography>
+              </Stack>
+            ))}
+          </Stack>
+        </Box>
+      )}
+
+      {analytics.downloadEvents.length > 0 && (
+        <Box>
+          <Typography variant="caption" sx={{ fontWeight: 600 }}>Recent downloads</Typography>
+          <Stack spacing={0.25} sx={{ mt: 0.5, maxHeight: 160, overflowY: 'auto' }}>
+            {analytics.downloadEvents.slice().reverse().slice(0, 20).map((ev, i) => (
+              <Stack
+                key={i}
+                direction="row"
+                spacing={1}
+                sx={{ alignItems: 'center', px: 1, py: 0.5, borderRadius: 1, bgcolor: 'action.hover' }}
+              >
+                <Typography variant="caption" sx={{ fontFamily: 'monospace', flexShrink: 0, width: 28 }}>
+                  {ev.country !== 'XX' ? ev.country : '??'}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">{formatDate(ev.at)}</Typography>
+              </Stack>
+            ))}
+          </Stack>
+        </Box>
+      )}
+
+      {analytics.downloadEvents.length === 0 && (
+        <Typography variant="caption" color="text.secondary">No downloads yet.</Typography>
+      )}
+    </Stack>
+  )
+}
+
+// ─── Main component ────────────────────────────────────────────────────────────
 export default function HistoryList(): React.ReactElement {
   const [transfers, setTransfers] = React.useState<TransferSummary[] | null>(null)
   const [error, setError] = React.useState<string | null>(null)
   const [deleting, setDeleting] = React.useState<Set<string>>(new Set())
   const [copied, setCopied] = React.useState<string | null>(null)
   const [snackbar, setSnackbar] = React.useState('')
+  const [analyticsOpen, setAnalyticsOpen] = React.useState<Set<string>>(new Set())
+  const [editSlug, setEditSlug] = React.useState<string | null>(null)
 
   React.useEffect(() => {
     fetch('/api/transfer/history')
@@ -86,6 +334,24 @@ export default function HistoryList(): React.ReactElement {
       setDeleting((prev) => { const next = new Set(prev); next.delete(slug); return next })
     }
   }
+
+  const toggleAnalytics = (slug: string) => {
+    setAnalyticsOpen((prev) => {
+      const next = new Set(prev)
+      if (next.has(slug)) next.delete(slug)
+      else next.add(slug)
+      return next
+    })
+  }
+
+  const handleSaved = (slug: string, patch: Partial<TransferSummary>) => {
+    setTransfers((prev) =>
+      prev?.map((t) => (t.slug === slug ? { ...t, ...patch } : t)) ?? null,
+    )
+    setSnackbar('Transfer updated.')
+  }
+
+  const editTransfer = transfers?.find((t) => t.slug === editSlug)
 
   return (
     <Container maxWidth="md" sx={{ py: { xs: 6, md: 10 } }}>
@@ -124,6 +390,7 @@ export default function HistoryList(): React.ReactElement {
           {transfers.map((t) => {
             const daysLeft = Math.ceil((new Date(t.expiresAt).getTime() - Date.now()) / 86400000)
             const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/transfer/${t.slug}`
+            const analyticsShown = analyticsOpen.has(t.slug)
             return (
               <Card key={t.slug} variant="outlined">
                 <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
@@ -152,6 +419,20 @@ export default function HistoryList(): React.ReactElement {
                             color={copied === t.slug ? 'success' : 'default'}
                           >
                             {copied === t.slug ? <CheckIcon fontSize="small" /> : <LinkIcon fontSize="small" />}
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Analytics">
+                          <IconButton
+                            size="small"
+                            onClick={() => toggleAnalytics(t.slug)}
+                            color={analyticsShown ? 'primary' : 'default'}
+                          >
+                            <BarChartIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Edit transfer">
+                          <IconButton size="small" onClick={() => setEditSlug(t.slug)}>
+                            <EditIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
                         <Tooltip title="Delete transfer and files">
@@ -205,12 +486,27 @@ export default function HistoryList(): React.ReactElement {
                         {copied === t.slug ? 'Copied!' : 'Copy'}
                       </Button>
                     </Box>
+
+                    {/* Analytics panel */}
+                    <Collapse in={analyticsShown} unmountOnExit>
+                      <Divider />
+                      <AnalyticsPanel slug={t.slug} />
+                    </Collapse>
                   </Stack>
                 </CardContent>
               </Card>
             )
           })}
         </Stack>
+      )}
+
+      {editTransfer && (
+        <EditDialog
+          open={!!editSlug}
+          transfer={editTransfer}
+          onClose={() => setEditSlug(null)}
+          onSaved={handleSaved}
+        />
       )}
 
       <Snackbar
