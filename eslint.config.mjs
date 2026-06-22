@@ -11,7 +11,7 @@ export default tseslint.config({
   rules: {
     '@typescript-eslint/no-unused-vars': [
       'error',
-      { argsIgnorePattern: '^_' },
+      { argsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
     ],
     '@typescript-eslint/no-use-before-define': [
       'error',
