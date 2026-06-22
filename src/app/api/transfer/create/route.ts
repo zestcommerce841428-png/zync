@@ -12,6 +12,7 @@ import {
   sweepExpiredTransfers,
 } from '../../../../lib/transfer'
 import { getSupabaseServerClient } from '../../../../supabase/server'
+import { lookupApiKey } from '../../../../lib/apiKeys'
 import { generateShortSlug } from '../../../../slugs'
 import { rateLimit, getClientIp } from '../../../../rateLimit'
 import { tooManyRequests, ok, err } from '../../../../lib/apiResponse'
@@ -40,6 +41,7 @@ const BodySchema = z.object({
   maxDownloads: z.number().int().positive().nullable().default(null),
   notifyEmail: z.string().email().optional().or(z.literal('')),
   notifyEveryDownload: z.boolean().default(false),
+  webhookUrl: z.string().url().max(500).optional().or(z.literal('')),
   recipientEmails: z.array(z.string().email()).max(20).default([]),
   burnAfterRead: z.boolean().default(false),
   background: z.string().max(500).optional(),
@@ -60,7 +62,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   const {
     files, title, message, password, maxDownloads,
-    notifyEmail, notifyEveryDownload, recipientEmails, burnAfterRead, background, recaptchaToken,
+    notifyEmail, notifyEveryDownload, webhookUrl, recipientEmails, burnAfterRead, background, recaptchaToken,
   } = body.data
 
   const captcha = await verifyRecaptcha(recaptchaToken, { minScore: 0.3 })
@@ -70,9 +72,17 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   if (totalSize > MAX_BYTES) return err(`Total size exceeds ${formatBytes(MAX_BYTES)} limit.`)
 
   try {
-    const supabase = await getSupabaseServerClient()
-    const user = supabase ? (await supabase.auth.getUser()).data.user : null
-    const ownerId = user?.id ?? null
+    // Auth: session cookie OR Bearer API key
+    let ownerId: string | null = null
+    const authHeader = req.headers.get('authorization')
+    if (authHeader?.startsWith('Bearer zync_')) {
+      const lookup = await lookupApiKey(authHeader.slice(7))
+      if (lookup) ownerId = lookup.userId
+    } else {
+      const supabase = await getSupabaseServerClient()
+      const user = supabase ? (await supabase.auth.getUser()).data.user : null
+      ownerId = user?.id ?? null
+    }
 
     const days = body.data.expiryDays ?? defaultExpiryDays(!!ownerId)
     // Guests: max 7 days. Logged-in: max 365 days (1 year, WeTransfer Pro parity)
@@ -122,6 +132,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       passwordHash: password ? hashPassword(password) : null,
       notifyEmail: notifyEmail || null,
       notifyEveryDownload,
+      webhookUrl: webhookUrl || null,
       notifiedAt: null,
       recipientEmails,
       burnAfterRead,

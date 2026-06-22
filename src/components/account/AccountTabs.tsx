@@ -14,6 +14,7 @@ import AvatarManager from './AvatarManager'
 import ProfileForm from './ProfileForm'
 import SecurityPanel from './SecurityPanel'
 import TransferHistory from './TransferHistory'
+import ApiKeysPanel from './ApiKeysPanel'
 import { getSupabaseBrowserClient } from '../../supabase/client'
 
 export default function AccountTabs({
@@ -81,6 +82,7 @@ export default function AccountTabs({
         <Tab label="Profile" />
         <Tab label="History" />
         <Tab label="Security" />
+        <Tab label="API Keys" />
       </Tabs>
 
       {tab === 0 && (
@@ -101,6 +103,8 @@ export default function AccountTabs({
           initialBackupEmail={metadata.backup_email || ''}
         />
       )}
+
+      {tab === 3 && <ApiKeysPanel />}
     </Box>
   )
 }

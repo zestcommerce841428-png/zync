@@ -7,21 +7,11 @@ export const dynamic = 'force-dynamic'
 export async function GET(): Promise<NextResponse> {
   const supabase = await getSupabaseServerClient()
   if (!supabase) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
-
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
 
   const transfers = await listUserTransfers(user.id)
-
-  return NextResponse.json(
-    transfers.map(({ passwordHash, notifiedAt, recipientEmails, files, notifyEmail, notifyEveryDownload, webhookUrl, ...rest }) => ({
-      ...rest,
-      passwordProtected: !!passwordHash,
-      notifyEmail: notifyEmail ?? null,
-      notifyEveryDownload: notifyEveryDownload ?? false,
-      webhookUrl: webhookUrl ?? null,
-      fileCount: files.length,
-      files: files.map(({ name, size, type }) => ({ name, size, type })),
-    })),
-  )
+  const totalBytes = transfers.reduce((s, t) => s + t.totalSize, 0)
+  const fileCount = transfers.reduce((s, t) => s + t.files.length, 0)
+  return NextResponse.json({ totalBytes, fileCount, transferCount: transfers.length })
 }

@@ -101,6 +101,24 @@ export async function POST(
       void sendMail({ to: transfer.notifyEmail, subject: tpl.subject, html: tpl.html, text: tpl.text })
     }
 
+    // Fire webhook (fire-and-forget, never block the download)
+    if (transfer.webhookUrl) {
+      void fetch(transfer.webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event: 'transfer.downloaded',
+          slug,
+          downloadCount: newCount,
+          country: req.headers.get('cf-ipcountry') ?? 'XX',
+          at: new Date().toISOString(),
+          title: transfer.title,
+          fileCount: transfer.files.length,
+        }),
+        signal: AbortSignal.timeout(5000),
+      }).catch(() => {})
+    }
+
     if (transfer.burnAfterRead) {
       void scheduleBurn(slug, transfer.files.map((f) => f.key))
       setTimeout(() => void sweepExpiredTransfers(), 32_000)

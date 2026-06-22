@@ -78,8 +78,12 @@ export default function TransferPage(): React.ReactElement {
   const [notifyMe, setNotifyMe] = React.useState(false)
   const [notifyEmail, setNotifyEmail] = React.useState('')
   const [notifyEveryDownload, setNotifyEveryDownload] = React.useState(false)
+  const [webhookUrl, setWebhookUrl] = React.useState('')
   const [burnAfterRead, setBurnAfterRead] = React.useState(false)
   const [background, setBackground] = React.useState('')
+  const [templates, setTemplates] = React.useState<Array<{ id: string; name: string; settings: Record<string, unknown> }>>([])
+  const [saveTemplateName, setSaveTemplateName] = React.useState('')
+  const [savingTemplate, setSavingTemplate] = React.useState(false)
   const [stage, setStage] = React.useState<Stage>('idle')
   const [fileProgress, setFileProgress] = React.useState<FileProgress[]>([])
   const [speedBps, setSpeedBps] = React.useState(0)
@@ -92,13 +96,61 @@ export default function TransferPage(): React.ReactElement {
 
   const { getToken } = useRecaptcha()
 
-  // Load saved contacts
+  // Load saved contacts + templates
   React.useEffect(() => {
     fetch('/api/contacts')
       .then((r) => (r.ok ? r.json() : null))
       .then((j) => { if (j?.contacts) setSavedContacts(j.contacts.map((c: { email: string }) => c.email)) })
       .catch(() => {})
+    fetch('/api/templates')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => { if (j?.templates) setTemplates(j.templates) })
+      .catch(() => {})
   }, [])
+
+  const applyTemplate = (tpl: { settings: Record<string, unknown> }) => {
+    const s = tpl.settings
+    if (typeof s.title === 'string') setTitle(s.title)
+    if (typeof s.message === 'string') setMessage(s.message)
+    if (typeof s.expiryDays === 'number') setExpiryDays(s.expiryDays)
+    if (s.maxDownloads !== undefined) {
+      if (s.maxDownloads === null) { setLimitDownloads(false); setMaxDownloads(5) }
+      else { setLimitDownloads(true); setMaxDownloads(s.maxDownloads as number) }
+    }
+    if (typeof s.notifyEmail === 'string') { setNotifyMe(!!s.notifyEmail); setNotifyEmail(s.notifyEmail) }
+    if (typeof s.notifyEveryDownload === 'boolean') setNotifyEveryDownload(s.notifyEveryDownload)
+    if (typeof s.webhookUrl === 'string') setWebhookUrl(s.webhookUrl)
+    if (typeof s.burnAfterRead === 'boolean') setBurnAfterRead(s.burnAfterRead)
+    if (typeof s.background === 'string') setBackground(s.background)
+  }
+
+  const saveAsTemplate = async () => {
+    if (!saveTemplateName.trim()) return
+    setSavingTemplate(true)
+    try {
+      await fetch('/api/templates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: saveTemplateName.trim(),
+          settings: {
+            title, message, expiryDays,
+            maxDownloads: limitDownloads ? maxDownloads : null,
+            notifyEmail: notifyMe ? notifyEmail : '',
+            notifyEveryDownload,
+            webhookUrl,
+            burnAfterRead,
+            background,
+          },
+        }),
+      })
+      const res = await fetch('/api/templates')
+      const j = await res.json()
+      if (j?.templates) setTemplates(j.templates)
+      setSaveTemplateName('')
+    } catch {}
+    setSavingTemplate(false)
+  }
 
   const totalSize = files.reduce((s, f) => s + f.size, 0)
   const overLimit = totalSize > MAX_BYTES
@@ -164,6 +216,7 @@ export default function TransferPage(): React.ReactElement {
           maxDownloads: limitDownloads ? maxDownloads : null,
           notifyEmail: notifyMe && notifyEmail ? notifyEmail : undefined,
           notifyEveryDownload: notifyMe ? notifyEveryDownload : false,
+          webhookUrl: webhookUrl || undefined,
           recipientEmails,
           burnAfterRead,
           background: background || undefined,
@@ -253,6 +306,7 @@ export default function TransferPage(): React.ReactElement {
     setNotifyMe(false)
     setNotifyEmail('')
     setNotifyEveryDownload(false)
+    setWebhookUrl('')
     setBurnAfterRead(false)
     setBackground('')
     setStage('idle')
@@ -297,6 +351,26 @@ export default function TransferPage(): React.ReactElement {
 
               {stage === 'uploading' && (
                 <UploadProgress files={fileProgress} overallProgress={overallProgress} speedBps={speedBps} etaSeconds={etaSeconds} />
+              )}
+
+              {stage !== 'uploading' && files.length === 0 && templates.length > 0 && (
+                <Stack spacing={1}>
+                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    Load a preset
+                  </Typography>
+                  <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
+                    {templates.map((t) => (
+                      <Chip
+                        key={t.id}
+                        label={t.name}
+                        onClick={() => applyTemplate(t)}
+                        variant="outlined"
+                        size="small"
+                        sx={{ cursor: 'pointer' }}
+                      />
+                    ))}
+                  </Stack>
+                </Stack>
               )}
 
               {stage !== 'uploading' && files.length > 0 && (
@@ -524,6 +598,17 @@ export default function TransferPage(): React.ReactElement {
                             </Stack>
                           </Collapse>
                         </Stack>
+
+                        {/* Webhook URL */}
+                        <TextField
+                          label="Webhook URL (optional)"
+                          placeholder="https://your-server.com/hook"
+                          value={webhookUrl}
+                          onChange={(e) => setWebhookUrl(e.target.value)}
+                          size="small"
+                          fullWidth
+                          helperText="We'll POST a JSON payload to this URL on every download"
+                        />
                       </Stack>
                     </AccordionDetails>
                   </Accordion>
@@ -602,6 +687,28 @@ export default function TransferPage(): React.ReactElement {
                       </Stack>
                     </AccordionDetails>
                   </Accordion>
+
+                  {/* Save as template */}
+                  <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                    <TextField
+                      label="Save current settings as preset"
+                      placeholder="Preset name…"
+                      value={saveTemplateName}
+                      onChange={(e) => setSaveTemplateName(e.target.value)}
+                      size="small"
+                      sx={{ flex: 1 }}
+                      slotProps={{ htmlInput: { maxLength: 100 } }}
+                      onKeyDown={(e) => { if (e.key === 'Enter') saveAsTemplate() }}
+                    />
+                    <Button
+                      variant="outlined"
+                      onClick={saveAsTemplate}
+                      disabled={!saveTemplateName.trim() || savingTemplate}
+                      sx={{ flexShrink: 0, whiteSpace: 'nowrap' }}
+                    >
+                      Save preset
+                    </Button>
+                  </Stack>
                 </>
               )}
 

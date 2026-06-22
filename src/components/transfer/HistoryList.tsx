@@ -39,6 +39,8 @@ import BarChartIcon from '@mui/icons-material/BarChart'
 import EditIcon from '@mui/icons-material/Edit'
 import PublicIcon from '@mui/icons-material/Public'
 import DownloadIcon from '@mui/icons-material/Download'
+import Checkbox from '@mui/material/Checkbox'
+import LinearProgress from '@mui/material/LinearProgress'
 
 type TransferSummary = {
   slug: string
@@ -53,6 +55,7 @@ type TransferSummary = {
   passwordProtected: boolean
   notifyEmail?: string | null
   notifyEveryDownload?: boolean
+  webhookUrl?: string | null
   createdAt: string
 }
 
@@ -95,6 +98,7 @@ function EditDialog({ open, transfer, onClose, onSaved }: EditDialogProps): Reac
   const [clearPassword, setClearPassword] = React.useState(false)
   const [notifyEmail, setNotifyEmail] = React.useState(transfer.notifyEmail ?? '')
   const [notifyEveryDownload, setNotifyEveryDownload] = React.useState(transfer.notifyEveryDownload ?? false)
+  const [webhookUrl, setWebhookUrl] = React.useState(transfer.webhookUrl ?? '')
   const [saving, setSaving] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 
@@ -113,6 +117,7 @@ function EditDialog({ open, transfer, onClose, onSaved }: EditDialogProps): Reac
       if (clearPassword) body.clearPassword = true
       if (notifyEmail !== (transfer.notifyEmail ?? '')) body.notifyEmail = notifyEmail
       if (notifyEveryDownload !== (transfer.notifyEveryDownload ?? false)) body.notifyEveryDownload = notifyEveryDownload
+      if (webhookUrl !== (transfer.webhookUrl ?? '')) body.webhookUrl = webhookUrl
 
       const res = await fetch(`/api/transfer/${transfer.slug}`, {
         method: 'PATCH',
@@ -224,6 +229,15 @@ function EditDialog({ open, transfer, onClose, onSaved }: EditDialogProps): Reac
             }
             label={<Typography variant="body2">Notify on every download (not just first)</Typography>}
           />
+          <TextField
+            label="Webhook URL (blank = disabled)"
+            placeholder="https://your-server.com/hook"
+            value={webhookUrl}
+            onChange={(e) => setWebhookUrl(e.target.value)}
+            size="small"
+            fullWidth
+            helperText="POST called with JSON on every download event"
+          />
         </Stack>
       </DialogContent>
       <DialogActions>
@@ -326,6 +340,9 @@ export default function HistoryList(): React.ReactElement {
   const [snackbar, setSnackbar] = React.useState('')
   const [analyticsOpen, setAnalyticsOpen] = React.useState<Set<string>>(new Set())
   const [editSlug, setEditSlug] = React.useState<string | null>(null)
+  const [selected, setSelected] = React.useState<Set<string>>(new Set())
+  const [bulkDeleting, setBulkDeleting] = React.useState(false)
+  const [storage, setStorage] = React.useState<{ totalBytes: number; fileCount: number; transferCount: number } | null>(null)
 
   React.useEffect(() => {
     fetch('/api/transfer/history')
@@ -335,6 +352,10 @@ export default function HistoryList(): React.ReactElement {
       })
       .then(setTransfers)
       .catch((e) => setError(e.message))
+    fetch('/api/transfer/storage')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => { if (j && !j.error) setStorage(j) })
+      .catch(() => {})
   }, [])
 
   const copyLink = async (slug: string) => {
@@ -372,6 +393,32 @@ export default function HistoryList(): React.ReactElement {
     })
   }
 
+  const toggleSelect = (slug: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (next.has(slug)) next.delete(slug)
+      else next.add(slug)
+      return next
+    })
+  }
+
+  const toggleSelectAll = () => {
+    if (!transfers) return
+    if (selected.size === transfers.length) setSelected(new Set())
+    else setSelected(new Set(transfers.map((t) => t.slug)))
+  }
+
+  const handleBulkDelete = async () => {
+    if (selected.size === 0) return
+    setBulkDeleting(true)
+    const slugs = [...selected]
+    await Promise.all(slugs.map((slug) => fetch(`/api/transfer/${slug}`, { method: 'DELETE' }).catch(() => {})))
+    setTransfers((prev) => prev?.filter((t) => !selected.has(t.slug)) ?? null)
+    setSelected(new Set())
+    setSnackbar(`${slugs.length} transfer${slugs.length !== 1 ? 's' : ''} deleted.`)
+    setBulkDeleting(false)
+  }
+
   const handleSaved = (slug: string, patch: Partial<TransferSummary>) => {
     setTransfers((prev) =>
       prev?.map((t) => (t.slug === slug ? { ...t, ...patch } : t)) ?? null,
@@ -381,9 +428,11 @@ export default function HistoryList(): React.ReactElement {
 
   const editTransfer = transfers?.find((t) => t.slug === editSlug)
 
+  const MAX_STORAGE_BYTES = 200 * 1024 * 1024 * 1024 // 200 GB display cap
+
   return (
     <Container maxWidth="md" sx={{ py: { xs: 6, md: 10 } }}>
-      <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', mb: 4, flexWrap: 'wrap', gap: 2 }}>
+      <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', mb: 2, flexWrap: 'wrap', gap: 2 }}>
         <Stack spacing={0.5}>
           <Typography variant="h4" sx={{ fontWeight: 900 }}>My transfers</Typography>
           <Typography color="text.secondary">
@@ -392,6 +441,56 @@ export default function HistoryList(): React.ReactElement {
         </Stack>
         <Button variant="contained" href="/transfer">New transfer</Button>
       </Stack>
+
+      {/* Storage usage bar */}
+      {storage && (
+        <Card variant="outlined" sx={{ mb: 3 }}>
+          <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
+            <Stack spacing={0.75}>
+              <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                  Storage used
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {formatBytes(storage.totalBytes)} across {storage.transferCount} transfer{storage.transferCount !== 1 ? 's' : ''} · {storage.fileCount} file{storage.fileCount !== 1 ? 's' : ''}
+                </Typography>
+              </Stack>
+              <LinearProgress
+                variant="determinate"
+                value={Math.min(100, (storage.totalBytes / MAX_STORAGE_BYTES) * 100)}
+                sx={{ borderRadius: 1, height: 6 }}
+              />
+            </Stack>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Bulk action bar */}
+      {transfers !== null && transfers.length > 0 && (
+        <Stack direction="row" sx={{ alignItems: 'center', mb: 1.5, gap: 1 }}>
+          <Checkbox
+            size="small"
+            checked={selected.size > 0 && selected.size === transfers.length}
+            indeterminate={selected.size > 0 && selected.size < transfers.length}
+            onChange={toggleSelectAll}
+          />
+          <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
+            {selected.size > 0 ? `${selected.size} selected` : 'Select all'}
+          </Typography>
+          {selected.size > 0 && (
+            <Button
+              size="small"
+              color="error"
+              variant="outlined"
+              startIcon={bulkDeleting ? <CircularProgress size={14} color="inherit" /> : <DeleteIcon />}
+              onClick={handleBulkDelete}
+              disabled={bulkDeleting}
+            >
+              Delete {selected.size}
+            </Button>
+          )}
+        </Stack>
+      )}
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
@@ -420,10 +519,16 @@ export default function HistoryList(): React.ReactElement {
             const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/transfer/${t.slug}`
             const analyticsShown = analyticsOpen.has(t.slug)
             return (
-              <Card key={t.slug} variant="outlined">
+              <Card key={t.slug} variant="outlined" sx={{ outline: selected.has(t.slug) ? '2px solid' : 'none', outlineColor: 'primary.main' }}>
                 <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
                   <Stack spacing={1.5}>
                     <Stack direction="row" sx={{ alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
+                      <Checkbox
+                        size="small"
+                        checked={selected.has(t.slug)}
+                        onChange={() => toggleSelect(t.slug)}
+                        sx={{ mt: -0.5, ml: -1 }}
+                      />
                       <Stack spacing={0.5} sx={{ flex: 1, minWidth: 0 }}>
                         <Typography variant="subtitle1" sx={{ fontWeight: 700 }} noWrap>
                           {t.title || `Transfer ${t.slug}`}

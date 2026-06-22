@@ -39,6 +39,7 @@ export type TransferRecord = {
   completed: boolean
   burnAfterRead: boolean
   background: string | null  // CSS color/gradient string, null = default theme
+  webhookUrl: string | null  // optional HTTP callback on every download event
 }
 
 const KEY = (slug: string) => `transfer:${slug}`
