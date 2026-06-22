@@ -1,4 +1,4 @@
-import * as React from 'react'
+﻿import * as React from 'react'
 import type { Metadata } from 'next'
 import Box from '@mui/material/Box'
 import Container from '@mui/material/Container'
@@ -40,63 +40,63 @@ export const metadata: Metadata = {
 const FEATURES = [
   {
     icon: CloudOffIcon,
-    title: ‘No server storage (P2P)’,
-    body: ‘Files stream directly browser-to-browser over WebRTC. They never touch our servers, so there is nothing to leak, subpoena, or breach.’,
+    title: "No server storage (P2P)",
+    body: "Files stream directly browser-to-browser over WebRTC. They never touch our servers, so there is nothing to leak, subpoena, or breach.",
   },
   {
     icon: LockIcon,
-    title: ‘Encrypted end-to-end’,
-    body: ‘Every P2P transfer rides on WebRTC’s mandatory DTLS encryption. Cloud transfers use password protection with SHA-256 hashing and rate-limited verify endpoints.’,
+    title: "Encrypted end-to-end",
+    body: "Every P2P transfer rides on WebRTC"s mandatory DTLS encryption. Cloud transfers use password protection with SHA-256 hashing and rate-limited verify endpoints.’,
   },
   {
     icon: BoltIcon,
-    title: ‘Blazing fast’,
-    body: ‘P2P transfers move at full network speed with no round trip. Cloud transfers go browser → R2 → browser via presigned URLs — the VPS never touches your file bytes.’,
+    title: "Blazing fast",
+    body: "P2P transfers move at full network speed with no round trip. Cloud transfers go browser → R2 → browser via presigned URLs — the VPS never touches your file bytes.",
   },
   {
     icon: DevicesIcon,
-    title: ‘Any device, any size’,
-    body: ‘Works in any modern browser on desktop or mobile. P2P has no size cap. Cloud transfers support up to 200 GB per transfer across up to 20 files.’,
+    title: "Any device, any size",
+    body: "Works in any modern browser on desktop or mobile. P2P has no size cap. Cloud transfers support up to 200 GB per transfer across up to 20 files.",
   },
   {
     icon: PublicIcon,
-    title: ‘Share with a link or QR’,
-    body: ‘Every transfer — P2P or cloud — gets a short link and scannable QR code. Add recipient emails and we’ll notify them the moment your transfer is ready.’,
+    title: "Share with a link or QR",
+    body: "Every transfer — P2P or cloud — gets a short link and scannable QR code. Add recipient emails and we"ll notify them the moment your transfer is ready.’,
   },
   {
     icon: VpnKeyIcon,
-    title: ‘You stay in control’,
-    body: ‘Password-protect, set a download limit, or burn-after-read (auto-deletes 30 s after first download). Cloud links expire after up to 1 year for signed-in users.’,
+    title: "You stay in control",
+    body: "Password-protect, set a download limit, or burn-after-read (auto-deletes 30 s after first download). Cloud links expire after up to 1 year for signed-in users.",
   },
   {
     icon: AllInclusiveIcon,
-    title: ‘200 GB cloud transfers’,
-    body: ‘Cloud transfers (WeTransfer-style) support up to 200 GB per transfer and up to 1 year expiry for registered users — full WeTransfer Pro parity, for free.’,
+    title: "200 GB cloud transfers",
+    body: "Cloud transfers (WeTransfer-style) support up to 200 GB per transfer and up to 1 year expiry for registered users — full WeTransfer Pro parity, for free.",
   },
   {
     icon: SensorsIcon,
-    title: ‘Live presence & status’,
-    body: ‘See in real time when the uploader is online, how many people are viewing, and how many downloads have started — streamed over Server-Sent Events.’,
+    title: "Live presence & status",
+    body: "See in real time when the uploader is online, how many people are viewing, and how many downloads have started — streamed over Server-Sent Events.",
   },
   {
     icon: QrCode2Icon,
-    title: ‘Email & download alerts’,
-    body: ‘Send a transfer link directly to recipient emails. Get notified the moment your file is downloaded. All powered by transactional email via SMTP.’,
+    title: "Email & download alerts",
+    body: "Send a transfer link directly to recipient emails. Get notified the moment your file is downloaded. All powered by transactional email via SMTP.",
   },
   {
     icon: ReplayIcon,
-    title: ‘Resumable transfers’,
-    body: ‘Dropped connection? Zync remembers the last acknowledged byte and resumes from there instead of starting over. Works for both P2P and cloud modes.’,
+    title: "Resumable transfers",
+    body: "Dropped connection? Zync remembers the last acknowledged byte and resumes from there instead of starting over. Works for both P2P and cloud modes.",
   },
   {
     icon: AutoDeleteIcon,
-    title: ‘Automatic cleanup’,
-    body: ‘Expired cloud transfers are batch-deleted every 5 minutes via a cron container. Burn-after-read links are wiped within 30 seconds of first download.’,
+    title: "Automatic cleanup",
+    body: "Expired cloud transfers are batch-deleted every 5 minutes via a cron container. Burn-after-read links are wiped within 30 seconds of first download.",
   },
   {
     icon: CloudUploadIcon,
-    title: ‘Flexible cloud storage’,
-    body: ‘Store files on Cloudflare R2 (zero egress fees) or AWS S3 with Intelligent-Tiering, Standard-IA, or Glacier IR for up to 68% cost savings. Switch providers from the admin panel.’,
+    title: "Flexible cloud storage",
+    body: "Store files on Cloudflare R2 (zero egress fees) or AWS S3 with Intelligent-Tiering, Standard-IA, or Glacier IR for up to 68% cost savings. Switch providers from the admin panel.",
   },
 ]
 

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Box from '@mui/material/Box'
 import Grid from '@mui/material/Grid'
 import Card from '@mui/material/Card'
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 const VALUES = [
   {
     title: 'Privacy first',
-    body: 'We can't lose what we never hold. P2P files travel directly between browsers — zero bytes on our servers. Cloud transfers are stored encrypted on Cloudflare R2 and auto-deleted at expiry.',
+    body: "We can't lose what we never hold. P2P files travel directly between browsers — zero bytes on our servers. Cloud transfers are stored encrypted on Cloudflare R2 and auto-deleted at expiry.",
   },
   {
     title: 'Radically simple',

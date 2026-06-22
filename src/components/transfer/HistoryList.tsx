@@ -40,7 +40,6 @@ import EditIcon from '@mui/icons-material/Edit'
 import PublicIcon from '@mui/icons-material/Public'
 import DownloadIcon from '@mui/icons-material/Download'
 import Checkbox from '@mui/material/Checkbox'
-import LinearProgress from '@mui/material/LinearProgress'
 
 type TransferSummary = {
   slug: string
