@@ -1,6 +1,8 @@
 'use client'
 
 import * as React from 'react'
+import { useRouter } from 'next/navigation'
+import { getSupabaseBrowserClient } from '../../supabase/client'
 import Container from '@mui/material/Container'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
@@ -394,13 +396,27 @@ function CreateForm({
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function CollectPage(): React.ReactElement {
+  const router = useRouter()
   const [view, setView] = React.useState<'list' | 'create'>('list')
   const [resultSlug, setResultSlug] = React.useState('')
   const [copied, setCopied] = React.useState(false)
   const [origin, setOrigin] = React.useState('')
+  const [authChecked, setAuthChecked] = React.useState(false)
+
   React.useEffect(() => {
     setOrigin(window.location.origin)
   }, [])
+
+  React.useEffect(() => {
+    const supabase = getSupabaseBrowserClient()
+    if (!supabase) { setAuthChecked(true); return }
+    supabase.auth.getUser().then(({ data }) => {
+      if (!data.user) router.replace('/login?next=/collect')
+      else setAuthChecked(true)
+    }).catch(() => { setAuthChecked(true) })
+  }, [router])
+
+  if (!authChecked) return <></>
 
   const collectUrl = resultSlug ? `${origin}/collect/${resultSlug}` : ''
 
