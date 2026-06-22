@@ -52,6 +52,7 @@ const BodySchema = z.object({
   recipientEmails: z.array(z.string().email()).max(20).default([]),
   burnAfterRead: z.boolean().default(false),
   background: z.string().max(500).optional(),
+  encrypted: z.boolean().default(false),
   recaptchaToken: z.string().optional(),
 })
 
@@ -84,6 +85,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     recipientEmails,
     burnAfterRead,
     background,
+    encrypted,
     recaptchaToken,
   } = body.data
 
@@ -172,6 +174,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       recipientEmails,
       burnAfterRead,
       background: background || null,
+      encrypted,
       createdAt: new Date().toISOString(),
       completed: false,
     })

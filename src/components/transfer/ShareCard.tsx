@@ -19,6 +19,7 @@ import TwitterIcon from '@mui/icons-material/X'
 import EmailIcon from '@mui/icons-material/Email'
 import TelegramIcon from '@mui/icons-material/Telegram'
 import QRCode from 'react-qr-code'
+import LockIcon from '@mui/icons-material/Lock'
 
 type Props = {
   slug: string
@@ -26,6 +27,7 @@ type Props = {
   title?: string
   passwordProtected?: boolean
   burnAfterRead?: boolean
+  encryptionKey?: string // hex AES-256 key — appended to URL as #k=<hex>
 }
 
 export default function ShareCard({
@@ -34,6 +36,7 @@ export default function ShareCard({
   title,
   passwordProtected,
   burnAfterRead,
+  encryptionKey,
 }: Props): React.ReactElement {
   const [origin, setOrigin] = React.useState('')
   const [canShare, setCanShare] = React.useState(false)
@@ -41,7 +44,8 @@ export default function ShareCard({
     setOrigin(window.location.origin)
     setCanShare(typeof navigator.share === 'function')
   }, [])
-  const url = `${origin}/transfer/${slug}`
+  const baseUrl = `${origin}/transfer/${slug}`
+  const url = encryptionKey ? `${baseUrl}#k=${encryptionKey}` : baseUrl
   const shareText = title
     ? `"${title}" — download via Zync`
     : 'Here are your files — download via Zync'
@@ -215,7 +219,22 @@ export default function ShareCard({
             variant="outlined"
           />
         )}
+        {encryptionKey && (
+          <Chip
+            icon={<LockIcon />}
+            label="E2E Encrypted"
+            size="small"
+            color="success"
+          />
+        )}
       </Stack>
+
+      {encryptionKey && (
+        <Alert severity="warning" sx={{ fontSize: '0.75rem' }}>
+          The decryption key is embedded in the link above. Anyone with the link
+          can decrypt and download. Do not share the link on public pages.
+        </Alert>
+      )}
 
       <Typography variant="caption" color="text.secondary">
         Anyone with this link can download the files.
@@ -238,7 +257,7 @@ export default function ShareCard({
             </Typography>
             <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
               <TextField
-                value={`${origin}/transfer/${slug}?direct=1`}
+                value={`${baseUrl}?direct=1${encryptionKey ? `#k=${encryptionKey}` : ''}`}
                 size="small"
                 fullWidth
                 slotProps={{
@@ -251,7 +270,7 @@ export default function ShareCard({
                   size="small"
                   onClick={() => {
                     void navigator.clipboard.writeText(
-                      `${origin}/transfer/${slug}?direct=1`,
+                      `${baseUrl}?direct=1${encryptionKey ? `#k=${encryptionKey}` : ''}`,
                     )
                   }}
                 >

@@ -45,6 +45,7 @@ type Props = {
   passwordProtected?: boolean
   burnAfterRead?: boolean
   autoDownload?: boolean
+  encrypted?: boolean
 }
 
 function formatBytes(n: number): string {
@@ -74,6 +75,24 @@ function isPreviewable(type: string): boolean {
   )
 }
 
+// Decrypt AES-256-GCM ciphertext (IV prepended as first 12 bytes)
+async function decryptBlob(
+  ciphertext: ArrayBuffer,
+  keyHex: string,
+): Promise<ArrayBuffer> {
+  const raw = new Uint8Array(keyHex.match(/.{2}/g)!.map((b) => parseInt(b, 16)))
+  const key = await crypto.subtle.importKey('raw', raw, 'AES-GCM', false, [
+    'decrypt',
+  ])
+  const iv = ciphertext.slice(0, 12)
+  const data = ciphertext.slice(12)
+  return crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv: new Uint8Array(iv) },
+    key,
+    data,
+  )
+}
+
 export default function DownloadCard({
   slug,
   files,
@@ -86,11 +105,21 @@ export default function DownloadCard({
   passwordProtected,
   burnAfterRead,
   autoDownload,
+  encrypted,
 }: Props): React.ReactElement {
   const [now, setNow] = React.useState<number | null>(null)
   React.useEffect(() => {
     setNow(Date.now())
   }, [])
+
+  // Extract decryption key from URL fragment (#k=<hex>)
+  const [encKeyHex, setEncKeyHex] = React.useState<string | null>(null)
+  React.useEffect(() => {
+    if (!encrypted) return
+    const hash = window.location.hash
+    const match = hash.match(/[#&]k=([0-9a-f]{64})/i)
+    if (match) setEncKeyHex(match[1].toLowerCase())
+  }, [encrypted])
   const expiry = new Date(expiresAt)
   const daysLeft =
     now !== null ? Math.ceil((expiry.getTime() - now) / 86400000) : null
@@ -213,10 +242,25 @@ export default function DownloadCard({
         return
       }
       const { url } = await res.json()
-      const a = document.createElement('a')
-      a.href = url
-      a.download = files[index].name
-      a.click()
+
+      if (encrypted && encKeyHex) {
+        // Fetch ciphertext then decrypt in-browser
+        const cipher = await fetch(url).then((r) => r.arrayBuffer())
+        const plain = await decryptBlob(cipher, encKeyHex)
+        const blob = new Blob([plain], {
+          type: files[index].type || 'application/octet-stream',
+        })
+        const a = document.createElement('a')
+        a.href = URL.createObjectURL(blob)
+        a.download = files[index].name
+        a.click()
+        setTimeout(() => URL.revokeObjectURL(a.href), 60000)
+      } else {
+        const a = document.createElement('a')
+        a.href = url
+        a.download = files[index].name
+        a.click()
+      }
     } catch {
       setError('Network error. Please try again.')
     } finally {
@@ -286,7 +330,9 @@ export default function DownloadCard({
           }
           const { url } = await res.json()
           const fileRes = await fetch(url)
-          const buf = new Uint8Array(await fileRes.arrayBuffer())
+          let raw = await fileRes.arrayBuffer()
+          if (encrypted && encKeyHex) raw = await decryptBlob(raw, encKeyHex)
+          const buf = new Uint8Array(raw)
           const zipPath = f.path && f.path !== f.name ? f.path : f.name
           const entry = new AsyncZipDeflate(zipPath)
           zip.add(entry)
@@ -408,6 +454,19 @@ export default function DownloadCard({
         </Alert>
       )}
 
+      {encrypted && !encKeyHex && (
+        <Alert severity="error">
+          <strong>Decryption key missing.</strong> The share link must include{' '}
+          <code>#k=…</code> at the end. Make sure you copied the full link.
+        </Alert>
+      )}
+
+      {encrypted && encKeyHex && (
+        <Alert severity="success" icon={<LockIcon fontSize="small" />}>
+          End-to-end encrypted — files will be decrypted in your browser.
+        </Alert>
+      )}
+
       {error && <Alert severity="error">{error}</Alert>}
 
       <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
@@ -451,7 +510,7 @@ export default function DownloadCard({
             sx={{ py: 0.5 }}
             secondaryAction={
               <Stack direction="row" spacing={0.5}>
-                {isPreviewable(f.type) && (
+                {isPreviewable(f.type) && !encrypted && (
                   <IconButton
                     size="small"
                     onClick={() => previewFile(i)}
@@ -527,7 +586,9 @@ export default function DownloadCard({
           )
         }
         onClick={downloadAll}
-        disabled={zipping || downloading.size > 0}
+        disabled={
+          zipping || downloading.size > 0 || (!!encrypted && !encKeyHex)
+        }
         fullWidth
       >
         {zipping

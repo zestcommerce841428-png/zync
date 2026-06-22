@@ -26,6 +26,7 @@ import AccordionSummary from '@mui/material/AccordionSummary'
 import AccordionDetails from '@mui/material/AccordionDetails'
 import Tooltip from '@mui/material/Tooltip'
 import CloudUploadIcon from '@mui/icons-material/CloudUpload'
+import LockIcon from '@mui/icons-material/Lock'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
@@ -88,6 +89,8 @@ export default function TransferPage(): React.ReactElement {
   const [webhookUrl, setWebhookUrl] = React.useState('')
   const [burnAfterRead, setBurnAfterRead] = React.useState(false)
   const [background, setBackground] = React.useState('')
+  const [encryptFiles, setEncryptFiles] = React.useState(false)
+  const [encryptionKey, setEncryptionKey] = React.useState<string | null>(null)
   const [templates, setTemplates] = React.useState<
     Array<{ id: string; name: string; settings: Record<string, unknown> }>
   >([])
@@ -241,15 +244,51 @@ export default function TransferPage(): React.ReactElement {
     }
 
     try {
+      // Generate encryption key if E2E encryption is enabled
+      let cryptoKey: CryptoKey | null = null
+      let exportedKeyHex: string | null = null
+      if (encryptFiles) {
+        cryptoKey = await crypto.subtle.generateKey(
+          { name: 'AES-GCM', length: 256 },
+          true,
+          ['encrypt', 'decrypt'],
+        )
+        const raw = await crypto.subtle.exportKey('raw', cryptoKey)
+        exportedKeyHex = Array.from(new Uint8Array(raw))
+          .map((b) => b.toString(16).padStart(2, '0'))
+          .join('')
+      }
+
+      // Encrypt a File in-browser: 12-byte IV prepended to AES-GCM ciphertext
+      const encryptFile = async (file: File): Promise<Blob> => {
+        if (!cryptoKey) return file
+        const iv = crypto.getRandomValues(new Uint8Array(12))
+        const buf = await file.arrayBuffer()
+        const cipher = await crypto.subtle.encrypt(
+          { name: 'AES-GCM', iv },
+          cryptoKey,
+          buf,
+        )
+        const out = new Uint8Array(12 + cipher.byteLength)
+        out.set(iv, 0)
+        out.set(new Uint8Array(cipher), 12)
+        return new Blob([out], { type: 'application/octet-stream' })
+      }
+
       const recaptchaToken = await getToken('transfer_create')
+      // When encrypting, report encrypted size (IV + ciphertext tag overhead ~28 bytes per file)
+      const encryptedSizes = encryptFiles
+        ? files.map((f) => f.size + 12 + 16)
+        : files.map((f) => f.size)
+
       const createRes = await fetch('/api/transfer/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           files: files.map((f, i) => ({
             name: f.name,
-            size: f.size,
-            type: f.type,
+            size: encryptedSizes[i],
+            type: encryptFiles ? 'application/octet-stream' : f.type,
             path: filePaths[i] || f.name,
           })),
           title,
@@ -263,6 +302,7 @@ export default function TransferPage(): React.ReactElement {
           recipientEmails,
           burnAfterRead,
           background: background || undefined,
+          encrypted: encryptFiles,
           recaptchaToken,
         }),
       })
@@ -276,42 +316,46 @@ export default function TransferPage(): React.ReactElement {
         files.map(
           (file, i) =>
             new Promise<void>((resolve, reject) => {
-              const xhr = new XMLHttpRequest()
-              xhr.open('PUT', uploadUrls[i])
-              xhr.setRequestHeader(
-                'Content-Type',
-                file.type || 'application/octet-stream',
-              )
-              xhr.upload.addEventListener('progress', (e) => {
-                if (e.lengthComputable) onProgress(i, e.loaded)
-              })
-              xhr.addEventListener('load', () => {
-                if (xhr.status >= 200 && xhr.status < 300) {
-                  onProgress(i, file.size)
-                  setFileProgress((prev) => {
-                    const next = [...prev]
-                    next[i] = { ...next[i], progress: 100, done: true }
-                    return next
-                  })
-                  resolve()
-                } else {
+              encryptFile(file).then((blob) => {
+                const xhr = new XMLHttpRequest()
+                xhr.open('PUT', uploadUrls[i])
+                xhr.setRequestHeader(
+                  'Content-Type',
+                  encryptFiles
+                    ? 'application/octet-stream'
+                    : file.type || 'application/octet-stream',
+                )
+                xhr.upload.addEventListener('progress', (e) => {
+                  if (e.lengthComputable) onProgress(i, e.loaded)
+                })
+                xhr.addEventListener('load', () => {
+                  if (xhr.status >= 200 && xhr.status < 300) {
+                    onProgress(i, blob.size)
+                    setFileProgress((prev) => {
+                      const next = [...prev]
+                      next[i] = { ...next[i], progress: 100, done: true }
+                      return next
+                    })
+                    resolve()
+                  } else {
+                    setFileProgress((prev) => {
+                      const next = [...prev]
+                      next[i] = { ...next[i], error: true }
+                      return next
+                    })
+                    reject(new Error(`Upload failed for ${file.name}`))
+                  }
+                })
+                xhr.addEventListener('error', () => {
                   setFileProgress((prev) => {
                     const next = [...prev]
                     next[i] = { ...next[i], error: true }
                     return next
                   })
-                  reject(new Error(`Upload failed for ${file.name}`))
-                }
-              })
-              xhr.addEventListener('error', () => {
-                setFileProgress((prev) => {
-                  const next = [...prev]
-                  next[i] = { ...next[i], error: true }
-                  return next
+                  reject(new Error(`Network error uploading ${file.name}`))
                 })
-                reject(new Error(`Network error uploading ${file.name}`))
+                xhr.send(blob)
               })
-              xhr.send(file)
             }),
         ),
       )
@@ -326,6 +370,7 @@ export default function TransferPage(): React.ReactElement {
       setResultExpiry(expiresAt)
       setResultTitle(title)
       setResultBurn(burnAfterRead)
+      setEncryptionKey(exportedKeyHex)
       setStage('done')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed.')
@@ -360,6 +405,8 @@ export default function TransferPage(): React.ReactElement {
     setWebhookUrl('')
     setBurnAfterRead(false)
     setBackground('')
+    setEncryptFiles(false)
+    setEncryptionKey(null)
     setStage('idle')
     setFileProgress([])
     setSpeedBps(0)
@@ -404,6 +451,7 @@ export default function TransferPage(): React.ReactElement {
                 expiresAt={resultExpiry}
                 title={resultTitle}
                 burnAfterRead={resultBurn}
+                encryptionKey={encryptionKey ?? undefined}
               />
               <Button variant="outlined" onClick={reset}>
                 Send another transfer
@@ -693,6 +741,45 @@ export default function TransferPage(): React.ReactElement {
                             </Stack>
                           )}
                         </Stack>
+
+                        {/* End-to-end encryption */}
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={encryptFiles}
+                              onChange={(e) =>
+                                setEncryptFiles(e.target.checked)
+                              }
+                              size="small"
+                              color="success"
+                            />
+                          }
+                          label={
+                            <Stack>
+                              <Stack
+                                direction="row"
+                                spacing={0.5}
+                                sx={{ alignItems: 'center' }}
+                              >
+                                <LockIcon
+                                  fontSize="small"
+                                  color={encryptFiles ? 'success' : 'disabled'}
+                                />
+                                <Typography variant="body2">
+                                  End-to-end encrypt
+                                </Typography>
+                              </Stack>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                AES-256-GCM in-browser — the server never sees
+                                your file contents. Key travels in the share
+                                link only.
+                              </Typography>
+                            </Stack>
+                          }
+                        />
 
                         {/* Burn after read */}
                         <FormControlLabel

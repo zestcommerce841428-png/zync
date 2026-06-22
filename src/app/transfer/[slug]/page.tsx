@@ -133,6 +133,7 @@ export default async function TransferDownloadPage({
                     passwordProtected={!!transfer.passwordHash}
                     burnAfterRead={!!transfer.burnAfterRead}
                     autoDownload={autoDownload}
+                    encrypted={!!transfer.encrypted}
                   />
 
                   {/* Transfer tracking — only visible to the owner */}

@@ -40,6 +40,7 @@ export type TransferRecord = {
   burnAfterRead: boolean
   background: string | null // CSS color/gradient string, null = default theme
   webhookUrl: string | null // optional HTTP callback on every download event
+  encrypted: boolean // AES-256-GCM client-side encryption; key travels only in URL fragment
 }
 
 const KEY = (slug: string) => `transfer:${slug}`
