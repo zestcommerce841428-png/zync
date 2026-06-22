@@ -46,7 +46,7 @@ const FEATURES = [
   {
     icon: LockIcon,
     title: "Encrypted end-to-end",
-    body: "Every P2P transfer rides on WebRTC"s mandatory DTLS encryption. Cloud transfers use password protection with SHA-256 hashing and rate-limited verify endpoints.’,
+    body: "Every P2P transfer rides on WebRTC’s mandatory DTLS encryption. Cloud transfers use password protection with SHA-256 hashing and rate-limited verify endpoints.",
   },
   {
     icon: BoltIcon,
@@ -61,7 +61,7 @@ const FEATURES = [
   {
     icon: PublicIcon,
     title: "Share with a link or QR",
-    body: "Every transfer — P2P or cloud — gets a short link and scannable QR code. Add recipient emails and we"ll notify them the moment your transfer is ready.’,
+    body: "Every transfer — P2P or cloud — gets a short link and scannable QR code. Add recipient emails and we’ll notify them the moment your transfer is ready.",
   },
   {
     icon: VpnKeyIcon,
@@ -138,7 +138,7 @@ const STEPS = [
   {
     n: '03',
     title: 'They download direct',
-    body: 'The recipient’s browser connects straight to yours and the bytes flow peer-to-peer until it’s done.',
+    body: "The recipient’s browser connects straight to yours and the bytes flow peer-to-peer until it’s done.",
   },
 ]
 
