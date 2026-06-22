@@ -81,7 +81,7 @@ export default function ApiKeysPanel(): React.ReactElement {
   }
 
   const copy = async (text: string) => {
-    try { await navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000) } catch {}
+    try { await navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000) } catch (_e) { /* clipboard unavailable */ }
   }
 
   return (

@@ -14,7 +14,6 @@ import Alert from '@mui/material/Alert'
 import Chip from '@mui/material/Chip'
 import CircularProgress from '@mui/material/CircularProgress'
 import TextField from '@mui/material/TextField'
-import Collapse from '@mui/material/Collapse'
 import Dialog from '@mui/material/Dialog'
 import DialogContent from '@mui/material/DialogContent'
 import DownloadIcon from '@mui/icons-material/Download'
@@ -106,7 +105,7 @@ export default function DownloadCard({
       const json = await res.json()
       if (json.valid) {
         setUnlocked(true)
-        try { sessionStorage.setItem(`transfer-pw-${slug}`, passwordInput) } catch {}
+        try { sessionStorage.setItem(`transfer-pw-${slug}`, passwordInput) } catch (_e) { /* private browsing */ }
       } else {
         setPwError(true)
       }
@@ -126,7 +125,7 @@ export default function DownloadCard({
         setPasswordInput(saved)
         setUnlocked(true)
       }
-    } catch {}
+    } catch (_e) { /* private browsing */ }
   }, [slug, passwordProtected])
 
   // Fetch inline thumbnails for image files once unlocked
@@ -143,7 +142,6 @@ export default function DownloadCard({
         .then((json) => { if (json?.url) setThumbnails((prev) => ({ ...prev, [i]: json.url })) })
         .catch(() => {})
     })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unlocked, slug])
 
   const [downloading, setDownloading] = React.useState<Set<number>>(new Set())
@@ -156,7 +154,6 @@ export default function DownloadCard({
     if (!autoDownload || !unlocked || expired || autoTriggered.current) return
     autoTriggered.current = true
     void downloadAll()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoDownload, unlocked, expired])
 
   // Inline thumbnails: map fileIndex → presigned URL

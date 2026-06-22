@@ -148,7 +148,7 @@ export default function TransferPage(): React.ReactElement {
       const j = await res.json()
       if (j?.templates) setTemplates(j.templates)
       setSaveTemplateName('')
-    } catch {}
+    } catch (_e) { /* save failed */ }
     setSavingTemplate(false)
   }
 

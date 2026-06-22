@@ -362,7 +362,7 @@ export default function HistoryList(): React.ReactElement {
       await navigator.clipboard.writeText(`${window.location.origin}/transfer/${slug}`)
       setCopied(slug)
       setTimeout(() => setCopied(null), 2000)
-    } catch {}
+    } catch (_e) { /* clipboard unavailable */ }
   }
 
   const handleDelete = async (slug: string) => {

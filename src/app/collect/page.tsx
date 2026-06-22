@@ -73,7 +73,7 @@ function CollectList({ onCreateNew }: { onCreateNew: () => void }): React.ReactE
       await navigator.clipboard.writeText(`${origin}/collect/${slug}`)
       setCopiedSlug(slug)
       setTimeout(() => setCopiedSlug(null), 2000)
-    } catch {}
+    } catch (_e) { /* clipboard unavailable */ }
   }
 
   const toggleActive = async (slug: string, current: boolean) => {
@@ -87,7 +87,7 @@ function CollectList({ onCreateNew }: { onCreateNew: () => void }): React.ReactE
       setCollects((prev) =>
         prev ? prev.map((c) => (c.slug === slug ? { ...c, active: !current } : c)) : prev,
       )
-    } catch {}
+    } catch (_e) { /* fetch failed */ }
     setTogglingSlug(null)
   }
 
@@ -314,7 +314,7 @@ export default function CollectPage(): React.ReactElement {
   const collectUrl = resultSlug ? `${origin}/collect/${resultSlug}` : ''
 
   const copy = async () => {
-    try { await navigator.clipboard.writeText(collectUrl); setCopied(true); setTimeout(() => setCopied(false), 2000) } catch {}
+    try { await navigator.clipboard.writeText(collectUrl); setCopied(true); setTimeout(() => setCopied(false), 2000) } catch (_e) { /* clipboard unavailable */ }
   }
 
   const handleCreated = (slug: string) => {
