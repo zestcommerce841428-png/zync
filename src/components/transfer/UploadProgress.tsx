@@ -10,17 +10,17 @@ import ErrorIcon from '@mui/icons-material/Error'
 
 export type FileProgress = {
   name: string
-  size: number       // total bytes
-  loaded: number     // bytes uploaded so far
-  progress: number   // 0–100
+  size: number // total bytes
+  loaded: number // bytes uploaded so far
+  progress: number // 0–100
   done: boolean
   error: boolean
 }
 
 type Props = {
   files: FileProgress[]
-  overallProgress: number   // 0–100
-  speedBps: number          // current bytes/sec across all files
+  overallProgress: number // 0–100
+  speedBps: number // current bytes/sec across all files
   etaSeconds: number | null // null while calculating
 }
 
@@ -36,10 +36,18 @@ function fmtEta(s: number): string {
   return `${(s / 3600).toFixed(1)}h left`
 }
 
-export default function UploadProgress({ files, overallProgress, speedBps, etaSeconds }: Props): React.ReactElement {
+export default function UploadProgress({
+  files,
+  overallProgress,
+  speedBps,
+  etaSeconds,
+}: Props): React.ReactElement {
   return (
     <Box>
-      <Stack direction="row" sx={{ justifyContent: 'space-between', mb: 0.5, alignItems: 'center' }}>
+      <Stack
+        direction="row"
+        sx={{ justifyContent: 'space-between', mb: 0.5, alignItems: 'center' }}
+      >
         <Typography variant="body2" sx={{ fontWeight: 600 }}>
           Uploading…
         </Typography>
@@ -51,7 +59,9 @@ export default function UploadProgress({ files, overallProgress, speedBps, etaSe
           )}
           <Typography variant="body2" color="text.secondary">
             {Math.round(overallProgress)}%
-            {etaSeconds !== null && etaSeconds > 0 && ` · ${fmtEta(etaSeconds)}`}
+            {etaSeconds !== null &&
+              etaSeconds > 0 &&
+              ` · ${fmtEta(etaSeconds)}`}
           </Typography>
         </Stack>
       </Stack>
@@ -63,13 +73,15 @@ export default function UploadProgress({ files, overallProgress, speedBps, etaSe
       <Stack spacing={1}>
         {files.map((f, i) => (
           <Box key={i}>
-            <Stack direction="row" spacing={1} sx={{ mb: 0.25, alignItems: 'center' }}>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{ mb: 0.25, alignItems: 'center' }}
+            >
               {f.done && !f.error && (
                 <CheckCircleIcon fontSize="small" color="success" />
               )}
-              {f.error && (
-                <ErrorIcon fontSize="small" color="error" />
-              )}
+              {f.error && <ErrorIcon fontSize="small" color="error" />}
               <Typography
                 variant="caption"
                 noWrap
@@ -78,7 +90,11 @@ export default function UploadProgress({ files, overallProgress, speedBps, etaSe
                 {f.name}
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                {f.done ? 'Done' : f.error ? 'Failed' : `${Math.round(f.progress)}%`}
+                {f.done
+                  ? 'Done'
+                  : f.error
+                    ? 'Failed'
+                    : `${Math.round(f.progress)}%`}
               </Typography>
             </Stack>
             <LinearProgress

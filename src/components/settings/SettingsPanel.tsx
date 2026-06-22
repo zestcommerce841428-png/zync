@@ -89,16 +89,23 @@ function ReadingGuide(): React.ReactElement {
 }
 
 export default function SettingsPanel(): React.ReactElement {
-  const { settings, update, reset, panelOpen, setPanelOpen, panelTab } = useSettings()
+  const { settings, update, reset, panelOpen, setPanelOpen, panelTab } =
+    useSettings()
   const [tab, setTab] = React.useState(panelTab)
   const [mounted, setMounted] = React.useState(false)
   React.useEffect(() => setMounted(true), [])
   // Sync tab when opened from header buttons
-  React.useEffect(() => { if (panelOpen) setTab(panelTab) }, [panelOpen, panelTab])
+  React.useEffect(() => {
+    if (panelOpen) setTab(panelTab)
+  }, [panelOpen, panelTab])
 
   return (
     <>
-      <Drawer anchor="right" open={panelOpen} onClose={() => setPanelOpen(false)}>
+      <Drawer
+        anchor="right"
+        open={panelOpen}
+        onClose={() => setPanelOpen(false)}
+      >
         <Box
           sx={{
             width: { xs: 300, sm: 360 },

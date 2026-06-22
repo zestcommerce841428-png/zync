@@ -30,7 +30,11 @@ type KeyMeta = {
 }
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  return new Date(iso).toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
 }
 
 export default function ApiKeysPanel(): React.ReactElement {
@@ -46,12 +50,19 @@ export default function ApiKeysPanel(): React.ReactElement {
     try {
       const res = await fetch('/api/keys')
       const j = await res.json()
-      if (j.error) { setError(j.error); setKeys([]) }
-      else setKeys(j.keys ?? [])
-    } catch { setError('Failed to load API keys.'); setKeys([]) }
+      if (j.error) {
+        setError(j.error)
+        setKeys([])
+      } else setKeys(j.keys ?? [])
+    } catch {
+      setError('Failed to load API keys.')
+      setKeys([])
+    }
   }, [])
 
-  React.useEffect(() => { load() }, [load])
+  React.useEffect(() => {
+    load()
+  }, [load])
 
   const create = async () => {
     if (!newName.trim()) return
@@ -63,12 +74,18 @@ export default function ApiKeysPanel(): React.ReactElement {
         body: JSON.stringify({ name: newName.trim() }),
       })
       const j = await res.json()
-      if (!res.ok) { setError(j.error ?? 'Failed to create key.'); return }
+      if (!res.ok) {
+        setError(j.error ?? 'Failed to create key.')
+        return
+      }
       setNewKey(j.key)
       setNewName('')
       await load()
-    } catch { setError('Network error.') }
-    finally { setCreating(false) }
+    } catch {
+      setError('Network error.')
+    } finally {
+      setCreating(false)
+    }
   }
 
   const remove = async (id: string) => {
@@ -76,24 +93,40 @@ export default function ApiKeysPanel(): React.ReactElement {
     try {
       await fetch(`/api/keys/${id}`, { method: 'DELETE' })
       setKeys((prev) => prev?.filter((k) => k.id !== id) ?? null)
-    } catch { setError('Failed to delete key.') }
-    finally { setDeletingId(null) }
+    } catch {
+      setError('Failed to delete key.')
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   const copy = async (text: string) => {
-    try { await navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000) } catch (_e) { /* clipboard unavailable */ }
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (_e) {
+      /* clipboard unavailable */
+    }
   }
 
   return (
     <Stack spacing={3}>
       <Stack spacing={0.5}>
-        <Typography variant="h6" sx={{ fontWeight: 700 }}>API Keys</Typography>
+        <Typography variant="h6" sx={{ fontWeight: 700 }}>
+          API Keys
+        </Typography>
         <Typography variant="body2" color="text.secondary">
-          Use API keys to create transfers programmatically via the REST API. Each key authenticates as your account.
+          Use API keys to create transfers programmatically via the REST API.
+          Each key authenticates as your account.
         </Typography>
       </Stack>
 
-      {error && <Alert severity="error" onClose={() => setError(null)}>{error}</Alert>}
+      {error && (
+        <Alert severity="error" onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      )}
 
       {/* Create */}
       <Card variant="outlined">
@@ -107,11 +140,19 @@ export default function ApiKeysPanel(): React.ReactElement {
               size="small"
               sx={{ flex: 1 }}
               slotProps={{ htmlInput: { maxLength: 100 } }}
-              onKeyDown={(e) => { if (e.key === 'Enter') create() }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') create()
+              }}
             />
             <Button
               variant="contained"
-              startIcon={creating ? <CircularProgress size={16} color="inherit" /> : <AddIcon />}
+              startIcon={
+                creating ? (
+                  <CircularProgress size={16} color="inherit" />
+                ) : (
+                  <AddIcon />
+                )
+              }
               onClick={create}
               disabled={!newName.trim() || creating}
               sx={{ flexShrink: 0 }}
@@ -126,7 +167,10 @@ export default function ApiKeysPanel(): React.ReactElement {
       {keys === null ? (
         <CircularProgress sx={{ display: 'block', mx: 'auto' }} />
       ) : keys.length === 0 ? (
-        <Stack spacing={1} sx={{ alignItems: 'center', py: 4, color: 'text.secondary' }}>
+        <Stack
+          spacing={1}
+          sx={{ alignItems: 'center', py: 4, color: 'text.secondary' }}
+        >
           <KeyIcon sx={{ fontSize: 44, opacity: 0.4 }} />
           <Typography variant="body2">No API keys yet.</Typography>
         </Stack>
@@ -136,10 +180,26 @@ export default function ApiKeysPanel(): React.ReactElement {
             <Card key={k.id} variant="outlined">
               <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
                 <Stack direction="row" sx={{ alignItems: 'center', gap: 1 }}>
-                  <KeyIcon sx={{ color: 'text.secondary', fontSize: 20, flexShrink: 0 }} />
+                  <KeyIcon
+                    sx={{
+                      color: 'text.secondary',
+                      fontSize: 20,
+                      flexShrink: 0,
+                    }}
+                  />
                   <Stack sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 700 }} noWrap>{k.name}</Typography>
-                    <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', alignItems: 'center' }}>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ fontWeight: 700 }}
+                      noWrap
+                    >
+                      {k.name}
+                    </Typography>
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      sx={{ flexWrap: 'wrap', alignItems: 'center' }}
+                    >
                       <Typography variant="caption" color="text.secondary">
                         Created {formatDate(k.createdAt)}
                       </Typography>
@@ -148,7 +208,13 @@ export default function ApiKeysPanel(): React.ReactElement {
                           · Last used {formatDate(k.lastUsedAt)}
                         </Typography>
                       )}
-                      {!k.lastUsedAt && <Chip label="Never used" size="small" variant="outlined" />}
+                      {!k.lastUsedAt && (
+                        <Chip
+                          label="Never used"
+                          size="small"
+                          variant="outlined"
+                        />
+                      )}
                     </Stack>
                   </Stack>
                   <Tooltip title="Revoke key">
@@ -159,7 +225,11 @@ export default function ApiKeysPanel(): React.ReactElement {
                         onClick={() => remove(k.id)}
                         disabled={deletingId === k.id}
                       >
-                        {deletingId === k.id ? <CircularProgress size={16} /> : <DeleteIcon fontSize="small" />}
+                        {deletingId === k.id ? (
+                          <CircularProgress size={16} />
+                        ) : (
+                          <DeleteIcon fontSize="small" />
+                        )}
                       </IconButton>
                     </span>
                   </Tooltip>
@@ -173,15 +243,31 @@ export default function ApiKeysPanel(): React.ReactElement {
       {/* Usage docs */}
       <Card variant="outlined" sx={{ bgcolor: 'action.hover' }}>
         <CardContent>
-          <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>Usage</Typography>
-          <Typography variant="caption" color="text.secondary" component="div" sx={{ fontFamily: 'monospace', whiteSpace: 'pre-wrap', lineHeight: 1.8 }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
+            Usage
+          </Typography>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            component="div"
+            sx={{
+              fontFamily: 'monospace',
+              whiteSpace: 'pre-wrap',
+              lineHeight: 1.8,
+            }}
+          >
             {`POST /api/transfer/create\nAuthorization: Bearer <your-key>\nContent-Type: application/json\n\n{ "files": [...], "title": "...", ... }`}
           </Typography>
         </CardContent>
       </Card>
 
       {/* New key reveal dialog */}
-      <Dialog open={!!newKey} onClose={() => setNewKey(null)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={!!newKey}
+        onClose={() => setNewKey(null)}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle>Your new API key</DialogTitle>
         <DialogContent>
           <Stack spacing={2}>
@@ -193,11 +279,19 @@ export default function ApiKeysPanel(): React.ReactElement {
                 value={newKey ?? ''}
                 size="small"
                 fullWidth
-                slotProps={{ input: { readOnly: true, sx: { fontFamily: 'monospace', fontSize: 13 } } }}
+                slotProps={{
+                  input: {
+                    readOnly: true,
+                    sx: { fontFamily: 'monospace', fontSize: 13 },
+                  },
+                }}
                 onClick={(e) => (e.target as HTMLInputElement).select()}
               />
               <Tooltip title={copied ? 'Copied!' : 'Copy'}>
-                <IconButton onClick={() => copy(newKey ?? '')} color={copied ? 'success' : 'default'}>
+                <IconButton
+                  onClick={() => copy(newKey ?? '')}
+                  color={copied ? 'success' : 'default'}
+                >
                   {copied ? <CheckIcon /> : <ContentCopyIcon />}
                 </IconButton>
               </Tooltip>
@@ -205,7 +299,9 @@ export default function ApiKeysPanel(): React.ReactElement {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button variant="contained" onClick={() => setNewKey(null)}>Done, I saved it</Button>
+          <Button variant="contained" onClick={() => setNewKey(null)}>
+            Done, I saved it
+          </Button>
         </DialogActions>
       </Dialog>
     </Stack>

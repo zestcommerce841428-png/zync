@@ -121,7 +121,8 @@ export const TOOLS: ToolMeta[] = [
   {
     slug: 'regex-tester',
     name: 'Regex Tester',
-    description: 'Test regular expressions against text and see all matches highlighted.',
+    description:
+      'Test regular expressions against text and see all matches highlighted.',
     emoji: '🔎',
     category: 'Developer',
   },
@@ -135,14 +136,16 @@ export const TOOLS: ToolMeta[] = [
   {
     slug: 'base-converter',
     name: 'Number Base Converter',
-    description: 'Convert numbers between binary, octal, decimal and hexadecimal.',
+    description:
+      'Convert numbers between binary, octal, decimal and hexadecimal.',
     emoji: '🔢',
     category: 'Developer',
   },
   {
     slug: 'unit-converter',
     name: 'Unit Converter',
-    description: 'Convert between temperature, length, weight and data-size units.',
+    description:
+      'Convert between temperature, length, weight and data-size units.',
     emoji: '📐',
     category: 'Utilities',
   },
@@ -156,7 +159,8 @@ export const TOOLS: ToolMeta[] = [
   {
     slug: 'random-generator',
     name: 'Random Generator',
-    description: 'Roll dice, flip coins, pick random numbers or shuffle a list.',
+    description:
+      'Roll dice, flip coins, pick random numbers or shuffle a list.',
     emoji: '🎲',
     category: 'Generators',
   },

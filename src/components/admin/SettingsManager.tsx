@@ -105,9 +105,17 @@ function FeatureToggle({
             onChange={(e) => onChange(e.target.checked ? 'true' : 'false')}
           />
         }
-        label={<Typography variant="body2" sx={{ fontWeight: 600 }}>{label}</Typography>}
+        label={
+          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+            {label}
+          </Typography>
+        }
       />
-      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', ml: 6.5, mt: -0.5 }}>
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        sx={{ display: 'block', ml: 6.5, mt: -0.5 }}
+      >
         {description}
       </Typography>
     </Box>
@@ -137,7 +145,9 @@ export default function SettingsManager(): React.ReactElement {
     }
   }, [])
 
-  React.useEffect(() => { load() }, [load])
+  React.useEffect(() => {
+    load()
+  }, [load])
 
   const patch = (updates: Partial<Settings>) =>
     setSettings((s) => ({ ...s, ...updates }))
@@ -167,7 +177,11 @@ export default function SettingsManager(): React.ReactElement {
 
   return (
     <Box>
-      <Stack direction="row" spacing={1} sx={{ alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{ alignItems: 'center', justifyContent: 'space-between', mb: 2 }}
+      >
         <Typography variant="h6" sx={{ fontWeight: 800 }}>
           Settings
         </Typography>
@@ -182,7 +196,9 @@ export default function SettingsManager(): React.ReactElement {
           <Button
             onClick={save}
             disabled={saving || loading}
-            startIcon={saving ? <CircularProgress size={16} /> : <SaveOutlinedIcon />}
+            startIcon={
+              saving ? <CircularProgress size={16} /> : <SaveOutlinedIcon />
+            }
             variant="contained"
             size="small"
           >
@@ -191,8 +207,16 @@ export default function SettingsManager(): React.ReactElement {
         </Stack>
       </Stack>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-      {success && <Alert severity="success" sx={{ mb: 2 }}>Settings saved. Changes take effect within 30 seconds.</Alert>}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+      {success && (
+        <Alert severity="success" sx={{ mb: 2 }}>
+          Settings saved. Changes take effect within 30 seconds.
+        </Alert>
+      )}
 
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
@@ -209,7 +233,8 @@ export default function SettingsManager(): React.ReactElement {
           {tab === 0 && (
             <Stack spacing={2} sx={{ maxWidth: 520 }}>
               <Typography variant="body2" color="text.secondary">
-                SMTP credentials for transfer notifications. DB values override env vars — no redeploy needed.
+                SMTP credentials for transfer notifications. DB values override
+                env vars — no redeploy needed.
               </Typography>
               <Divider />
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
@@ -258,7 +283,8 @@ export default function SettingsManager(): React.ReactElement {
           {tab === 1 && (
             <Stack spacing={2} sx={{ maxWidth: 560 }}>
               <Typography variant="body2" color="text.secondary">
-                Choose your storage provider. Changes apply within 30 seconds — no redeploy needed.
+                Choose your storage provider. Changes apply within 30 seconds —
+                no redeploy needed.
               </Typography>
               <Divider />
 
@@ -267,7 +293,9 @@ export default function SettingsManager(): React.ReactElement {
                 {(['r2', 's3'] as const).map((p) => (
                   <Button
                     key={p}
-                    variant={s.storage_provider === p ? 'contained' : 'outlined'}
+                    variant={
+                      s.storage_provider === p ? 'contained' : 'outlined'
+                    }
                     size="small"
                     onClick={() => patch({ storage_provider: p })}
                   >
@@ -280,16 +308,38 @@ export default function SettingsManager(): React.ReactElement {
               {(s.storage_provider === 'r2' || !s.storage_provider) && (
                 <Stack spacing={2}>
                   <Alert severity="info" sx={{ py: 0.5 }}>
-                    R2 has <strong>zero egress fees</strong> and flat storage pricing (~$0.015/GB/mo). Best choice for most deployments.
+                    R2 has <strong>zero egress fees</strong> and flat storage
+                    pricing (~$0.015/GB/mo). Best choice for most deployments.
                   </Alert>
-                  <TextField label="R2 Account ID" fullWidth size="small"
-                    value={s.r2_account_id ?? ''} onChange={(e) => patch({ r2_account_id: e.target.value })} />
-                  <TextField label="R2 Access Key ID" fullWidth size="small"
-                    value={s.r2_access_key_id ?? ''} onChange={(e) => patch({ r2_access_key_id: e.target.value })} />
-                  <SecretField label="R2 Secret Access Key"
-                    value={s.r2_secret_access_key ?? ''} onChange={(v) => patch({ r2_secret_access_key: v })} />
-                  <TextField label="Bucket Name" fullWidth size="small" placeholder="zync-transfers"
-                    value={s.r2_bucket_name ?? ''} onChange={(e) => patch({ r2_bucket_name: e.target.value })} />
+                  <TextField
+                    label="R2 Account ID"
+                    fullWidth
+                    size="small"
+                    value={s.r2_account_id ?? ''}
+                    onChange={(e) => patch({ r2_account_id: e.target.value })}
+                  />
+                  <TextField
+                    label="R2 Access Key ID"
+                    fullWidth
+                    size="small"
+                    value={s.r2_access_key_id ?? ''}
+                    onChange={(e) =>
+                      patch({ r2_access_key_id: e.target.value })
+                    }
+                  />
+                  <SecretField
+                    label="R2 Secret Access Key"
+                    value={s.r2_secret_access_key ?? ''}
+                    onChange={(v) => patch({ r2_secret_access_key: v })}
+                  />
+                  <TextField
+                    label="Bucket Name"
+                    fullWidth
+                    size="small"
+                    placeholder="zync-transfers"
+                    value={s.r2_bucket_name ?? ''}
+                    onChange={(e) => patch({ r2_bucket_name: e.target.value })}
+                  />
                 </Stack>
               )}
 
@@ -297,46 +347,105 @@ export default function SettingsManager(): React.ReactElement {
               {s.storage_provider === 's3' && (
                 <Stack spacing={2}>
                   <Alert severity="info" sx={{ py: 0.5 }}>
-                    S3 charges egress fees. Use <strong>Intelligent-Tiering</strong> to auto-move objects to cheaper tiers after 30/90 days. <strong>Standard-IA</strong> saves ~45% for files accessed rarely. <strong>Glacier IR</strong> saves ~68% with instant retrieval.
+                    S3 charges egress fees. Use{' '}
+                    <strong>Intelligent-Tiering</strong> to auto-move objects to
+                    cheaper tiers after 30/90 days. <strong>Standard-IA</strong>{' '}
+                    saves ~45% for files accessed rarely.{' '}
+                    <strong>Glacier IR</strong> saves ~68% with instant
+                    retrieval.
                   </Alert>
-                  <TextField label="AWS Access Key ID" fullWidth size="small"
-                    value={s.s3_access_key_id ?? ''} onChange={(e) => patch({ s3_access_key_id: e.target.value })} />
-                  <SecretField label="AWS Secret Access Key"
-                    value={s.s3_secret_access_key ?? ''} onChange={(v) => patch({ s3_secret_access_key: v })} />
+                  <TextField
+                    label="AWS Access Key ID"
+                    fullWidth
+                    size="small"
+                    value={s.s3_access_key_id ?? ''}
+                    onChange={(e) =>
+                      patch({ s3_access_key_id: e.target.value })
+                    }
+                  />
+                  <SecretField
+                    label="AWS Secret Access Key"
+                    value={s.s3_secret_access_key ?? ''}
+                    onChange={(v) => patch({ s3_secret_access_key: v })}
+                  />
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                    <TextField label="Region" fullWidth size="small" placeholder="us-east-1"
-                      value={s.s3_region ?? ''} onChange={(e) => patch({ s3_region: e.target.value })} />
-                    <TextField label="Bucket Name" fullWidth size="small" placeholder="zync-transfers"
-                      value={s.s3_bucket ?? ''} onChange={(e) => patch({ s3_bucket: e.target.value })} />
+                    <TextField
+                      label="Region"
+                      fullWidth
+                      size="small"
+                      placeholder="us-east-1"
+                      value={s.s3_region ?? ''}
+                      onChange={(e) => patch({ s3_region: e.target.value })}
+                    />
+                    <TextField
+                      label="Bucket Name"
+                      fullWidth
+                      size="small"
+                      placeholder="zync-transfers"
+                      value={s.s3_bucket ?? ''}
+                      onChange={(e) => patch({ s3_bucket: e.target.value })}
+                    />
                   </Stack>
 
                   {/* Storage class picker with cost context */}
-                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, mt: 1 }}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ fontWeight: 600, mt: 1 }}
+                  >
                     Storage Class (cost savings)
                   </Typography>
                   <Stack spacing={1}>
-                    {([
-                      { value: 'STANDARD', label: 'Standard', desc: 'Full price. Use for frequently accessed files only.' },
-                      { value: 'INTELLIGENT_TIERING', label: 'Intelligent-Tiering (recommended)', desc: 'Auto-tiers to Infrequent Access after 30 days, Archive after 90 days. ~$0.023→$0.0125/GB.' },
-                      { value: 'STANDARD_IA', label: 'Standard-IA', desc: '~45% cheaper than Standard. Best for files accessed < once/month. Min 30-day charge.' },
-                      { value: 'GLACIER_IR', label: 'Glacier Instant Retrieval', desc: '~68% cheaper. 1–5ms retrieval. Best for archive transfers rarely downloaded.' },
-                    ] as const).map((opt) => (
+                    {(
+                      [
+                        {
+                          value: 'STANDARD',
+                          label: 'Standard',
+                          desc: 'Full price. Use for frequently accessed files only.',
+                        },
+                        {
+                          value: 'INTELLIGENT_TIERING',
+                          label: 'Intelligent-Tiering (recommended)',
+                          desc: 'Auto-tiers to Infrequent Access after 30 days, Archive after 90 days. ~$0.023→$0.0125/GB.',
+                        },
+                        {
+                          value: 'STANDARD_IA',
+                          label: 'Standard-IA',
+                          desc: '~45% cheaper than Standard. Best for files accessed < once/month. Min 30-day charge.',
+                        },
+                        {
+                          value: 'GLACIER_IR',
+                          label: 'Glacier Instant Retrieval',
+                          desc: '~68% cheaper. 1–5ms retrieval. Best for archive transfers rarely downloaded.',
+                        },
+                      ] as const
+                    ).map((opt) => (
                       <Box
                         key={opt.value}
                         onClick={() => patch({ s3_storage_class: opt.value })}
                         sx={{
                           border: 1,
-                          borderColor: s.s3_storage_class === opt.value ? 'primary.main' : 'divider',
+                          borderColor:
+                            s.s3_storage_class === opt.value
+                              ? 'primary.main'
+                              : 'divider',
                           borderRadius: 1,
                           px: 1.5,
                           py: 1,
                           cursor: 'pointer',
-                          bgcolor: s.s3_storage_class === opt.value ? 'primary.50' : 'transparent',
+                          bgcolor:
+                            s.s3_storage_class === opt.value
+                              ? 'primary.50'
+                              : 'transparent',
                           '&:hover': { borderColor: 'primary.main' },
                         }}
                       >
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>{opt.label}</Typography>
-                        <Typography variant="caption" color="text.secondary">{opt.desc}</Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          {opt.label}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {opt.desc}
+                        </Typography>
                       </Box>
                     ))}
                   </Stack>
@@ -348,7 +457,8 @@ export default function SettingsManager(): React.ReactElement {
           {tab === 2 && (
             <Stack spacing={2.5} sx={{ maxWidth: 480 }}>
               <Typography variant="body2" color="text.secondary">
-                Enable or disable features without redeploying. Takes effect within 30 seconds.
+                Enable or disable features without redeploying. Takes effect
+                within 30 seconds.
               </Typography>
               <Divider />
               <FeatureToggle

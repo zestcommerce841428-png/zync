@@ -16,7 +16,13 @@ import { sendMail } from '../../../../../email'
 import { tplTransferDownloaded } from '../../../../../emailTemplates'
 import { brand } from '../../../../../brand'
 import { rateLimit, getClientIp } from '../../../../../rateLimit'
-import { tooManyRequests, notFound, gone, err, ok } from '../../../../../lib/apiResponse'
+import {
+  tooManyRequests,
+  notFound,
+  gone,
+  err,
+  ok,
+} from '../../../../../lib/apiResponse'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,7 +39,10 @@ export async function POST(
   const { slug } = await params
 
   const ip = getClientIp(req)
-  const rl = await rateLimit(`transfer-download:${ip}`, { limit: 15, windowSeconds: 300 })
+  const rl = await rateLimit(`transfer-download:${ip}`, {
+    limit: 15,
+    windowSeconds: 300,
+  })
   if (!rl.success) return tooManyRequests(rl)
 
   void sweepExpiredTransfers()
@@ -41,7 +50,8 @@ export async function POST(
   const transfer = await getTransfer(slug)
   if (!transfer || !transfer.completed) return notFound('Transfer not found.')
 
-  if (new Date(transfer.expiresAt) < new Date()) return gone('Transfer has expired.')
+  if (new Date(transfer.expiresAt) < new Date())
+    return gone('Transfer has expired.')
 
   if (
     transfer.maxDownloads !== null &&
@@ -72,7 +82,9 @@ export async function POST(
       Key: file.key,
       ...(isPreview
         ? { ResponseContentType: file.type || 'application/octet-stream' }
-        : { ResponseContentDisposition: `attachment; filename="${encodeURIComponent(file.name)}"` }),
+        : {
+            ResponseContentDisposition: `attachment; filename="${encodeURIComponent(file.name)}"`,
+          }),
     }),
     { expiresIn: isPreview ? 300 : 900 },
   )
@@ -91,14 +103,23 @@ export async function POST(
     })
 
     // Notify sender: on first download always; on every download if notifyEveryDownload is set
-    if (transfer.notifyEmail && (!transfer.notifiedAt || transfer.notifyEveryDownload)) {
-      if (!transfer.notifiedAt) void updateTransfer(slug, { notifiedAt: new Date().toISOString() })
+    if (
+      transfer.notifyEmail &&
+      (!transfer.notifiedAt || transfer.notifyEveryDownload)
+    ) {
+      if (!transfer.notifiedAt)
+        void updateTransfer(slug, { notifiedAt: new Date().toISOString() })
       const tpl = tplTransferDownloaded({
         title: transfer.title,
         url: `${brand.url}/transfer/${slug}`,
         downloadCount: newCount,
       })
-      void sendMail({ to: transfer.notifyEmail, subject: tpl.subject, html: tpl.html, text: tpl.text })
+      void sendMail({
+        to: transfer.notifyEmail,
+        subject: tpl.subject,
+        html: tpl.html,
+        text: tpl.text,
+      })
     }
 
     // Fire webhook (fire-and-forget, never block the download)
@@ -120,7 +141,10 @@ export async function POST(
     }
 
     if (transfer.burnAfterRead) {
-      void scheduleBurn(slug, transfer.files.map((f) => f.key))
+      void scheduleBurn(
+        slug,
+        transfer.files.map((f) => f.key),
+      )
       setTimeout(() => void sweepExpiredTransfers(), 32_000)
     }
   }

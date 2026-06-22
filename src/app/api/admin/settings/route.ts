@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getCurrentUser } from '../../../../supabase/server'
 import { isSupabaseConfigured, isAdminEmail } from '../../../../supabase/config'
-import { getAllSettings, setSettings, type SettingKey } from '../../../../lib/appSettings'
+import {
+  getAllSettings,
+  setSettings,
+  type SettingKey,
+} from '../../../../lib/appSettings'
 import { ok, err } from '../../../../lib/apiResponse'
 
 export const dynamic = 'force-dynamic'
@@ -10,7 +14,8 @@ export const dynamic = 'force-dynamic'
 async function requireAdmin(): Promise<NextResponse | null> {
   if (!isSupabaseConfigured()) return err('Not configured.', { status: 503 })
   const user = await getCurrentUser()
-  if (!user || !isAdminEmail(user.email)) return err('Forbidden.', { status: 403 })
+  if (!user || !isAdminEmail(user.email))
+    return err('Forbidden.', { status: 403 })
   return null
 }
 
@@ -23,7 +28,11 @@ export async function GET(): Promise<NextResponse> {
   // Mask sensitive values — return placeholder so the UI can show "••••••"
   // without leaking the actual secret. The UI only sends back values that changed.
   const masked = { ...settings }
-  const secretKeys: SettingKey[] = ['smtp_pass', 'r2_secret_access_key', 's3_secret_access_key']
+  const secretKeys: SettingKey[] = [
+    'smtp_pass',
+    'r2_secret_access_key',
+    's3_secret_access_key',
+  ]
   for (const k of secretKeys) {
     if (masked[k]) masked[k] = '__masked__'
   }
@@ -46,7 +55,9 @@ const PatchSchema = z.object({
   s3_secret_access_key: z.string().max(200).optional(),
   s3_region: z.string().max(50).optional(),
   s3_bucket: z.string().max(200).optional(),
-  s3_storage_class: z.enum(['STANDARD', 'INTELLIGENT_TIERING', 'STANDARD_IA', 'GLACIER_IR']).optional(),
+  s3_storage_class: z
+    .enum(['STANDARD', 'INTELLIGENT_TIERING', 'STANDARD_IA', 'GLACIER_IR'])
+    .optional(),
   feature_email_notifications: z.enum(['true', 'false']).optional(),
   feature_transfer_tracking: z.enum(['true', 'false']).optional(),
   feature_recaptcha: z.enum(['true', 'false']).optional(),

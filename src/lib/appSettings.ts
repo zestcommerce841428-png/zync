@@ -23,8 +23,8 @@ export type SettingKey =
   | 's3_region'
   | 's3_bucket'
   // S3 cost-savings options
-  | 's3_storage_class'        // INTELLIGENT_TIERING | STANDARD | STANDARD_IA | GLACIER_IR
-  | 's3_lifecycle_days'       // move to Glacier IR after N days (informational — set via AWS console)
+  | 's3_storage_class' // INTELLIGENT_TIERING | STANDARD | STANDARD_IA | GLACIER_IR
+  | 's3_lifecycle_days' // move to Glacier IR after N days (informational — set via AWS console)
   // Feature flags
   | 'feature_email_notifications'
   | 'feature_transfer_tracking'
@@ -44,9 +44,7 @@ export async function getAllSettings(): Promise<SettingsMap> {
   const db = getSupabaseAdminClient()
   if (!db) return {}
 
-  const { data, error } = await db
-    .from('app_settings')
-    .select('key, value')
+  const { data, error } = await db.from('app_settings').select('key, value')
 
   if (error) {
     console.warn('[appSettings] failed to load:', error.message)

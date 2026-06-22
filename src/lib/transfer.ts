@@ -9,12 +9,12 @@ export type TransferFile = {
   name: string
   size: number
   type: string
-  path?: string  // relative path including folders, e.g. "folder/subfolder/file.txt"
+  path?: string // relative path including folders, e.g. "folder/subfolder/file.txt"
 }
 
 export type DownloadEvent = {
-  at: string      // ISO timestamp
-  ipHash: string  // SHA-256 of raw IP (privacy-preserving)
+  at: string // ISO timestamp
+  ipHash: string // SHA-256 of raw IP (privacy-preserving)
   country: string // CF-IPCountry header or 'XX'
 }
 
@@ -27,7 +27,7 @@ export type TransferRecord = {
   expiryDays: number
   maxDownloads: number | null
   downloadCount: number
-  downloadEvents: DownloadEvent[]  // per-download tracking (capped at 500)
+  downloadEvents: DownloadEvent[] // per-download tracking (capped at 500)
   title: string
   message: string
   passwordHash: string | null
@@ -38,8 +38,8 @@ export type TransferRecord = {
   createdAt: string
   completed: boolean
   burnAfterRead: boolean
-  background: string | null  // CSS color/gradient string, null = default theme
-  webhookUrl: string | null  // optional HTTP callback on every download event
+  background: string | null // CSS color/gradient string, null = default theme
+  webhookUrl: string | null // optional HTTP callback on every download event
 }
 
 const KEY = (slug: string) => `transfer:${slug}`
@@ -73,12 +73,17 @@ export async function saveTransfer(record: TransferRecord): Promise<void> {
   const ttl = Math.ceil((expiresMs - Date.now()) / 1000)
   if (ttl <= 0) return
   await redis.set(KEY(record.slug), JSON.stringify(record), 'EX', ttl)
-  const entry = JSON.stringify({ slug: record.slug, keys: record.files.map((f) => f.key) })
+  const entry = JSON.stringify({
+    slug: record.slug,
+    keys: record.files.map((f) => f.key),
+  })
   await redis.zadd(CLEANUP_KEY, expiresMs, entry)
   await redis.expire(CLEANUP_KEY, MAX_TTL_SECONDS)
 }
 
-export async function getTransfer(slug: string): Promise<TransferRecord | null> {
+export async function getTransfer(
+  slug: string,
+): Promise<TransferRecord | null> {
   const redis = getRedisClient()
   const raw = await redis.get(KEY(slug))
   if (!raw) return null
@@ -118,7 +123,11 @@ async function purgeCleanupEntries(slug: string): Promise<void> {
   const redis = getRedisClient()
   const all = await redis.zrange(CLEANUP_KEY, 0, -1)
   const toRemove = all.filter((entry) => {
-    try { return JSON.parse(entry).slug === slug } catch { return false }
+    try {
+      return JSON.parse(entry).slug === slug
+    } catch {
+      return false
+    }
   })
   if (toRemove.length > 0) {
     await redis.zrem(CLEANUP_KEY, ...toRemove)
@@ -128,7 +137,14 @@ async function purgeCleanupEntries(slug: string): Promise<void> {
 export async function sweepExpiredTransfers(limit = 20): Promise<number> {
   const redis = getRedisClient()
   const now = Date.now()
-  const expired = await redis.zrangebyscore(CLEANUP_KEY, '-inf', now, 'LIMIT', 0, limit)
+  const expired = await redis.zrangebyscore(
+    CLEANUP_KEY,
+    '-inf',
+    now,
+    'LIMIT',
+    0,
+    limit,
+  )
   if (expired.length === 0) return 0
 
   const storageKeys: string[] = []
@@ -179,19 +195,26 @@ export async function removeUserTransferIndex(
   await redis.zrem(USER_KEY(ownerId), slug)
 }
 
-export async function listUserTransfers(ownerId: string): Promise<TransferRecord[]> {
+export async function listUserTransfers(
+  ownerId: string,
+): Promise<TransferRecord[]> {
   const redis = getRedisClient()
   const slugs = await redis.zrangebyscore(USER_KEY(ownerId), Date.now(), '+inf')
   if (slugs.length === 0) return []
   const records = await Promise.all(slugs.map(getTransfer))
-  const valid = records.filter((r): r is TransferRecord => r !== null && r.completed)
+  const valid = records.filter(
+    (r): r is TransferRecord => r !== null && r.completed,
+  )
   await redis.zremrangebyscore(USER_KEY(ownerId), '-inf', Date.now() - 1)
   return valid.sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   )
 }
 
-export async function scheduleBurn(slug: string, keys: string[]): Promise<void> {
+export async function scheduleBurn(
+  slug: string,
+  keys: string[],
+): Promise<void> {
   const redis = getRedisClient()
   const burnAt = Date.now() + 30_000
   await purgeCleanupEntries(slug)

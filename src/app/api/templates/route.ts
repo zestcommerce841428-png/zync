@@ -24,9 +24,13 @@ const CreateSchema = z.object({
 
 export async function GET(): Promise<NextResponse> {
   const supabase = await getSupabaseServerClient()
-  if (!supabase) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
+  if (!supabase)
+    return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user)
+    return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
 
   const templates = await listTemplates(user.id)
   return NextResponse.json({ templates })
@@ -34,15 +38,21 @@ export async function GET(): Promise<NextResponse> {
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const supabase = await getSupabaseServerClient()
-  if (!supabase) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
+  if (!supabase)
+    return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user)
+    return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
 
   const body = CreateSchema.safeParse(await req.json().catch(() => null))
-  if (!body.success) return NextResponse.json({ error: 'Invalid payload.' }, { status: 400 })
+  if (!body.success)
+    return NextResponse.json({ error: 'Invalid payload.' }, { status: 400 })
 
   const existing = await listTemplates(user.id)
-  if (existing.length >= 20) return NextResponse.json({ error: 'Max 20 templates.' }, { status: 400 })
+  if (existing.length >= 20)
+    return NextResponse.json({ error: 'Max 20 templates.' }, { status: 400 })
 
   const tpl = {
     id: crypto.randomUUID(),

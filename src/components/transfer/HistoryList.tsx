@@ -75,7 +75,12 @@ function formatBytes(n: number): string {
 }
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+  return new Date(iso).toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 
 // ─── Edit Dialog ───────────────────────────────────────────────────────────────
@@ -86,7 +91,12 @@ type EditDialogProps = {
   onSaved: (slug: string, patch: Partial<TransferSummary>) => void
 }
 
-function EditDialog({ open, transfer, onClose, onSaved }: EditDialogProps): React.ReactElement {
+function EditDialog({
+  open,
+  transfer,
+  onClose,
+  onSaved,
+}: EditDialogProps): React.ReactElement {
   const [title, setTitle] = React.useState(transfer.title)
   const [message, setMessage] = React.useState(transfer.message)
   const [maxDownloads, setMaxDownloads] = React.useState<string>(
@@ -95,8 +105,12 @@ function EditDialog({ open, transfer, onClose, onSaved }: EditDialogProps): Reac
   const [extendDays, setExtendDays] = React.useState('')
   const [password, setPassword] = React.useState('')
   const [clearPassword, setClearPassword] = React.useState(false)
-  const [notifyEmail, setNotifyEmail] = React.useState(transfer.notifyEmail ?? '')
-  const [notifyEveryDownload, setNotifyEveryDownload] = React.useState(transfer.notifyEveryDownload ?? false)
+  const [notifyEmail, setNotifyEmail] = React.useState(
+    transfer.notifyEmail ?? '',
+  )
+  const [notifyEveryDownload, setNotifyEveryDownload] = React.useState(
+    transfer.notifyEveryDownload ?? false,
+  )
   const [webhookUrl, setWebhookUrl] = React.useState(transfer.webhookUrl ?? '')
   const [saving, setSaving] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
@@ -110,13 +124,17 @@ function EditDialog({ open, transfer, onClose, onSaved }: EditDialogProps): Reac
       if (message !== transfer.message) body.message = message
       if (maxDownloads !== '' && Number(maxDownloads) !== transfer.maxDownloads)
         body.maxDownloads = Number(maxDownloads)
-      if (maxDownloads === '' && transfer.maxDownloads !== null) body.maxDownloads = null
+      if (maxDownloads === '' && transfer.maxDownloads !== null)
+        body.maxDownloads = null
       if (extendDays) body.extendDays = Number(extendDays)
       if (password) body.password = password
       if (clearPassword) body.clearPassword = true
-      if (notifyEmail !== (transfer.notifyEmail ?? '')) body.notifyEmail = notifyEmail
-      if (notifyEveryDownload !== (transfer.notifyEveryDownload ?? false)) body.notifyEveryDownload = notifyEveryDownload
-      if (webhookUrl !== (transfer.webhookUrl ?? '')) body.webhookUrl = webhookUrl
+      if (notifyEmail !== (transfer.notifyEmail ?? ''))
+        body.notifyEmail = notifyEmail
+      if (notifyEveryDownload !== (transfer.notifyEveryDownload ?? false))
+        body.notifyEveryDownload = notifyEveryDownload
+      if (webhookUrl !== (transfer.webhookUrl ?? ''))
+        body.webhookUrl = webhookUrl
 
       const res = await fetch(`/api/transfer/${transfer.slug}`, {
         method: 'PATCH',
@@ -124,16 +142,22 @@ function EditDialog({ open, transfer, onClose, onSaved }: EditDialogProps): Reac
         body: JSON.stringify(body),
       })
       const json = await res.json()
-      if (!res.ok) { setError(json.error ?? 'Save failed.'); return }
+      if (!res.ok) {
+        setError(json.error ?? 'Save failed.')
+        return
+      }
 
       const patchedSummary: Partial<TransferSummary> = {}
       if (title !== transfer.title) patchedSummary.title = title
       if (message !== transfer.message) patchedSummary.message = message
-      if (maxDownloads !== '') patchedSummary.maxDownloads = Number(maxDownloads)
-      else if (transfer.maxDownloads !== null) patchedSummary.maxDownloads = null
+      if (maxDownloads !== '')
+        patchedSummary.maxDownloads = Number(maxDownloads)
+      else if (transfer.maxDownloads !== null)
+        patchedSummary.maxDownloads = null
       if (clearPassword) patchedSummary.passwordProtected = false
       else if (password) patchedSummary.passwordProtected = true
-      if (extendDays && json.transfer?.expiresAt) patchedSummary.expiresAt = json.transfer.expiresAt
+      if (extendDays && json.transfer?.expiresAt)
+        patchedSummary.expiresAt = json.transfer.expiresAt
 
       onSaved(transfer.slug, patchedSummary)
       onClose()
@@ -191,9 +215,16 @@ function EditDialog({ open, transfer, onClose, onSaved }: EditDialogProps): Reac
             </Select>
           </FormControl>
           <TextField
-            label={transfer.passwordProtected ? 'Change password (blank = keep current)' : 'Add password (blank = no password)'}
+            label={
+              transfer.passwordProtected
+                ? 'Change password (blank = keep current)'
+                : 'Add password (blank = no password)'
+            }
             value={password}
-            onChange={(e) => { setPassword(e.target.value); if (e.target.value) setClearPassword(false) }}
+            onChange={(e) => {
+              setPassword(e.target.value)
+              if (e.target.value) setClearPassword(false)
+            }}
             size="small"
             fullWidth
             type="password"
@@ -203,7 +234,10 @@ function EditDialog({ open, transfer, onClose, onSaved }: EditDialogProps): Reac
               size="small"
               color={clearPassword ? 'error' : 'inherit'}
               variant={clearPassword ? 'contained' : 'outlined'}
-              onClick={() => { setClearPassword((p) => !p); setPassword('') }}
+              onClick={() => {
+                setClearPassword((p) => !p)
+                setPassword('')
+              }}
             >
               {clearPassword ? 'Will remove password' : 'Remove password'}
             </Button>
@@ -226,7 +260,11 @@ function EditDialog({ open, transfer, onClose, onSaved }: EditDialogProps): Reac
                 disabled={!notifyEmail}
               />
             }
-            label={<Typography variant="body2">Notify on every download (not just first)</Typography>}
+            label={
+              <Typography variant="body2">
+                Notify on every download (not just first)
+              </Typography>
+            }
           />
           <TextField
             label="Webhook URL (blank = disabled)"
@@ -257,14 +295,23 @@ function AnalyticsPanel({ slug }: { slug: string }): React.ReactElement {
 
   React.useEffect(() => {
     fetch(`/api/transfer/${slug}/analytics`)
-      .then((r) => (r.ok ? r.json() : r.json().then((j) => Promise.reject(j.error ?? 'Failed'))))
+      .then((r) =>
+        r.ok
+          ? r.json()
+          : r.json().then((j) => Promise.reject(j.error ?? 'Failed')),
+      )
       .then(setAnalytics)
       .catch((e) => setError(String(e)))
       .finally(() => setLoading(false))
   }, [slug])
 
   if (loading) return <LinearProgress sx={{ my: 1 }} />
-  if (error) return <Alert severity="error" sx={{ mt: 1 }}>{error}</Alert>
+  if (error)
+    return (
+      <Alert severity="error" sx={{ mt: 1 }}>
+        {error}
+      </Alert>
+    )
   if (!analytics) return <></>
 
   const maxCount = analytics.countries[0]?.count ?? 1
@@ -274,26 +321,57 @@ function AnalyticsPanel({ slug }: { slug: string }): React.ReactElement {
       <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
         <DownloadIcon fontSize="small" color="action" />
         <Typography variant="caption" color="text.secondary">
-          {analytics.downloadCount} total download{analytics.downloadCount !== 1 ? 's' : ''}
+          {analytics.downloadCount} total download
+          {analytics.downloadCount !== 1 ? 's' : ''}
         </Typography>
       </Stack>
 
       {analytics.countries.length > 0 && (
         <Box>
-          <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 0.75 }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{ alignItems: 'center', mb: 0.75 }}
+          >
             <PublicIcon fontSize="small" color="action" />
-            <Typography variant="caption" sx={{ fontWeight: 600 }}>Country breakdown</Typography>
+            <Typography variant="caption" sx={{ fontWeight: 600 }}>
+              Country breakdown
+            </Typography>
           </Stack>
           <Stack spacing={0.5}>
             {analytics.countries.slice(0, 10).map(({ country, count }) => (
-              <Stack key={country} direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-                <Typography variant="caption" sx={{ width: 80, flexShrink: 0 }}>{country}</Typography>
-                <Box sx={{ flex: 1, bgcolor: 'action.hover', borderRadius: 0.5, height: 8, overflow: 'hidden' }}>
+              <Stack
+                key={country}
+                direction="row"
+                spacing={1}
+                sx={{ alignItems: 'center' }}
+              >
+                <Typography variant="caption" sx={{ width: 80, flexShrink: 0 }}>
+                  {country}
+                </Typography>
+                <Box
+                  sx={{
+                    flex: 1,
+                    bgcolor: 'action.hover',
+                    borderRadius: 0.5,
+                    height: 8,
+                    overflow: 'hidden',
+                  }}
+                >
                   <Box
-                    sx={{ height: '100%', bgcolor: 'primary.main', borderRadius: 0.5, width: `${(count / maxCount) * 100}%` }}
+                    sx={{
+                      height: '100%',
+                      bgcolor: 'primary.main',
+                      borderRadius: 0.5,
+                      width: `${(count / maxCount) * 100}%`,
+                    }}
                   />
                 </Box>
-                <Typography variant="caption" color="text.secondary" sx={{ width: 24, textAlign: 'right', flexShrink: 0 }}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ width: 24, textAlign: 'right', flexShrink: 0 }}
+                >
                   {count}
                 </Typography>
               </Stack>
@@ -304,27 +382,49 @@ function AnalyticsPanel({ slug }: { slug: string }): React.ReactElement {
 
       {analytics.downloadEvents.length > 0 && (
         <Box>
-          <Typography variant="caption" sx={{ fontWeight: 600 }}>Recent downloads</Typography>
-          <Stack spacing={0.25} sx={{ mt: 0.5, maxHeight: 160, overflowY: 'auto' }}>
-            {analytics.downloadEvents.slice().reverse().slice(0, 20).map((ev, i) => (
-              <Stack
-                key={i}
-                direction="row"
-                spacing={1}
-                sx={{ alignItems: 'center', px: 1, py: 0.5, borderRadius: 1, bgcolor: 'action.hover' }}
-              >
-                <Typography variant="caption" sx={{ fontFamily: 'monospace', flexShrink: 0, width: 28 }}>
-                  {ev.country !== 'XX' ? ev.country : '??'}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">{formatDate(ev.at)}</Typography>
-              </Stack>
-            ))}
+          <Typography variant="caption" sx={{ fontWeight: 600 }}>
+            Recent downloads
+          </Typography>
+          <Stack
+            spacing={0.25}
+            sx={{ mt: 0.5, maxHeight: 160, overflowY: 'auto' }}
+          >
+            {analytics.downloadEvents
+              .slice()
+              .reverse()
+              .slice(0, 20)
+              .map((ev, i) => (
+                <Stack
+                  key={i}
+                  direction="row"
+                  spacing={1}
+                  sx={{
+                    alignItems: 'center',
+                    px: 1,
+                    py: 0.5,
+                    borderRadius: 1,
+                    bgcolor: 'action.hover',
+                  }}
+                >
+                  <Typography
+                    variant="caption"
+                    sx={{ fontFamily: 'monospace', flexShrink: 0, width: 28 }}
+                  >
+                    {ev.country !== 'XX' ? ev.country : '??'}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {formatDate(ev.at)}
+                  </Typography>
+                </Stack>
+              ))}
           </Stack>
         </Box>
       )}
 
       {analytics.downloadEvents.length === 0 && (
-        <Typography variant="caption" color="text.secondary">No downloads yet.</Typography>
+        <Typography variant="caption" color="text.secondary">
+          No downloads yet.
+        </Typography>
       )}
     </Stack>
   )
@@ -332,16 +432,24 @@ function AnalyticsPanel({ slug }: { slug: string }): React.ReactElement {
 
 // ─── Main component ────────────────────────────────────────────────────────────
 export default function HistoryList(): React.ReactElement {
-  const [transfers, setTransfers] = React.useState<TransferSummary[] | null>(null)
+  const [transfers, setTransfers] = React.useState<TransferSummary[] | null>(
+    null,
+  )
   const [error, setError] = React.useState<string | null>(null)
   const [deleting, setDeleting] = React.useState<Set<string>>(new Set())
   const [copied, setCopied] = React.useState<string | null>(null)
   const [snackbar, setSnackbar] = React.useState('')
-  const [analyticsOpen, setAnalyticsOpen] = React.useState<Set<string>>(new Set())
+  const [analyticsOpen, setAnalyticsOpen] = React.useState<Set<string>>(
+    new Set(),
+  )
   const [editSlug, setEditSlug] = React.useState<string | null>(null)
   const [selected, setSelected] = React.useState<Set<string>>(new Set())
   const [bulkDeleting, setBulkDeleting] = React.useState(false)
-  const [storage, setStorage] = React.useState<{ totalBytes: number; fileCount: number; transferCount: number } | null>(null)
+  const [storage, setStorage] = React.useState<{
+    totalBytes: number
+    fileCount: number
+    transferCount: number
+  } | null>(null)
 
   React.useEffect(() => {
     fetch('/api/transfer/history')
@@ -353,16 +461,22 @@ export default function HistoryList(): React.ReactElement {
       .catch((e) => setError(e.message))
     fetch('/api/transfer/storage')
       .then((r) => (r.ok ? r.json() : null))
-      .then((j) => { if (j && !j.error) setStorage(j) })
+      .then((j) => {
+        if (j && !j.error) setStorage(j)
+      })
       .catch(() => {})
   }, [])
 
   const copyLink = async (slug: string) => {
     try {
-      await navigator.clipboard.writeText(`${window.location.origin}/transfer/${slug}`)
+      await navigator.clipboard.writeText(
+        `${window.location.origin}/transfer/${slug}`,
+      )
       setCopied(slug)
       setTimeout(() => setCopied(null), 2000)
-    } catch (_e) { /* clipboard unavailable */ }
+    } catch (_e) {
+      /* clipboard unavailable */
+    }
   }
 
   const handleDelete = async (slug: string) => {
@@ -379,7 +493,11 @@ export default function HistoryList(): React.ReactElement {
     } catch {
       setSnackbar('Network error.')
     } finally {
-      setDeleting((prev) => { const next = new Set(prev); next.delete(slug); return next })
+      setDeleting((prev) => {
+        const next = new Set(prev)
+        next.delete(slug)
+        return next
+      })
     }
   }
 
@@ -411,16 +529,23 @@ export default function HistoryList(): React.ReactElement {
     if (selected.size === 0) return
     setBulkDeleting(true)
     const slugs = [...selected]
-    await Promise.all(slugs.map((slug) => fetch(`/api/transfer/${slug}`, { method: 'DELETE' }).catch(() => {})))
+    await Promise.all(
+      slugs.map((slug) =>
+        fetch(`/api/transfer/${slug}`, { method: 'DELETE' }).catch(() => {}),
+      ),
+    )
     setTransfers((prev) => prev?.filter((t) => !selected.has(t.slug)) ?? null)
     setSelected(new Set())
-    setSnackbar(`${slugs.length} transfer${slugs.length !== 1 ? 's' : ''} deleted.`)
+    setSnackbar(
+      `${slugs.length} transfer${slugs.length !== 1 ? 's' : ''} deleted.`,
+    )
     setBulkDeleting(false)
   }
 
   const handleSaved = (slug: string, patch: Partial<TransferSummary>) => {
-    setTransfers((prev) =>
-      prev?.map((t) => (t.slug === slug ? { ...t, ...patch } : t)) ?? null,
+    setTransfers(
+      (prev) =>
+        prev?.map((t) => (t.slug === slug ? { ...t, ...patch } : t)) ?? null,
     )
     setSnackbar('Transfer updated.')
   }
@@ -431,14 +556,28 @@ export default function HistoryList(): React.ReactElement {
 
   return (
     <Container maxWidth="md" sx={{ py: { xs: 6, md: 10 } }}>
-      <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', mb: 2, flexWrap: 'wrap', gap: 2 }}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          mb: 2,
+          flexWrap: 'wrap',
+          gap: 2,
+        }}
+      >
         <Stack spacing={0.5}>
-          <Typography variant="h4" sx={{ fontWeight: 900 }}>My transfers</Typography>
+          <Typography variant="h4" sx={{ fontWeight: 900 }}>
+            My transfers
+          </Typography>
           <Typography color="text.secondary">
-            Active transfers you've sent — files are deleted automatically when they expire.
+            Active transfers you've sent — files are deleted automatically when
+            they expire.
           </Typography>
         </Stack>
-        <Button variant="contained" href="/transfer">New transfer</Button>
+        <Button variant="contained" href="/transfer">
+          New transfer
+        </Button>
       </Stack>
 
       {/* Storage usage bar */}
@@ -446,17 +585,26 @@ export default function HistoryList(): React.ReactElement {
         <Card variant="outlined" sx={{ mb: 3 }}>
           <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
             <Stack spacing={0.75}>
-              <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+              <Stack
+                direction="row"
+                sx={{ justifyContent: 'space-between', alignItems: 'center' }}
+              >
                 <Typography variant="caption" sx={{ fontWeight: 600 }}>
                   Storage used
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {formatBytes(storage.totalBytes)} across {storage.transferCount} transfer{storage.transferCount !== 1 ? 's' : ''} · {storage.fileCount} file{storage.fileCount !== 1 ? 's' : ''}
+                  {formatBytes(storage.totalBytes)} across{' '}
+                  {storage.transferCount} transfer
+                  {storage.transferCount !== 1 ? 's' : ''} · {storage.fileCount}{' '}
+                  file{storage.fileCount !== 1 ? 's' : ''}
                 </Typography>
               </Stack>
               <LinearProgress
                 variant="determinate"
-                value={Math.min(100, (storage.totalBytes / MAX_STORAGE_BYTES) * 100)}
+                value={Math.min(
+                  100,
+                  (storage.totalBytes / MAX_STORAGE_BYTES) * 100,
+                )}
                 sx={{ borderRadius: 1, height: 6 }}
               />
             </Stack>
@@ -470,7 +618,9 @@ export default function HistoryList(): React.ReactElement {
           <Checkbox
             size="small"
             checked={selected.size > 0 && selected.size === transfers.length}
-            indeterminate={selected.size > 0 && selected.size < transfers.length}
+            indeterminate={
+              selected.size > 0 && selected.size < transfers.length
+            }
             onChange={toggleSelectAll}
           />
           <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
@@ -481,7 +631,13 @@ export default function HistoryList(): React.ReactElement {
               size="small"
               color="error"
               variant="outlined"
-              startIcon={bulkDeleting ? <CircularProgress size={14} color="inherit" /> : <DeleteIcon />}
+              startIcon={
+                bulkDeleting ? (
+                  <CircularProgress size={14} color="inherit" />
+                ) : (
+                  <DeleteIcon />
+                )
+              }
               onClick={handleBulkDelete}
               disabled={bulkDeleting}
             >
@@ -491,7 +647,11 @@ export default function HistoryList(): React.ReactElement {
         </Stack>
       )}
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
 
       {transfers === null && !error && (
         <Stack sx={{ alignItems: 'center', py: 8 }}>
@@ -504,8 +664,12 @@ export default function HistoryList(): React.ReactElement {
           <CardContent>
             <Stack spacing={2} sx={{ alignItems: 'center', py: 4 }}>
               <FolderIcon sx={{ fontSize: 56, color: 'text.disabled' }} />
-              <Typography color="text.secondary">No active transfers yet.</Typography>
-              <Button variant="contained" href="/transfer">Send your first transfer</Button>
+              <Typography color="text.secondary">
+                No active transfers yet.
+              </Typography>
+              <Button variant="contained" href="/transfer">
+                Send your first transfer
+              </Button>
             </Stack>
           </CardContent>
         </Card>
@@ -514,14 +678,30 @@ export default function HistoryList(): React.ReactElement {
       {transfers !== null && transfers.length > 0 && (
         <Stack spacing={2}>
           {transfers.map((t) => {
-            const daysLeft = Math.ceil((new Date(t.expiresAt).getTime() - Date.now()) / 86400000)
+            const daysLeft = Math.ceil(
+              (new Date(t.expiresAt).getTime() - Date.now()) / 86400000,
+            )
             const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/transfer/${t.slug}`
             const analyticsShown = analyticsOpen.has(t.slug)
             return (
-              <Card key={t.slug} variant="outlined" sx={{ outline: selected.has(t.slug) ? '2px solid' : 'none', outlineColor: 'primary.main' }}>
+              <Card
+                key={t.slug}
+                variant="outlined"
+                sx={{
+                  outline: selected.has(t.slug) ? '2px solid' : 'none',
+                  outlineColor: 'primary.main',
+                }}
+              >
                 <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
                   <Stack spacing={1.5}>
-                    <Stack direction="row" sx={{ alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
+                    <Stack
+                      direction="row"
+                      sx={{
+                        alignItems: 'flex-start',
+                        justifyContent: 'space-between',
+                        gap: 1,
+                      }}
+                    >
                       <Checkbox
                         size="small"
                         checked={selected.has(t.slug)}
@@ -529,28 +709,52 @@ export default function HistoryList(): React.ReactElement {
                         sx={{ mt: -0.5, ml: -1 }}
                       />
                       <Stack spacing={0.5} sx={{ flex: 1, minWidth: 0 }}>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 700 }} noWrap>
+                        <Typography
+                          variant="subtitle1"
+                          sx={{ fontWeight: 700 }}
+                          noWrap
+                        >
                           {t.title || `Transfer ${t.slug}`}
                         </Typography>
                         {t.message && (
-                          <Typography variant="body2" color="text.secondary" noWrap>
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            noWrap
+                          >
                             {t.message}
                           </Typography>
                         )}
                       </Stack>
-                      <Stack direction="row" spacing={0.5} sx={{ flexShrink: 0 }}>
+                      <Stack
+                        direction="row"
+                        spacing={0.5}
+                        sx={{ flexShrink: 0 }}
+                      >
                         <Tooltip title="Open download page">
-                          <IconButton size="small" component="a" href={url} target="_blank" rel="noopener">
+                          <IconButton
+                            size="small"
+                            component="a"
+                            href={url}
+                            target="_blank"
+                            rel="noopener"
+                          >
                             <OpenInNewIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
-                        <Tooltip title={copied === t.slug ? 'Copied!' : 'Copy link'}>
+                        <Tooltip
+                          title={copied === t.slug ? 'Copied!' : 'Copy link'}
+                        >
                           <IconButton
                             size="small"
                             onClick={() => copyLink(t.slug)}
                             color={copied === t.slug ? 'success' : 'default'}
                           >
-                            {copied === t.slug ? <CheckIcon fontSize="small" /> : <LinkIcon fontSize="small" />}
+                            {copied === t.slug ? (
+                              <CheckIcon fontSize="small" />
+                            ) : (
+                              <LinkIcon fontSize="small" />
+                            )}
                           </IconButton>
                         </Tooltip>
                         <Tooltip title="Analytics">
@@ -563,7 +767,10 @@ export default function HistoryList(): React.ReactElement {
                           </IconButton>
                         </Tooltip>
                         <Tooltip title="Edit transfer">
-                          <IconButton size="small" onClick={() => setEditSlug(t.slug)}>
+                          <IconButton
+                            size="small"
+                            onClick={() => setEditSlug(t.slug)}
+                          >
                             <EditIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
@@ -574,16 +781,26 @@ export default function HistoryList(): React.ReactElement {
                             onClick={() => handleDelete(t.slug)}
                             disabled={deleting.has(t.slug)}
                           >
-                            {deleting.has(t.slug) ? <CircularProgress size={16} /> : <DeleteIcon fontSize="small" />}
+                            {deleting.has(t.slug) ? (
+                              <CircularProgress size={16} />
+                            ) : (
+                              <DeleteIcon fontSize="small" />
+                            )}
                           </IconButton>
                         </Tooltip>
                       </Stack>
                     </Stack>
 
-                    <Stack direction="row" spacing={0.75} sx={{ flexWrap: 'wrap' }}>
+                    <Stack
+                      direction="row"
+                      spacing={0.75}
+                      sx={{ flexWrap: 'wrap' }}
+                    >
                       <Chip
                         icon={<AccessTimeIcon />}
-                        label={daysLeft > 0 ? `${daysLeft}d left` : 'Expiring soon'}
+                        label={
+                          daysLeft > 0 ? `${daysLeft}d left` : 'Expiring soon'
+                        }
                         size="small"
                         color={daysLeft <= 2 ? 'warning' : 'default'}
                       />
@@ -594,23 +811,47 @@ export default function HistoryList(): React.ReactElement {
                       <Chip
                         label={`${t.downloadCount}${t.maxDownloads ? `/${t.maxDownloads}` : ''} download${t.downloadCount !== 1 ? 's' : ''}`}
                         size="small"
-                        color={t.maxDownloads !== null && t.downloadCount >= t.maxDownloads ? 'error' : 'default'}
+                        color={
+                          t.maxDownloads !== null &&
+                          t.downloadCount >= t.maxDownloads
+                            ? 'error'
+                            : 'default'
+                        }
                       />
                       {t.passwordProtected && (
-                        <Chip icon={<LockIcon />} label="Password" size="small" color="info" />
+                        <Chip
+                          icon={<LockIcon />}
+                          label="Password"
+                          size="small"
+                          color="info"
+                        />
                       )}
                     </Stack>
 
                     <Divider />
 
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
-                      <Typography variant="caption" color="text.secondary" noWrap sx={{ flex: 1 }}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        minWidth: 0,
+                      }}
+                    >
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        noWrap
+                        sx={{ flex: 1 }}
+                      >
                         {url}
                       </Typography>
                       <Button
                         size="small"
                         variant="outlined"
-                        startIcon={copied === t.slug ? <CheckIcon /> : <LinkIcon />}
+                        startIcon={
+                          copied === t.slug ? <CheckIcon /> : <LinkIcon />
+                        }
                         onClick={() => copyLink(t.slug)}
                         color={copied === t.slug ? 'success' : 'inherit'}
                         sx={{ flexShrink: 0 }}

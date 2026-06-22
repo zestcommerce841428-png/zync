@@ -9,7 +9,10 @@ export const dynamic = 'force-dynamic'
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const secret = process.env.CRON_SECRET
   if (!secret) {
-    return NextResponse.json({ error: 'CRON_SECRET not configured.' }, { status: 503 })
+    return NextResponse.json(
+      { error: 'CRON_SECRET not configured.' },
+      { status: 503 },
+    )
   }
 
   const auth = req.headers.get('authorization')

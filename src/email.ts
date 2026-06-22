@@ -59,7 +59,10 @@ export async function isEmailConfigured(): Promise<boolean> {
 
 // Transporter is rebuilt whenever config changes (DB values may update).
 // We don't cache it indefinitely to ensure fresh credentials are always used.
-let _transporter: { config: SmtpConfig; transport: nodemailer.Transporter } | null = null
+let _transporter: {
+  config: SmtpConfig
+  transport: nodemailer.Transporter
+} | null = null
 
 async function getTransporter(): Promise<nodemailer.Transporter | null> {
   const cfg = await getSmtpConfig()

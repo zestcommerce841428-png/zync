@@ -27,7 +27,12 @@ export default function TransferSlugLoading(): React.ReactElement {
             </Stack>
             {/* File list */}
             {[1, 2, 3].map((i) => (
-              <Stack key={i} direction="row" spacing={2} sx={{ alignItems: 'center' }}>
+              <Stack
+                key={i}
+                direction="row"
+                spacing={2}
+                sx={{ alignItems: 'center' }}
+              >
                 <Skeleton variant="circular" width={32} height={32} />
                 <Stack spacing={0.5} sx={{ flex: 1 }}>
                   <Skeleton variant="text" width="60%" height={20} />

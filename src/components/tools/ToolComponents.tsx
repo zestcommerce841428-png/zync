@@ -756,7 +756,11 @@ function RegexTester() {
   const [matches, setMatches] = React.useState<string[]>([])
 
   React.useEffect(() => {
-    if (!pattern) { setMatches([]); setError(''); return }
+    if (!pattern) {
+      setMatches([])
+      setError('')
+      return
+    }
     try {
       const re = new RegExp(pattern, flags)
       const m = [...text.matchAll(re)].map((x) => x[0])
@@ -802,7 +806,19 @@ function RegexTester() {
           </Typography>
           <Stack spacing={0.5} sx={{ mt: 1 }}>
             {matches.slice(0, 50).map((m, i) => (
-              <Typography key={i} sx={{ fontFamily: 'monospace', fontSize: 13, bgcolor: 'warning.main', color: 'warning.contrastText', px: 1, borderRadius: 0.5, display: 'inline-block', width: 'fit-content' }}>
+              <Typography
+                key={i}
+                sx={{
+                  fontFamily: 'monospace',
+                  fontSize: 13,
+                  bgcolor: 'warning.main',
+                  color: 'warning.contrastText',
+                  px: 1,
+                  borderRadius: 0.5,
+                  display: 'inline-block',
+                  width: 'fit-content',
+                }}
+              >
                 {m || '(empty match)'}
               </Typography>
             ))}
@@ -822,7 +838,9 @@ function JwtDecoder() {
 
   const decode = (part: string) => {
     try {
-      const pad = part.replace(/-/g, '+').replace(/_/g, '/') + '=='.slice((part.length + 2) % 4 === 0 ? 4 : (part.length + 2) % 4)
+      const pad =
+        part.replace(/-/g, '+').replace(/_/g, '/') +
+        '=='.slice((part.length + 2) % 4 === 0 ? 4 : (part.length + 2) % 4)
       return JSON.parse(decodeURIComponent(escape(atob(pad))))
     } catch {
       return null
@@ -835,7 +853,8 @@ function JwtDecoder() {
   const payload = isValid ? decode(parts[1]) : null
 
   React.useEffect(() => {
-    if (token && !isValid) setError('Not a valid JWT (expected 3 dot-separated parts)')
+    if (token && !isValid)
+      setError('Not a valid JWT (expected 3 dot-separated parts)')
     else setError('')
   }, [token, isValid])
 
@@ -850,7 +869,9 @@ function JwtDecoder() {
         fullWidth
         value={token}
         onChange={(e) => setToken(e.target.value)}
-        slotProps={{ htmlInput: { style: { fontFamily: 'monospace', fontSize: 12 } } }}
+        slotProps={{
+          htmlInput: { style: { fontFamily: 'monospace', fontSize: 12 } },
+        }}
       />
       {error && <Alert severity="error">{error}</Alert>}
       {header && <Output value={fmt(header)} label="Header" />}
@@ -858,14 +879,19 @@ function JwtDecoder() {
         <>
           <Output value={fmt(payload)} label="Payload" />
           {payload.exp && (
-            <Alert severity={payload.exp * 1000 > Date.now() ? 'success' : 'warning'}>
-              Expires: {new Date(payload.exp * 1000).toLocaleString()} ({payload.exp * 1000 > Date.now() ? 'valid' : 'expired'})
+            <Alert
+              severity={payload.exp * 1000 > Date.now() ? 'success' : 'warning'}
+            >
+              Expires: {new Date(payload.exp * 1000).toLocaleString()} (
+              {payload.exp * 1000 > Date.now() ? 'valid' : 'expired'})
             </Alert>
           )}
         </>
       )}
       {isValid && (
-        <Alert severity="info">Signature is NOT verified — this tool only decodes the payload.</Alert>
+        <Alert severity="info">
+          Signature is NOT verified — this tool only decodes the payload.
+        </Alert>
       )}
     </Stack>
   )
@@ -901,26 +927,47 @@ function BaseConverter() {
           onChange={(_, v) => v && setFrom(v)}
         >
           {bases.map(([base, label]) => (
-            <ToggleButton key={base} value={base}>{label}</ToggleButton>
+            <ToggleButton key={base} value={base}>
+              {label}
+            </ToggleButton>
           ))}
         </ToggleButtonGroup>
       </Stack>
-      {!valid && value && <Alert severity="error">Invalid value for base {from}</Alert>}
-      {valid && bases.map(([base, label, prefix]) => (
-        base !== from && (
-          <Output key={base} value={prefix + num.toString(base).toUpperCase()} label={label} />
-        )
-      ))}
+      {!valid && value && (
+        <Alert severity="error">Invalid value for base {from}</Alert>
+      )}
+      {valid &&
+        bases.map(
+          ([base, label, prefix]) =>
+            base !== from && (
+              <Output
+                key={base}
+                value={prefix + num.toString(base).toUpperCase()}
+                label={label}
+              />
+            ),
+        )}
     </Stack>
   )
 }
 
 // 19. Unit converter
 type UnitCategory = 'Temperature' | 'Length' | 'Weight' | 'Data'
-const UNITS: Record<UnitCategory, Array<{ label: string; toBase: (v: number) => number; fromBase: (v: number) => number }>> = {
+const UNITS: Record<
+  UnitCategory,
+  Array<{
+    label: string
+    toBase: (v: number) => number
+    fromBase: (v: number) => number
+  }>
+> = {
   Temperature: [
     { label: '°C', toBase: (v) => v, fromBase: (v) => v },
-    { label: '°F', toBase: (v) => (v - 32) * 5 / 9, fromBase: (v) => v * 9 / 5 + 32 },
+    {
+      label: '°F',
+      toBase: (v) => ((v - 32) * 5) / 9,
+      fromBase: (v) => (v * 9) / 5 + 32,
+    },
     { label: 'K', toBase: (v) => v - 273.15, fromBase: (v) => v + 273.15 },
   ],
   Length: [
@@ -937,15 +984,31 @@ const UNITS: Record<UnitCategory, Array<{ label: string; toBase: (v: number) => 
     { label: 'g', toBase: (v) => v / 1000, fromBase: (v) => v * 1000 },
     { label: 'kg', toBase: (v) => v, fromBase: (v) => v },
     { label: 'lb', toBase: (v) => v * 0.453592, fromBase: (v) => v / 0.453592 },
-    { label: 'oz', toBase: (v) => v * 0.0283495, fromBase: (v) => v / 0.0283495 },
+    {
+      label: 'oz',
+      toBase: (v) => v * 0.0283495,
+      fromBase: (v) => v / 0.0283495,
+    },
     { label: 't', toBase: (v) => v * 1000, fromBase: (v) => v / 1000 },
   ],
   Data: [
     { label: 'B', toBase: (v) => v, fromBase: (v) => v },
     { label: 'KB', toBase: (v) => v * 1024, fromBase: (v) => v / 1024 },
-    { label: 'MB', toBase: (v) => v * 1024 ** 2, fromBase: (v) => v / 1024 ** 2 },
-    { label: 'GB', toBase: (v) => v * 1024 ** 3, fromBase: (v) => v / 1024 ** 3 },
-    { label: 'TB', toBase: (v) => v * 1024 ** 4, fromBase: (v) => v / 1024 ** 4 },
+    {
+      label: 'MB',
+      toBase: (v) => v * 1024 ** 2,
+      fromBase: (v) => v / 1024 ** 2,
+    },
+    {
+      label: 'GB',
+      toBase: (v) => v * 1024 ** 3,
+      fromBase: (v) => v / 1024 ** 3,
+    },
+    {
+      label: 'TB',
+      toBase: (v) => v * 1024 ** 4,
+      fromBase: (v) => v / 1024 ** 4,
+    },
   ],
 }
 
@@ -964,11 +1027,18 @@ function UnitConverter() {
         exclusive
         size="small"
         value={category}
-        onChange={(_, v) => { if (v) { setCategory(v as UnitCategory); setFromUnit(0) } }}
+        onChange={(_, v) => {
+          if (v) {
+            setCategory(v as UnitCategory)
+            setFromUnit(0)
+          }
+        }}
         sx={{ flexWrap: 'wrap' }}
       >
         {Object.keys(UNITS).map((c) => (
-          <ToggleButton key={c} value={c}>{c}</ToggleButton>
+          <ToggleButton key={c} value={c}>
+            {c}
+          </ToggleButton>
         ))}
       </ToggleButtonGroup>
       <Stack direction="row" spacing={1.5}>
@@ -987,13 +1057,23 @@ function UnitConverter() {
           sx={{ flexWrap: 'wrap' }}
         >
           {units.map((u, i) => (
-            <ToggleButton key={i} value={i}>{u.label}</ToggleButton>
+            <ToggleButton key={i} value={i}>
+              {u.label}
+            </ToggleButton>
           ))}
         </ToggleButtonGroup>
       </Stack>
-      {!isNaN(base) && units.map((u, i) => i !== fromUnit && (
-        <Output key={i} value={String(parseFloat(u.fromBase(base).toPrecision(8)))} label={u.label} />
-      ))}
+      {!isNaN(base) &&
+        units.map(
+          (u, i) =>
+            i !== fromUnit && (
+              <Output
+                key={i}
+                value={String(parseFloat(u.fromBase(base).toPrecision(8)))}
+                label={u.label}
+              />
+            ),
+        )}
     </Stack>
   )
 }
@@ -1001,15 +1081,37 @@ function UnitConverter() {
 // 20. Cron parser
 function parseCron(expr: string): string {
   const parts = expr.trim().split(/\s+/)
-  if (parts.length !== 5) return 'Expected 5 fields: minute hour day-of-month month day-of-week'
+  if (parts.length !== 5)
+    return 'Expected 5 fields: minute hour day-of-month month day-of-week'
   const [min, hr, dom, mon, dow] = parts
-  const months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  const months = [
+    '',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ]
   const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
   const fmt = (v: string, unit: string, names?: string[]) => {
     if (v === '*') return `every ${unit}`
     if (v.startsWith('*/')) return `every ${v.slice(2)} ${unit}s`
-    if (v.includes('-')) { const [a, b] = v.split('-'); return `${unit}s ${names ? names[+a] : a}–${names ? names[+b] : b}` }
-    if (v.includes(',')) return `${unit}s ${v.split(',').map((x) => names ? names[+x] : x).join(', ')}`
+    if (v.includes('-')) {
+      const [a, b] = v.split('-')
+      return `${unit}s ${names ? names[+a] : a}–${names ? names[+b] : b}`
+    }
+    if (v.includes(','))
+      return `${unit}s ${v
+        .split(',')
+        .map((x) => (names ? names[+x] : x))
+        .join(', ')}`
     return `at ${unit} ${names ? names[+v] : v}`
   }
   return `Runs ${fmt(min, 'minute')} | ${fmt(hr, 'hour')} | ${fmt(dom, 'day-of-month')} | ${fmt(mon, 'month', months)} | ${fmt(dow, 'weekday', days)}`
@@ -1035,13 +1137,22 @@ function CronParser() {
         placeholder="* * * * *"
       />
       <Typography variant="caption" color="text.secondary">
-        Format: minute  hour  day-of-month  month  day-of-week
+        Format: minute hour day-of-month month day-of-week
       </Typography>
       <Alert severity="info">{description}</Alert>
-      <Typography variant="overline" color="text.secondary">Presets</Typography>
+      <Typography variant="overline" color="text.secondary">
+        Presets
+      </Typography>
       <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1 }}>
         {presets.map(([label, val]) => (
-          <Button key={val} size="small" variant="outlined" onClick={() => setExpr(val)}>{label}</Button>
+          <Button
+            key={val}
+            size="small"
+            variant="outlined"
+            onClick={() => setExpr(val)}
+          >
+            {label}
+          </Button>
         ))}
       </Stack>
     </Stack>
@@ -1050,7 +1161,9 @@ function CronParser() {
 
 // 21. Random generator
 function RandomGenerator() {
-  const [mode, setMode] = React.useState<'number' | 'dice' | 'coin' | 'list'>('number')
+  const [mode, setMode] = React.useState<'number' | 'dice' | 'coin' | 'list'>(
+    'number',
+  )
   const [min, setMin] = React.useState(1)
   const [max, setMax] = React.useState(100)
   const [count, setCount] = React.useState(1)
@@ -1059,24 +1172,43 @@ function RandomGenerator() {
 
   const run = () => {
     if (mode === 'number') {
-      const nums = Array.from({ length: count }, () => min + Math.floor(Math.random() * (max - min + 1)))
+      const nums = Array.from(
+        { length: count },
+        () => min + Math.floor(Math.random() * (max - min + 1)),
+      )
       setResult(nums.join(', '))
     } else if (mode === 'dice') {
-      const rolls = Array.from({ length: count }, () => 1 + Math.floor(Math.random() * 6))
-      setResult(rolls.join(', ') + ` (sum: ${rolls.reduce((a, b) => a + b, 0)})`)
+      const rolls = Array.from(
+        { length: count },
+        () => 1 + Math.floor(Math.random() * 6),
+      )
+      setResult(
+        rolls.join(', ') + ` (sum: ${rolls.reduce((a, b) => a + b, 0)})`,
+      )
     } else if (mode === 'coin') {
-      setResult(Array.from({ length: count }, () => Math.random() < 0.5 ? 'Heads' : 'Tails').join(', '))
+      setResult(
+        Array.from({ length: count }, () =>
+          Math.random() < 0.5 ? 'Heads' : 'Tails',
+        ).join(', '),
+      )
     } else {
       const items = list.split('\n').filter(Boolean)
       if (!items.length) return
-      const picked = [...items].sort(() => Math.random() - 0.5).slice(0, Math.min(count, items.length))
+      const picked = [...items]
+        .sort(() => Math.random() - 0.5)
+        .slice(0, Math.min(count, items.length))
       setResult(picked.join('\n'))
     }
   }
 
   return (
     <Stack spacing={2}>
-      <ToggleButtonGroup exclusive size="small" value={mode} onChange={(_, v) => v && setMode(v)}>
+      <ToggleButtonGroup
+        exclusive
+        size="small"
+        value={mode}
+        onChange={(_, v) => v && setMode(v)}
+      >
         <ToggleButton value="number">Number</ToggleButton>
         <ToggleButton value="dice">Dice 🎲</ToggleButton>
         <ToggleButton value="coin">Coin 🪙</ToggleButton>
@@ -1084,18 +1216,41 @@ function RandomGenerator() {
       </ToggleButtonGroup>
       {mode === 'number' && (
         <Stack direction="row" spacing={1.5}>
-          <TextField label="Min" type="number" value={min} onChange={(e) => setMin(Number(e.target.value))} />
-          <TextField label="Max" type="number" value={max} onChange={(e) => setMax(Number(e.target.value))} />
+          <TextField
+            label="Min"
+            type="number"
+            value={min}
+            onChange={(e) => setMin(Number(e.target.value))}
+          />
+          <TextField
+            label="Max"
+            type="number"
+            value={max}
+            onChange={(e) => setMax(Number(e.target.value))}
+          />
         </Stack>
       )}
       {mode === 'list' && (
-        <TextField label="Items (one per line)" multiline minRows={4} value={list} onChange={(e) => setList(e.target.value)} />
+        <TextField
+          label="Items (one per line)"
+          multiline
+          minRows={4}
+          value={list}
+          onChange={(e) => setList(e.target.value)}
+        />
       )}
       <Box>
         <Typography gutterBottom>Count: {count}</Typography>
-        <Slider min={1} max={mode === 'list' ? 20 : 50} value={count} onChange={(_, v) => setCount(v as number)} />
+        <Slider
+          min={1}
+          max={mode === 'list' ? 20 : 50}
+          value={count}
+          onChange={(_, v) => setCount(v as number)}
+        />
       </Box>
-      <Button variant="contained" onClick={run}>Generate</Button>
+      <Button variant="contained" onClick={run}>
+        Generate
+      </Button>
       <Output value={result} label="Result" />
     </Stack>
   )
@@ -1114,12 +1269,31 @@ function CssMinifier() {
       .trim()
     setOut(result)
   }
-  const savings = css.length && out.length ? Math.round((1 - out.length / css.length) * 100) : 0
+  const savings =
+    css.length && out.length
+      ? Math.round((1 - out.length / css.length) * 100)
+      : 0
   return (
     <Stack spacing={2}>
-      <TextField label="CSS" multiline minRows={8} fullWidth value={css} onChange={(e) => setCss(e.target.value)} slotProps={{ htmlInput: { style: { fontFamily: 'monospace', fontSize: 13 } } }} />
-      <Button variant="contained" onClick={minify}>Minify</Button>
-      {savings > 0 && <Alert severity="success">Saved {savings}% ({css.length - out.length} bytes)</Alert>}
+      <TextField
+        label="CSS"
+        multiline
+        minRows={8}
+        fullWidth
+        value={css}
+        onChange={(e) => setCss(e.target.value)}
+        slotProps={{
+          htmlInput: { style: { fontFamily: 'monospace', fontSize: 13 } },
+        }}
+      />
+      <Button variant="contained" onClick={minify}>
+        Minify
+      </Button>
+      {savings > 0 && (
+        <Alert severity="success">
+          Saved {savings}% ({css.length - out.length} bytes)
+        </Alert>
+      )}
       <Output value={out} label="Minified CSS" />
     </Stack>
   )
@@ -1133,11 +1307,23 @@ function TextRepeater() {
   const out = text ? Array(n).fill(text).join(sep) : ''
   return (
     <Stack spacing={2}>
-      <TextField label="Text to repeat" multiline minRows={2} fullWidth value={text} onChange={(e) => setText(e.target.value)} />
+      <TextField
+        label="Text to repeat"
+        multiline
+        minRows={2}
+        fullWidth
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+      />
       <Stack direction="row" spacing={1.5}>
         <Box sx={{ flex: 1 }}>
           <Typography gutterBottom>Repeat: {n}×</Typography>
-          <Slider min={1} max={100} value={n} onChange={(_, v) => setN(v as number)} />
+          <Slider
+            min={1}
+            max={100}
+            value={n}
+            onChange={(_, v) => setN(v as number)}
+          />
         </Box>
         <TextField
           label="Separator"
@@ -1169,7 +1355,10 @@ function PomodoroTimer() {
     if (!running) return
     const id = setInterval(() => {
       setLeft((l) => {
-        if (l <= 1) { setRunning(false); return 0 }
+        if (l <= 1) {
+          setRunning(false)
+          return 0
+        }
         return l - 1
       })
     }, 1000)
@@ -1189,27 +1378,65 @@ function PomodoroTimer() {
 
   return (
     <Stack spacing={2} sx={{ alignItems: 'center' }}>
-      <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', justifyContent: 'center' }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{ flexWrap: 'wrap', justifyContent: 'center' }}
+      >
         {presets.map((p) => (
-          <Button key={p.label} size="small" variant={phase === p.label ? 'contained' : 'outlined'} onClick={() => pick(p.label, p.seconds)}>
+          <Button
+            key={p.label}
+            size="small"
+            variant={phase === p.label ? 'contained' : 'outlined'}
+            onClick={() => pick(p.label, p.seconds)}
+          >
             {p.label}
           </Button>
         ))}
       </Stack>
       <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-        <Box sx={{ width: 180, height: 180, borderRadius: '50%', background: `conic-gradient(var(--mui-palette-primary-main) ${pct}%, transparent ${pct}%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '4px solid', borderColor: 'divider' }}>
-          <Typography variant="h2" sx={{ fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>
+        <Box
+          sx={{
+            width: 180,
+            height: 180,
+            borderRadius: '50%',
+            background: `conic-gradient(var(--mui-palette-primary-main) ${pct}%, transparent ${pct}%)`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: '4px solid',
+            borderColor: 'divider',
+          }}
+        >
+          <Typography
+            variant="h2"
+            sx={{ fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}
+          >
             {mm}:{ss}
           </Typography>
         </Box>
       </Box>
       <Stack direction="row" spacing={1.5}>
-        <Button variant="contained" size="large" onClick={() => setRunning((r) => !r)}>
+        <Button
+          variant="contained"
+          size="large"
+          onClick={() => setRunning((r) => !r)}
+        >
           {running ? 'Pause' : left === total ? 'Start' : 'Resume'}
         </Button>
-        <Button variant="outlined" onClick={() => { setRunning(false); setLeft(total) }}>Reset</Button>
+        <Button
+          variant="outlined"
+          onClick={() => {
+            setRunning(false)
+            setLeft(total)
+          }}
+        >
+          Reset
+        </Button>
       </Stack>
-      {left === 0 && <Alert severity="success">Time's up! Take a break 🎉</Alert>}
+      {left === 0 && (
+        <Alert severity="success">Time's up! Take a break 🎉</Alert>
+      )}
     </Stack>
   )
 }
@@ -1222,10 +1449,31 @@ function HtmlFormatter() {
 
   const process = () => {
     if (mode === 'minify') {
-      setOut(html.replace(/<!--[\s\S]*?-->/g, '').replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim())
+      setOut(
+        html
+          .replace(/<!--[\s\S]*?-->/g, '')
+          .replace(/\s+/g, ' ')
+          .replace(/>\s+</g, '><')
+          .trim(),
+      )
     } else {
       let indent = 0
-      const voidTags = new Set(['area','base','br','col','embed','hr','img','input','link','meta','param','source','track','wbr'])
+      const voidTags = new Set([
+        'area',
+        'base',
+        'br',
+        'col',
+        'embed',
+        'hr',
+        'img',
+        'input',
+        'link',
+        'meta',
+        'param',
+        'source',
+        'track',
+        'wbr',
+      ])
       const tokens = html.match(/<[^>]+>|[^<]+/g) || []
       const lines: string[] = []
       for (const tok of tokens) {
@@ -1248,12 +1496,29 @@ function HtmlFormatter() {
 
   return (
     <Stack spacing={2}>
-      <ToggleButtonGroup exclusive size="small" value={mode} onChange={(_, v) => v && setMode(v)}>
+      <ToggleButtonGroup
+        exclusive
+        size="small"
+        value={mode}
+        onChange={(_, v) => v && setMode(v)}
+      >
         <ToggleButton value="beautify">Beautify</ToggleButton>
         <ToggleButton value="minify">Minify</ToggleButton>
       </ToggleButtonGroup>
-      <TextField label="HTML" multiline minRows={8} fullWidth value={html} onChange={(e) => setHtml(e.target.value)} slotProps={{ htmlInput: { style: { fontFamily: 'monospace', fontSize: 13 } } }} />
-      <Button variant="contained" onClick={process}>{mode === 'beautify' ? 'Beautify' : 'Minify'}</Button>
+      <TextField
+        label="HTML"
+        multiline
+        minRows={8}
+        fullWidth
+        value={html}
+        onChange={(e) => setHtml(e.target.value)}
+        slotProps={{
+          htmlInput: { style: { fontFamily: 'monospace', fontSize: 13 } },
+        }}
+      />
+      <Button variant="contained" onClick={process}>
+        {mode === 'beautify' ? 'Beautify' : 'Minify'}
+      </Button>
       <Output value={out} label="Result" />
     </Stack>
   )

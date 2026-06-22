@@ -51,11 +51,15 @@ export default function ProgressBar({
     if (isComplete) setSpeed(null)
   }, [isComplete])
 
-  const remaining = speed && speed > 0 && max > value ? (max - value) / speed : null
+  const remaining =
+    speed && speed > 0 && max > value ? (max - value) / speed : null
 
   return (
     <Box sx={{ width: '100%' }}>
-      <Box id="progress-bar" sx={{ position: 'relative', width: '100%', height: 48 }}>
+      <Box
+        id="progress-bar"
+        sx={{ position: 'relative', width: '100%', height: 48 }}
+      >
         <LinearProgress
           variant="determinate"
           value={Math.min(100, Math.max(0, percentage))}
@@ -82,14 +86,25 @@ export default function ProgressBar({
         >
           <Typography
             id="progress-percentage"
-            sx={{ fontWeight: 700, color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,.45)' }}
+            sx={{
+              fontWeight: 700,
+              color: '#fff',
+              textShadow: '0 1px 2px rgba(0,0,0,.45)',
+            }}
           >
             {Math.round(percentage)}%
           </Typography>
         </Box>
       </Box>
       {(speed !== null || remaining !== null) && !isComplete && (
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.5, px: 0.5 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            mt: 0.5,
+            px: 0.5,
+          }}
+        >
           {speed !== null && (
             <Typography variant="caption" color="text.secondary">
               {formatSpeed(speed)}

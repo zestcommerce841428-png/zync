@@ -36,13 +36,23 @@ type CollectSummary = {
   description: string
   expiresAt: string
   maxFiles: number
-  files: { name: string; size: number; type: string; uploadedAt: string; uploaderNote?: string }[]
+  files: {
+    name: string
+    size: number
+    type: string
+    uploadedAt: string
+    uploaderNote?: string
+  }[]
   active: boolean
   createdAt: string
 }
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  return new Date(iso).toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
 }
 
 function daysLeft(iso: string): number {
@@ -50,13 +60,19 @@ function daysLeft(iso: string): number {
 }
 
 // ─── Collect List ────────────────────────────────────────────────────────────
-function CollectList({ onCreateNew }: { onCreateNew: () => void }): React.ReactElement {
+function CollectList({
+  onCreateNew,
+}: {
+  onCreateNew: () => void
+}): React.ReactElement {
   const [collects, setCollects] = React.useState<CollectSummary[] | null>(null)
   const [error, setError] = React.useState<string | null>(null)
   const [copiedSlug, setCopiedSlug] = React.useState<string | null>(null)
   const [togglingSlug, setTogglingSlug] = React.useState<string | null>(null)
   const [origin, setOrigin] = React.useState('')
-  React.useEffect(() => { setOrigin(window.location.origin) }, [])
+  React.useEffect(() => {
+    setOrigin(window.location.origin)
+  }, [])
 
   React.useEffect(() => {
     fetch('/api/collect/list')
@@ -73,7 +89,9 @@ function CollectList({ onCreateNew }: { onCreateNew: () => void }): React.ReactE
       await navigator.clipboard.writeText(`${origin}/collect/${slug}`)
       setCopiedSlug(slug)
       setTimeout(() => setCopiedSlug(null), 2000)
-    } catch (_e) { /* clipboard unavailable */ }
+    } catch (_e) {
+      /* clipboard unavailable */
+    }
   }
 
   const toggleActive = async (slug: string, current: boolean) => {
@@ -85,14 +103,19 @@ function CollectList({ onCreateNew }: { onCreateNew: () => void }): React.ReactE
         body: JSON.stringify({ active: !current }),
       })
       setCollects((prev) =>
-        prev ? prev.map((c) => (c.slug === slug ? { ...c, active: !current } : c)) : prev,
+        prev
+          ? prev.map((c) => (c.slug === slug ? { ...c, active: !current } : c))
+          : prev,
       )
-    } catch (_e) { /* fetch failed */ }
+    } catch (_e) {
+      /* fetch failed */
+    }
     setTogglingSlug(null)
   }
 
   if (error) return <Alert severity="error">{error}</Alert>
-  if (!collects) return <CircularProgress sx={{ display: 'block', mx: 'auto' }} />
+  if (!collects)
+    return <CircularProgress sx={{ display: 'block', mx: 'auto' }} />
 
   if (collects.length === 0) {
     return (
@@ -100,8 +123,14 @@ function CollectList({ onCreateNew }: { onCreateNew: () => void }): React.ReactE
         <CardContent>
           <Stack spacing={2} sx={{ alignItems: 'center', py: 4 }}>
             <InboxIcon sx={{ fontSize: 56, color: 'text.secondary' }} />
-            <Typography color="text.secondary">No file requests yet.</Typography>
-            <Button variant="contained" startIcon={<AddIcon />} onClick={onCreateNew}>
+            <Typography color="text.secondary">
+              No file requests yet.
+            </Typography>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={onCreateNew}
+            >
               Create your first request
             </Button>
           </Stack>
@@ -117,12 +146,27 @@ function CollectList({ onCreateNew }: { onCreateNew: () => void }): React.ReactE
         const expired = left <= 0
         const collectUrl = `${origin}/collect/${c.slug}`
         return (
-          <Card key={c.slug} variant="outlined" sx={{ opacity: expired ? 0.6 : 1 }}>
+          <Card
+            key={c.slug}
+            variant="outlined"
+            sx={{ opacity: expired ? 0.6 : 1 }}
+          >
             <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
               <Stack spacing={1.5}>
-                <Stack direction="row" sx={{ alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
+                <Stack
+                  direction="row"
+                  sx={{
+                    alignItems: 'flex-start',
+                    justifyContent: 'space-between',
+                    gap: 1,
+                  }}
+                >
                   <Stack spacing={0.5} sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 700 }} noWrap>
+                    <Typography
+                      variant="subtitle1"
+                      sx={{ fontWeight: 700 }}
+                      noWrap
+                    >
                       {c.title}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
@@ -130,29 +174,47 @@ function CollectList({ onCreateNew }: { onCreateNew: () => void }): React.ReactE
                     </Typography>
                   </Stack>
                   <Stack direction="row" spacing={0.5} sx={{ flexShrink: 0 }}>
-                    <Tooltip title={copiedSlug === c.slug ? 'Copied!' : 'Copy link'}>
+                    <Tooltip
+                      title={copiedSlug === c.slug ? 'Copied!' : 'Copy link'}
+                    >
                       <IconButton size="small" onClick={() => copyLink(c.slug)}>
-                        {copiedSlug === c.slug ? <CheckIcon fontSize="small" color="success" /> : <ContentCopyIcon fontSize="small" />}
+                        {copiedSlug === c.slug ? (
+                          <CheckIcon fontSize="small" color="success" />
+                        ) : (
+                          <ContentCopyIcon fontSize="small" />
+                        )}
                       </IconButton>
                     </Tooltip>
                     <Tooltip title="Open upload page">
-                      <IconButton size="small" component="a" href={collectUrl} target="_blank">
+                      <IconButton
+                        size="small"
+                        component="a"
+                        href={collectUrl}
+                        target="_blank"
+                      >
                         <OpenInNewIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
-                    <Tooltip title={c.active ? 'Pause (stop accepting uploads)' : 'Resume (accept uploads)'}>
+                    <Tooltip
+                      title={
+                        c.active
+                          ? 'Pause (stop accepting uploads)'
+                          : 'Resume (accept uploads)'
+                      }
+                    >
                       <span>
                         <IconButton
                           size="small"
                           disabled={expired || togglingSlug === c.slug}
                           onClick={() => toggleActive(c.slug, c.active)}
                         >
-                          {togglingSlug === c.slug
-                            ? <CircularProgress size={16} />
-                            : c.active
-                              ? <PauseCircleIcon fontSize="small" color="primary" />
-                              : <PlayCircleIcon fontSize="small" color="disabled" />
-                          }
+                          {togglingSlug === c.slug ? (
+                            <CircularProgress size={16} />
+                          ) : c.active ? (
+                            <PauseCircleIcon fontSize="small" color="primary" />
+                          ) : (
+                            <PlayCircleIcon fontSize="small" color="disabled" />
+                          )}
                         </IconButton>
                       </span>
                     </Tooltip>
@@ -163,7 +225,9 @@ function CollectList({ onCreateNew }: { onCreateNew: () => void }): React.ReactE
                   <Chip
                     label={expired ? 'Expired' : `${left}d left`}
                     size="small"
-                    color={expired ? 'default' : left <= 3 ? 'warning' : 'default'}
+                    color={
+                      expired ? 'default' : left <= 3 ? 'warning' : 'default'
+                    }
                     variant={expired ? 'outlined' : 'filled'}
                   />
                   <Chip
@@ -180,8 +244,14 @@ function CollectList({ onCreateNew }: { onCreateNew: () => void }): React.ReactE
                 </Stack>
 
                 {c.description && (
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                    {c.description.length > 120 ? c.description.slice(0, 117) + '…' : c.description}
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ display: 'block' }}
+                  >
+                    {c.description.length > 120
+                      ? c.description.slice(0, 117) + '…'
+                      : c.description}
                   </Typography>
                 )}
 
@@ -203,7 +273,11 @@ function CollectList({ onCreateNew }: { onCreateNew: () => void }): React.ReactE
 }
 
 // ─── Create Form ─────────────────────────────────────────────────────────────
-function CreateForm({ onCreated }: { onCreated: (slug: string) => void }): React.ReactElement {
+function CreateForm({
+  onCreated,
+}: {
+  onCreated: (slug: string) => void
+}): React.ReactElement {
   const [title, setTitle] = React.useState('')
   const [description, setDescription] = React.useState('')
   const [expiryDays, setExpiryDays] = React.useState(30)
@@ -222,7 +296,11 @@ function CreateForm({ onCreated }: { onCreated: (slug: string) => void }): React
         body: JSON.stringify({ title, description, expiryDays, maxFiles }),
       })
       const json = await res.json()
-      if (!res.ok) { setError(json.error ?? 'Failed to create.'); setStage('error'); return }
+      if (!res.ok) {
+        setError(json.error ?? 'Failed to create.')
+        setStage('error')
+        return
+      }
       onCreated(json.slug)
     } catch {
       setError('Network error. Please try again.')
@@ -291,13 +369,24 @@ function CreateForm({ onCreated }: { onCreated: (slug: string) => void }): React
         size="large"
         onClick={create}
         disabled={!title.trim() || stage === 'creating'}
-        startIcon={stage === 'creating' ? <CircularProgress size={18} color="inherit" /> : <InboxIcon />}
+        startIcon={
+          stage === 'creating' ? (
+            <CircularProgress size={18} color="inherit" />
+          ) : (
+            <InboxIcon />
+          )
+        }
         fullWidth
       >
         {stage === 'creating' ? 'Creating…' : 'Create file request'}
       </Button>
-      <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center' }}>
-        You must be signed in to create a file request. Uploaders don't need an account.
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        sx={{ textAlign: 'center' }}
+      >
+        You must be signed in to create a file request. Uploaders don't need an
+        account.
       </Typography>
     </Stack>
   )
@@ -309,12 +398,20 @@ export default function CollectPage(): React.ReactElement {
   const [resultSlug, setResultSlug] = React.useState('')
   const [copied, setCopied] = React.useState(false)
   const [origin, setOrigin] = React.useState('')
-  React.useEffect(() => { setOrigin(window.location.origin) }, [])
+  React.useEffect(() => {
+    setOrigin(window.location.origin)
+  }, [])
 
   const collectUrl = resultSlug ? `${origin}/collect/${resultSlug}` : ''
 
   const copy = async () => {
-    try { await navigator.clipboard.writeText(collectUrl); setCopied(true); setTimeout(() => setCopied(false), 2000) } catch (_e) { /* clipboard unavailable */ }
+    try {
+      await navigator.clipboard.writeText(collectUrl)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (_e) {
+      /* clipboard unavailable */
+    }
   }
 
   const handleCreated = (slug: string) => {
@@ -326,22 +423,41 @@ export default function CollectPage(): React.ReactElement {
     <Container maxWidth="md" sx={{ py: { xs: 6, md: 10 } }}>
       <Stack spacing={3}>
         {/* Header */}
-        <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
+        <Stack
+          direction="row"
+          sx={{
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 2,
+          }}
+        >
           <Stack spacing={0.5}>
             <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
               <InboxIcon color="primary" />
-              <Typography variant="h4" sx={{ fontWeight: 900 }}>File requests</Typography>
+              <Typography variant="h4" sx={{ fontWeight: 900 }}>
+                File requests
+              </Typography>
             </Stack>
             <Typography color="text.secondary" variant="body2">
-              Create a link so others can upload files directly to you — no account needed on their end.
+              Create a link so others can upload files directly to you — no
+              account needed on their end.
             </Typography>
           </Stack>
           {view === 'list' ? (
-            <Button variant="contained" startIcon={<AddIcon />} onClick={() => setView('create')}>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => setView('create')}
+            >
               New request
             </Button>
           ) : (
-            <Button variant="outlined" startIcon={<CloseIcon />} onClick={() => setView('list')}>
+            <Button
+              variant="outlined"
+              startIcon={<CloseIcon />}
+              onClick={() => setView('list')}
+            >
               Cancel
             </Button>
           )}
@@ -349,14 +465,30 @@ export default function CollectPage(): React.ReactElement {
 
         {/* Success banner after creation */}
         {resultSlug && view === 'list' && (
-          <Card variant="outlined" sx={{ bgcolor: 'success.50', borderColor: 'success.main' }}>
+          <Card
+            variant="outlined"
+            sx={{ bgcolor: 'success.50', borderColor: 'success.main' }}
+          >
             <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
               <Stack spacing={2}>
                 <Alert severity="success" icon={<CheckIcon />}>
                   File request created! Share this link to receive files.
                 </Alert>
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ alignItems: 'flex-start' }}>
-                  <Stack sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 1, flexShrink: 0, bgcolor: 'white' }}>
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  spacing={1}
+                  sx={{ alignItems: 'flex-start' }}
+                >
+                  <Stack
+                    sx={{
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      borderRadius: 1,
+                      p: 1,
+                      flexShrink: 0,
+                      bgcolor: 'white',
+                    }}
+                  >
                     {origin && <QRCode value={collectUrl} size={96} />}
                   </Stack>
                   <Stack spacing={1} sx={{ flex: 1, width: '100%' }}>
@@ -377,7 +509,10 @@ export default function CollectPage(): React.ReactElement {
                       >
                         {copied ? 'Copied!' : 'Copy link'}
                       </Button>
-                      <Button variant="outlined" href={`/collect/${resultSlug}/received`}>
+                      <Button
+                        variant="outlined"
+                        href={`/collect/${resultSlug}/received`}
+                      >
                         View received
                       </Button>
                     </Stack>
@@ -393,10 +528,15 @@ export default function CollectPage(): React.ReactElement {
           <Card variant="outlined">
             <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
               <Stack spacing={1} sx={{ mb: 3 }}>
-                <Typography variant="h6" sx={{ fontWeight: 700 }}>New file request</Typography>
+                <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                  New file request
+                </Typography>
                 <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
                   <Chip label="No account needed for uploaders" size="small" />
-                  <Chip label="Email notification when files arrive" size="small" />
+                  <Chip
+                    label="Email notification when files arrive"
+                    size="small"
+                  />
                   <Chip label="Up to 365-day links" size="small" />
                 </Stack>
               </Stack>

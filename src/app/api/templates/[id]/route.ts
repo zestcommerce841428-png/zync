@@ -10,9 +10,13 @@ export async function DELETE(
 ): Promise<NextResponse> {
   const { id } = await params
   const supabase = await getSupabaseServerClient()
-  if (!supabase) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
+  if (!supabase)
+    return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user)
+    return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
 
   // Verify ownership via list (avoids needing a separate get)
   const templates = await listTemplates(user.id)

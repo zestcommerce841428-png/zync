@@ -28,7 +28,13 @@ type Props = {
   burnAfterRead?: boolean
 }
 
-export default function ShareCard({ slug, expiresAt, title, passwordProtected, burnAfterRead }: Props): React.ReactElement {
+export default function ShareCard({
+  slug,
+  expiresAt,
+  title,
+  passwordProtected,
+  burnAfterRead,
+}: Props): React.ReactElement {
   const [origin, setOrigin] = React.useState('')
   const [canShare, setCanShare] = React.useState(false)
   React.useEffect(() => {
@@ -36,7 +42,9 @@ export default function ShareCard({ slug, expiresAt, title, passwordProtected, b
     setCanShare(typeof navigator.share === 'function')
   }, [])
   const url = `${origin}/transfer/${slug}`
-  const shareText = title ? `"${title}" — download via Zync` : 'Here are your files — download via Zync'
+  const shareText = title
+    ? `"${title}" — download via Zync`
+    : 'Here are your files — download via Zync'
 
   const [copied, setCopied] = React.useState(false)
   const copy = async () => {
@@ -44,13 +52,17 @@ export default function ShareCard({ slug, expiresAt, title, passwordProtected, b
       await navigator.clipboard.writeText(url)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
 
   const nativeShare = async () => {
     try {
       await navigator.share({ title: shareText, url })
-    } catch { /* user cancelled */ }
+    } catch {
+      /* user cancelled */
+    }
   }
 
   const [daysLeft, setDaysLeft] = React.useState<number | null>(null)
@@ -60,7 +72,9 @@ export default function ShareCard({ slug, expiresAt, title, passwordProtected, b
   }, [expiresAt])
 
   const expiryStr = new Date(expiresAt).toLocaleDateString('en-US', {
-    month: 'short', day: 'numeric', year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
   })
 
   const encoded = encodeURIComponent(url)
@@ -96,11 +110,26 @@ export default function ShareCard({ slug, expiresAt, title, passwordProtected, b
   return (
     <Stack spacing={2}>
       <Alert severity="success" icon={<CheckIcon />}>
-        {title ? `"${title}" is ready to share!` : 'Your files are ready to share!'}
+        {title
+          ? `"${title}" is ready to share!`
+          : 'Your files are ready to share!'}
       </Alert>
 
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ alignItems: 'flex-start' }}>
-        <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 1, flexShrink: 0, bgcolor: 'white' }}>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        spacing={1}
+        sx={{ alignItems: 'flex-start' }}
+      >
+        <Box
+          sx={{
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: 1,
+            p: 1,
+            flexShrink: 0,
+            bgcolor: 'white',
+          }}
+        >
           {origin && <QRCode value={url} size={112} />}
         </Box>
         <Stack spacing={1} sx={{ flex: 1, width: '100%' }}>
@@ -135,7 +164,9 @@ export default function ShareCard({ slug, expiresAt, title, passwordProtected, b
       </Stack>
 
       <Divider>
-        <Typography variant="caption" color="text.secondary">Share via</Typography>
+        <Typography variant="caption" color="text.secondary">
+          Share via
+        </Typography>
       </Divider>
 
       <Stack direction="row" spacing={1} sx={{ justifyContent: 'center' }}>
@@ -153,7 +184,10 @@ export default function ShareCard({ slug, expiresAt, title, passwordProtected, b
                 borderRadius: 1.5,
                 p: 1,
                 color: color ?? 'text.primary',
-                '&:hover': { borderColor: color ?? 'primary.main', bgcolor: 'action.hover' },
+                '&:hover': {
+                  borderColor: color ?? 'primary.main',
+                  bgcolor: 'action.hover',
+                },
               }}
             >
               {icon}
@@ -174,13 +208,20 @@ export default function ShareCard({ slug, expiresAt, title, passwordProtected, b
           <Chip label="Password protected" size="small" color="info" />
         )}
         {burnAfterRead && (
-          <Chip label="Deletes after download" size="small" color="error" variant="outlined" />
+          <Chip
+            label="Deletes after download"
+            size="small"
+            color="error"
+            variant="outlined"
+          />
         )}
       </Stack>
 
       <Typography variant="caption" color="text.secondary">
         Anyone with this link can download the files.
-        {daysLeft !== null && daysLeft <= 7 ? ' Sign in to get links up to 30 days.' : ''}
+        {daysLeft !== null && daysLeft <= 7
+          ? ' Sign in to get links up to 30 days.'
+          : ''}
       </Typography>
 
       {/* Direct download link */}
@@ -188,23 +229,30 @@ export default function ShareCard({ slug, expiresAt, title, passwordProtected, b
         <>
           <Divider />
           <Stack spacing={0.5}>
-            <Typography variant="caption" sx={{ fontWeight: 600 }}>Direct download link</Typography>
+            <Typography variant="caption" sx={{ fontWeight: 600 }}>
+              Direct download link
+            </Typography>
             <Typography variant="caption" color="text.secondary">
-              Opening this link auto-starts the download — useful for email or automation.
+              Opening this link auto-starts the download — useful for email or
+              automation.
             </Typography>
             <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
               <TextField
                 value={`${origin}/transfer/${slug}?direct=1`}
                 size="small"
                 fullWidth
-                slotProps={{ input: { readOnly: true, sx: { fontSize: '0.75rem' } } }}
+                slotProps={{
+                  input: { readOnly: true, sx: { fontSize: '0.75rem' } },
+                }}
                 onClick={(e) => (e.target as HTMLInputElement).select()}
               />
               <Tooltip title="Copy direct link">
                 <IconButton
                   size="small"
                   onClick={() => {
-                    void navigator.clipboard.writeText(`${origin}/transfer/${slug}?direct=1`)
+                    void navigator.clipboard.writeText(
+                      `${origin}/transfer/${slug}?direct=1`,
+                    )
                   }}
                 >
                   <ContentCopyIcon fontSize="small" />

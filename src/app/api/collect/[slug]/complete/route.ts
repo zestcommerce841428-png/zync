@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { getCollect, updateCollect, CollectFile } from '../../../../../lib/collect'
+import {
+  getCollect,
+  updateCollect,
+  CollectFile,
+} from '../../../../../lib/collect'
 import { sendMail } from '../../../../../email'
 import { brand } from '../../../../../brand'
 import { rateLimit, getClientIp } from '../../../../../rateLimit'
@@ -8,12 +12,17 @@ import { rateLimit, getClientIp } from '../../../../../rateLimit'
 export const dynamic = 'force-dynamic'
 
 const BodySchema = z.object({
-  files: z.array(z.object({
-    key: z.string(),
-    name: z.string().min(1).max(500),
-    size: z.number().int().nonnegative(),
-    type: z.string().max(200),
-  })).min(1).max(20),
+  files: z
+    .array(
+      z.object({
+        key: z.string(),
+        name: z.string().min(1).max(500),
+        size: z.number().int().nonnegative(),
+        type: z.string().max(200),
+      }),
+    )
+    .min(1)
+    .max(20),
   note: z.string().max(500).optional(),
 })
 
@@ -31,15 +40,25 @@ export async function POST(
 ): Promise<NextResponse> {
   const { slug } = await params
   const ip = getClientIp(req)
-  const rl = await rateLimit(`collect-complete:${ip}`, { limit: 30, windowSeconds: 3600 })
-  if (!rl.success) return NextResponse.json({ error: 'Too many requests.' }, { status: 429 })
+  const rl = await rateLimit(`collect-complete:${ip}`, {
+    limit: 30,
+    windowSeconds: 3600,
+  })
+  if (!rl.success)
+    return NextResponse.json({ error: 'Too many requests.' }, { status: 429 })
 
   const collect = await getCollect(slug)
-  if (!collect) return NextResponse.json({ error: 'Not found.' }, { status: 404 })
-  if (!collect.active) return NextResponse.json({ error: 'This file request is closed.' }, { status: 410 })
+  if (!collect)
+    return NextResponse.json({ error: 'Not found.' }, { status: 404 })
+  if (!collect.active)
+    return NextResponse.json(
+      { error: 'This file request is closed.' },
+      { status: 410 },
+    )
 
   const body = BodySchema.safeParse(await req.json().catch(() => null))
-  if (!body.success) return NextResponse.json({ error: 'Invalid payload.' }, { status: 400 })
+  if (!body.success)
+    return NextResponse.json({ error: 'Invalid payload.' }, { status: 400 })
 
   const newFiles: CollectFile[] = body.data.files.map((f) => ({
     key: f.key,
@@ -56,7 +75,9 @@ export async function POST(
   // Notify owner by email (fire-and-forget)
   if (collect.ownerEmail) {
     const receivedUrl = `${brand.url}/collect/${slug}/received`
-    const fileList = newFiles.map((f) => `• ${f.name} (${formatBytes(f.size)})`).join('\n')
+    const fileList = newFiles
+      .map((f) => `• ${f.name} (${formatBytes(f.size)})`)
+      .join('\n')
     void sendMail({
       to: collect.ownerEmail,
       subject: `Files received for "${collect.title}" · ${brand.name}`,

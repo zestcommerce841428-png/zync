@@ -6,7 +6,7 @@ export type ApiKeyRecord = {
   id: string
   userId: string
   name: string
-  keyHash: string  // SHA-256 of the raw key, never store raw
+  keyHash: string // SHA-256 of the raw key, never store raw
   createdAt: string
   lastUsedAt: string | null
 }
@@ -31,7 +31,10 @@ export async function listApiKeys(userId: string): Promise<ApiKeyRecord[]> {
   return raws
     .filter((r): r is string => r !== null)
     .map((r) => JSON.parse(r) as ApiKeyRecord)
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    )
 }
 
 export async function saveApiKey(record: ApiKeyRecord): Promise<void> {
@@ -52,7 +55,9 @@ export async function deleteApiKey(userId: string, id: string): Promise<void> {
   await redis.del(HASH_IDX(record.keyHash))
 }
 
-export async function lookupApiKey(rawKey: string): Promise<{ userId: string; keyId: string } | null> {
+export async function lookupApiKey(
+  rawKey: string,
+): Promise<{ userId: string; keyId: string } | null> {
   const redis = getRedisClient()
   const hash = hashApiKey(rawKey)
   const val = await redis.get(HASH_IDX(hash))
@@ -63,7 +68,10 @@ export async function lookupApiKey(rawKey: string): Promise<{ userId: string; ke
     const raw = await redis.get(KEY(userId, keyId))
     if (!raw) return
     const record = JSON.parse(raw) as ApiKeyRecord
-    await redis.set(KEY(userId, keyId), JSON.stringify({ ...record, lastUsedAt: new Date().toISOString() }))
+    await redis.set(
+      KEY(userId, keyId),
+      JSON.stringify({ ...record, lastUsedAt: new Date().toISOString() }),
+    )
   })()
   return { userId, keyId }
 }

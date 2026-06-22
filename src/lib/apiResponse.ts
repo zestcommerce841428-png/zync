@@ -46,7 +46,9 @@ export function tooManyRequests(rl: RateLimitResult): NextResponse {
   )
 }
 
-export function unauthorized(message = 'Authentication required.'): NextResponse {
+export function unauthorized(
+  message = 'Authentication required.',
+): NextResponse {
   return NextResponse.json({ error: message }, { status: 401 })
 }
 

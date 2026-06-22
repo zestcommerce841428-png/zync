@@ -14,7 +14,9 @@ import Button from '@mui/material/Button'
 import Stack from '@mui/material/Stack'
 
 const MAX_FILES = 20
-const MAX_BYTES = Number(process.env.NEXT_PUBLIC_TRANSFER_MAX_BYTES ?? 200 * 1024 * 1024 * 1024)
+const MAX_BYTES = Number(
+  process.env.NEXT_PUBLIC_TRANSFER_MAX_BYTES ?? 200 * 1024 * 1024 * 1024,
+)
 
 function formatBytes(n: number): string {
   if (n >= 1e12) return `${(n / 1e12).toFixed(1)} TB`
@@ -32,7 +34,13 @@ type Props = {
   disabled?: boolean
 }
 
-export default function UploadZone({ files, onChange, onPaths, paths, disabled }: Props): React.ReactElement {
+export default function UploadZone({
+  files,
+  onChange,
+  onPaths,
+  paths,
+  disabled,
+}: Props): React.ReactElement {
   const [dragging, setDragging] = React.useState(false)
   const inputRef = React.useRef<HTMLInputElement>(null)
   const folderElRef = React.useRef<HTMLInputElement | null>(null)
@@ -56,10 +64,19 @@ export default function UploadZone({ files, onChange, onPaths, paths, disabled }
     onPaths?.(mergedPaths)
   }
 
-  const addFromFileList = (list: FileList | null, getPaths?: () => string[]) => {
+  const addFromFileList = (
+    list: FileList | null,
+    getPaths?: () => string[],
+  ) => {
     if (!list) return
     const arr = Array.from(list)
-    const pathArr = getPaths ? getPaths() : arr.map((f) => (f as File & { webkitRelativePath?: string }).webkitRelativePath || f.name)
+    const pathArr = getPaths
+      ? getPaths()
+      : arr.map(
+          (f) =>
+            (f as File & { webkitRelativePath?: string }).webkitRelativePath ||
+            f.name,
+        )
     addFiles(arr, pathArr)
   }
 
@@ -74,7 +91,10 @@ export default function UploadZone({ files, onChange, onPaths, paths, disabled }
   return (
     <Box>
       <Box
-        onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
+        onDragOver={(e) => {
+          e.preventDefault()
+          setDragging(true)
+        }}
         onDragLeave={() => setDragging(false)}
         onDrop={(e) => {
           e.preventDefault()
@@ -87,13 +107,18 @@ export default function UploadZone({ files, onChange, onPaths, paths, disabled }
               const entry = item.webkitGetAsEntry?.()
               if (entry) entries.push(entry)
             }
-            const readEntry = (entry: FileSystemEntry, basePath = ''): Promise<void> => {
+            const readEntry = (
+              entry: FileSystemEntry,
+              basePath = '',
+            ): Promise<void> => {
               if (entry.isFile) {
                 return new Promise((res) => {
                   ;(entry as FileSystemFileEntry).file((f) => {
                     flat.push(f)
                     // fullPath starts with '/', strip it; use basePath if available
-                    const rel = basePath ? `${basePath}/${entry.name}` : entry.name
+                    const rel = basePath
+                      ? `${basePath}/${entry.name}`
+                      : entry.name
                     flatPaths.push(rel)
                     res()
                   })
@@ -102,7 +127,9 @@ export default function UploadZone({ files, onChange, onPaths, paths, disabled }
               const reader = (entry as FileSystemDirectoryEntry).createReader()
               return new Promise((res) => {
                 reader.readEntries(async (sub) => {
-                  const childBase = basePath ? `${basePath}/${entry.name}` : entry.name
+                  const childBase = basePath
+                    ? `${basePath}/${entry.name}`
+                    : entry.name
                   await Promise.all(sub.map((s) => readEntry(s, childBase)))
                   res()
                 })
@@ -118,14 +145,20 @@ export default function UploadZone({ files, onChange, onPaths, paths, disabled }
         onClick={() => !disabled && inputRef.current?.click()}
         sx={{
           border: '2px dashed',
-          borderColor: dragging ? 'primary.main' : overLimit ? 'error.main' : 'divider',
+          borderColor: dragging
+            ? 'primary.main'
+            : overLimit
+              ? 'error.main'
+              : 'divider',
           borderRadius: 2,
           p: 4,
           textAlign: 'center',
           cursor: disabled ? 'default' : 'pointer',
           bgcolor: dragging ? 'action.hover' : 'background.paper',
           transition: 'border-color .2s, background .2s',
-          '&:hover': disabled ? {} : { borderColor: 'primary.main', bgcolor: 'action.hover' },
+          '&:hover': disabled
+            ? {}
+            : { borderColor: 'primary.main', bgcolor: 'action.hover' },
         }}
       >
         <UploadFileIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 1 }} />
@@ -144,7 +177,13 @@ export default function UploadZone({ files, onChange, onPaths, paths, disabled }
           multiple
           aria-label="Choose files to upload"
           title="Choose files to upload"
-          sx={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }}
+          sx={{
+            position: 'absolute',
+            width: 1,
+            height: 1,
+            opacity: 0,
+            pointerEvents: 'none',
+          }}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
             addFromFileList(e.target.files)
             e.target.value = ''
@@ -157,7 +196,13 @@ export default function UploadZone({ files, onChange, onPaths, paths, disabled }
           type="file"
           multiple
           aria-label="Choose folder to upload"
-          sx={{ position: 'absolute', width: 0, height: 0, opacity: 0, pointerEvents: 'none' }}
+          sx={{
+            position: 'absolute',
+            width: 0,
+            height: 0,
+            opacity: 0,
+            pointerEvents: 'none',
+          }}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
             addFromFileList(e.target.files)
             e.target.value = ''
@@ -174,7 +219,9 @@ export default function UploadZone({ files, onChange, onPaths, paths, disabled }
                 <ListItemText
                   primary={paths?.[i] ?? f.name}
                   secondary={formatBytes(f.size)}
-                  slotProps={{ primary: { noWrap: true, sx: { maxWidth: '80%' } } }}
+                  slotProps={{
+                    primary: { noWrap: true, sx: { maxWidth: '80%' } },
+                  }}
                 />
                 <ListItemSecondaryAction>
                   <IconButton

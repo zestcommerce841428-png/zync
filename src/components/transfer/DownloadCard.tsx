@@ -55,15 +55,23 @@ function formatBytes(n: number): string {
 }
 
 function fileIcon(type: string): React.ReactElement {
-  if (type.startsWith('image/')) return <ImageIcon fontSize="small" color="primary" />
-  if (type.startsWith('video/')) return <VideoFileIcon fontSize="small" color="secondary" />
-  if (type.startsWith('audio/')) return <AudioFileIcon fontSize="small" color="warning" />
-  if (type === 'application/pdf') return <PictureAsPdfIcon fontSize="small" color="error" />
+  if (type.startsWith('image/'))
+    return <ImageIcon fontSize="small" color="primary" />
+  if (type.startsWith('video/'))
+    return <VideoFileIcon fontSize="small" color="secondary" />
+  if (type.startsWith('audio/'))
+    return <AudioFileIcon fontSize="small" color="warning" />
+  if (type === 'application/pdf')
+    return <PictureAsPdfIcon fontSize="small" color="error" />
   return <InsertDriveFileIcon fontSize="small" color="action" />
 }
 
 function isPreviewable(type: string): boolean {
-  return type.startsWith('image/') || type.startsWith('video/') || type === 'application/pdf'
+  return (
+    type.startsWith('image/') ||
+    type.startsWith('video/') ||
+    type === 'application/pdf'
+  )
 }
 
 export default function DownloadCard({
@@ -80,9 +88,12 @@ export default function DownloadCard({
   autoDownload,
 }: Props): React.ReactElement {
   const [now, setNow] = React.useState<number | null>(null)
-  React.useEffect(() => { setNow(Date.now()) }, [])
+  React.useEffect(() => {
+    setNow(Date.now())
+  }, [])
   const expiry = new Date(expiresAt)
-  const daysLeft = now !== null ? Math.ceil((expiry.getTime() - now) / 86400000) : null
+  const daysLeft =
+    now !== null ? Math.ceil((expiry.getTime() - now) / 86400000) : null
   const expired = daysLeft !== null && daysLeft <= 0
 
   // Password gate
@@ -105,7 +116,11 @@ export default function DownloadCard({
       const json = await res.json()
       if (json.valid) {
         setUnlocked(true)
-        try { sessionStorage.setItem(`transfer-pw-${slug}`, passwordInput) } catch (_e) { /* private browsing */ }
+        try {
+          sessionStorage.setItem(`transfer-pw-${slug}`, passwordInput)
+        } catch (_e) {
+          /* private browsing */
+        }
       } else {
         setPwError(true)
       }
@@ -125,7 +140,9 @@ export default function DownloadCard({
         setPasswordInput(saved)
         setUnlocked(true)
       }
-    } catch (_e) { /* private browsing */ }
+    } catch (_e) {
+      /* private browsing */
+    }
   }, [slug, passwordProtected])
 
   // Fetch inline thumbnails for image files once unlocked
@@ -136,10 +153,16 @@ export default function DownloadCard({
       fetch(`/api/transfer/${slug}/download`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fileIndex: i, preview: true, password: currentPassword() }),
+        body: JSON.stringify({
+          fileIndex: i,
+          preview: true,
+          password: currentPassword(),
+        }),
       })
-        .then((r) => r.ok ? r.json() : null)
-        .then((json) => { if (json?.url) setThumbnails((prev) => ({ ...prev, [i]: json.url })) })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((json) => {
+          if (json?.url) setThumbnails((prev) => ({ ...prev, [i]: json.url }))
+        })
         .catch(() => {})
     })
   }, [unlocked, slug])
@@ -162,11 +185,17 @@ export default function DownloadCard({
   // Preview dialog
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(null)
   const [previewType, setPreviewType] = React.useState<string>('')
-  const [previewLoading, setPreviewLoading] = React.useState<number | null>(null)
+  const [previewLoading, setPreviewLoading] = React.useState<number | null>(
+    null,
+  )
 
   const currentPassword = (): string | undefined => {
     if (!passwordProtected) return undefined
-    try { return sessionStorage.getItem(`transfer-pw-${slug}`) ?? passwordInput } catch { return passwordInput }
+    try {
+      return sessionStorage.getItem(`transfer-pw-${slug}`) ?? passwordInput
+    } catch {
+      return passwordInput
+    }
   }
 
   const downloadFile = async (index: number) => {
@@ -205,7 +234,11 @@ export default function DownloadCard({
       const res = await fetch(`/api/transfer/${slug}/download`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fileIndex: index, preview: true, password: currentPassword() }),
+        body: JSON.stringify({
+          fileIndex: index,
+          preview: true,
+          password: currentPassword(),
+        }),
       })
       if (!res.ok) return
       const { url } = await res.json()
@@ -219,7 +252,10 @@ export default function DownloadCard({
   }
 
   const downloadAll = async () => {
-    if (files.length === 1) { await downloadFile(0); return }
+    if (files.length === 1) {
+      await downloadFile(0)
+      return
+    }
     setZipping(true)
     setError(null)
     try {
@@ -227,19 +263,27 @@ export default function DownloadCard({
       const zipChunks: Uint8Array[] = []
       await new Promise<void>((resolve, reject) => {
         const zip = new Zip((err, chunk, final) => {
-          if (err) { reject(err); return }
+          if (err) {
+            reject(err)
+            return
+          }
           zipChunks.push(chunk)
           if (final) resolve()
         })
         let pending = files.length
-        const finish = () => { if (--pending === 0) zip.end() }
+        const finish = () => {
+          if (--pending === 0) zip.end()
+        }
         files.forEach(async (f, i) => {
           const res = await fetch(`/api/transfer/${slug}/download`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ fileIndex: i, password: currentPassword() }),
           })
-          if (!res.ok) { reject(new Error('Failed to get download URL')); return }
+          if (!res.ok) {
+            reject(new Error('Failed to get download URL'))
+            return
+          }
           const { url } = await res.json()
           const fileRes = await fetch(url)
           const buf = new Uint8Array(await fileRes.arrayBuffer())
@@ -264,7 +308,11 @@ export default function DownloadCard({
   }
 
   if (expired) {
-    return <Alert severity="warning">This transfer has expired. The files have been deleted.</Alert>
+    return (
+      <Alert severity="warning">
+        This transfer has expired. The files have been deleted.
+      </Alert>
+    )
   }
 
   // Password gate
@@ -273,7 +321,9 @@ export default function DownloadCard({
       <Stack spacing={2}>
         <Stack spacing={0.5} sx={{ alignItems: 'center', py: 2 }}>
           <LockIcon sx={{ fontSize: 48, color: 'text.secondary' }} />
-          <Typography variant="h6" sx={{ fontWeight: 700 }}>Password required</Typography>
+          <Typography variant="h6" sx={{ fontWeight: 700 }}>
+            Password required
+          </Typography>
           <Typography variant="body2" color="text.secondary">
             This transfer is password protected.
           </Typography>
@@ -283,7 +333,9 @@ export default function DownloadCard({
           type={showPw ? 'text' : 'password'}
           value={passwordInput}
           onChange={(e) => setPasswordInput(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') verifyPassword() }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') verifyPassword()
+          }}
           error={pwError}
           helperText={pwError ? 'Incorrect password. Try again.' : ''}
           size="small"
@@ -291,8 +343,16 @@ export default function DownloadCard({
           slotProps={{
             input: {
               endAdornment: (
-                <IconButton size="small" onClick={() => setShowPw((p) => !p)} edge="end">
-                  {showPw ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
+                <IconButton
+                  size="small"
+                  onClick={() => setShowPw((p) => !p)}
+                  edge="end"
+                >
+                  {showPw ? (
+                    <VisibilityOffIcon fontSize="small" />
+                  ) : (
+                    <VisibilityIcon fontSize="small" />
+                  )}
                 </IconButton>
               ),
             },
@@ -302,7 +362,13 @@ export default function DownloadCard({
           variant="contained"
           onClick={verifyPassword}
           disabled={!passwordInput || pwChecking}
-          startIcon={pwChecking ? <CircularProgress size={16} color="inherit" /> : <LockOpenIcon />}
+          startIcon={
+            pwChecking ? (
+              <CircularProgress size={16} color="inherit" />
+            ) : (
+              <LockOpenIcon />
+            )
+          }
           fullWidth
         >
           {pwChecking ? 'Checking…' : 'Unlock transfer'}
@@ -320,7 +386,15 @@ export default function DownloadCard({
       )}
 
       {message && (
-        <Box sx={{ p: 2, bgcolor: 'action.hover', borderRadius: 1, borderLeft: '4px solid', borderColor: 'primary.main' }}>
+        <Box
+          sx={{
+            p: 2,
+            bgcolor: 'action.hover',
+            borderRadius: 1,
+            borderLeft: '4px solid',
+            borderColor: 'primary.main',
+          }}
+        >
           <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
             "{message}"
           </Typography>
@@ -329,7 +403,8 @@ export default function DownloadCard({
 
       {burnAfterRead && (
         <Alert severity="warning" icon="🔥">
-          <strong>Burn after read</strong> — these files will be permanently deleted from storage 30 seconds after the first download starts.
+          <strong>Burn after read</strong> — these files will be permanently
+          deleted from storage 30 seconds after the first download starts.
         </Alert>
       )}
 
@@ -346,9 +421,19 @@ export default function DownloadCard({
           size="small"
           color={daysLeft !== null && daysLeft <= 2 ? 'warning' : 'default'}
         />
-        <Chip label={`${files.length} file${files.length !== 1 ? 's' : ''}`} size="small" />
+        <Chip
+          label={`${files.length} file${files.length !== 1 ? 's' : ''}`}
+          size="small"
+        />
         <Chip label={formatBytes(totalSize)} size="small" />
-        {passwordProtected && <Chip icon={<LockIcon />} label="Password protected" size="small" color="info" />}
+        {passwordProtected && (
+          <Chip
+            icon={<LockIcon />}
+            label="Password protected"
+            size="small"
+            color="info"
+          />
+        )}
         {maxDownloads && (
           <Chip
             label={`${downloadCount}/${maxDownloads} downloads`}
@@ -373,13 +458,23 @@ export default function DownloadCard({
                     disabled={previewLoading === i}
                     title="Preview"
                   >
-                    {previewLoading === i ? <CircularProgress size={16} /> : <ZoomInIcon fontSize="small" />}
+                    {previewLoading === i ? (
+                      <CircularProgress size={16} />
+                    ) : (
+                      <ZoomInIcon fontSize="small" />
+                    )}
                   </IconButton>
                 )}
                 <Button
                   size="small"
                   variant="outlined"
-                  startIcon={downloading.has(i) ? <CircularProgress size={14} /> : <DownloadIcon />}
+                  startIcon={
+                    downloading.has(i) ? (
+                      <CircularProgress size={14} />
+                    ) : (
+                      <DownloadIcon />
+                    )
+                  }
                   onClick={() => downloadFile(i)}
                   disabled={downloading.has(i) || zipping}
                 >
@@ -394,10 +489,18 @@ export default function DownloadCard({
                   component="img"
                   src={thumbnails[i]}
                   alt={f.name}
-                  onClick={() => { setPreviewType(f.type); setPreviewUrl(thumbnails[i]) }}
+                  onClick={() => {
+                    setPreviewType(f.type)
+                    setPreviewUrl(thumbnails[i])
+                  }}
                   sx={{
-                    width: 36, height: 36, objectFit: 'cover', borderRadius: 1,
-                    cursor: 'pointer', border: '1px solid', borderColor: 'divider',
+                    width: 36,
+                    height: 36,
+                    objectFit: 'cover',
+                    borderRadius: 1,
+                    cursor: 'pointer',
+                    border: '1px solid',
+                    borderColor: 'divider',
                   }}
                 />
               ) : (
@@ -416,7 +519,13 @@ export default function DownloadCard({
       <Button
         variant="contained"
         size="large"
-        startIcon={zipping ? <CircularProgress size={18} color="inherit" /> : <FolderZipIcon />}
+        startIcon={
+          zipping ? (
+            <CircularProgress size={18} color="inherit" />
+          ) : (
+            <FolderZipIcon />
+          )
+        }
         onClick={downloadAll}
         disabled={zipping || downloading.size > 0}
         fullWidth
@@ -424,26 +533,53 @@ export default function DownloadCard({
         {zipping
           ? 'Creating ZIP…'
           : files.length === 1
-          ? 'Download file'
-          : 'Download all as ZIP'}
+            ? 'Download file'
+            : 'Download all as ZIP'}
       </Button>
 
       {/* Preview dialog */}
-      <Dialog open={!!previewUrl} onClose={() => setPreviewUrl(null)} maxWidth="lg" fullWidth>
+      <Dialog
+        open={!!previewUrl}
+        onClose={() => setPreviewUrl(null)}
+        maxWidth="lg"
+        fullWidth
+      >
         <Box sx={{ position: 'absolute', top: 8, right: 8, zIndex: 1 }}>
           <IconButton onClick={() => setPreviewUrl(null)}>
             <CloseIcon />
           </IconButton>
         </Box>
-        <DialogContent sx={{ p: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 300 }}>
+        <DialogContent
+          sx={{
+            p: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: 300,
+          }}
+        >
           {previewUrl && previewType.startsWith('image/') && (
-            <Box component="img" src={previewUrl} sx={{ maxWidth: '100%', maxHeight: '80vh', objectFit: 'contain' }} />
+            <Box
+              component="img"
+              src={previewUrl}
+              sx={{ maxWidth: '100%', maxHeight: '80vh', objectFit: 'contain' }}
+            />
           )}
           {previewUrl && previewType.startsWith('video/') && (
-            <Box component="video" src={previewUrl} controls sx={{ maxWidth: '100%', maxHeight: '80vh' }} />
+            <Box
+              component="video"
+              src={previewUrl}
+              controls
+              sx={{ maxWidth: '100%', maxHeight: '80vh' }}
+            />
           )}
           {previewUrl && previewType === 'application/pdf' && (
-            <Box component="iframe" src={previewUrl} sx={{ width: '100%', height: '80vh', border: 'none' }} title="PDF preview" />
+            <Box
+              component="iframe"
+              src={previewUrl}
+              sx={{ width: '100%', height: '80vh', border: 'none' }}
+              title="PDF preview"
+            />
           )}
         </DialogContent>
       </Dialog>

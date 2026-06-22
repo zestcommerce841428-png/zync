@@ -113,19 +113,19 @@ export default function AboutPage(): React.ReactElement {
         {brand.name} was born from a simple frustration: sharing a file
         shouldn't mean uploading your private data to someone else's cloud,
         waiting for it to process, and hoping it gets deleted. Most "file
-        sharing" services keep a copy of everything you send. {brand.name}{' '}
-        gives you the choice.
+        sharing" services keep a copy of everything you send. {brand.name} gives
+        you the choice.
       </Typography>
       <Typography component="p">
         In <strong>P2P mode</strong>, {brand.name} uses WebRTC to open a direct,
-        encrypted channel between the sender's browser and the recipient's browser.
-        The bytes flow straight from one device to the other — no size cap, no server
-        copy, gone the moment you close the tab.
+        encrypted channel between the sender's browser and the recipient's
+        browser. The bytes flow straight from one device to the other — no size
+        cap, no server copy, gone the moment you close the tab.
       </Typography>
       <Typography component="p">
         In <strong>Cloud mode</strong>, files go browser → Cloudflare R2 →
-        browser via presigned URLs. The VPS never touches your bytes. Links
-        stay live for up to 1 year, support up to 200 GB per transfer, and are
+        browser via presigned URLs. The VPS never touches your bytes. Links stay
+        live for up to 1 year, support up to 200 GB per transfer, and are
         automatically deleted at expiry — every 5 minutes by a cron container,
         or within 30 seconds for burn-after-read links.
       </Typography>
@@ -157,7 +157,10 @@ export default function AboutPage(): React.ReactElement {
             <Grid size={{ xs: 6, sm: 4, md: 2 }} key={c.label}>
               <Card variant="outlined" sx={{ textAlign: 'center' }}>
                 <CardContent sx={{ py: 2 }}>
-                  <Typography variant="h5" sx={{ fontWeight: 800, color: 'primary.main' }}>
+                  <Typography
+                    variant="h5"
+                    sx={{ fontWeight: 800, color: 'primary.main' }}
+                  >
                     {c.label}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
@@ -177,13 +180,28 @@ export default function AboutPage(): React.ReactElement {
       <Stack spacing={4}>
         {FEATURES.map((group) => (
           <Box key={group.section}>
-            <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 1.5 }}>
-              <Chip label={group.section} color="primary" size="small" sx={{ fontWeight: 700 }} />
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{ alignItems: 'center', mb: 1.5 }}
+            >
+              <Chip
+                label={group.section}
+                color="primary"
+                size="small"
+                sx={{ fontWeight: 700 }}
+              />
             </Stack>
             <Stack spacing={0.75}>
               {group.items.map((item) => (
                 <Stack key={item} direction="row" spacing={1}>
-                  <Typography variant="body2" color="primary.main" sx={{ flexShrink: 0 }}>✓</Typography>
+                  <Typography
+                    variant="body2"
+                    color="primary.main"
+                    sx={{ flexShrink: 0 }}
+                  >
+                    ✓
+                  </Typography>
                   <Typography variant="body2">{item}</Typography>
                 </Stack>
               ))}

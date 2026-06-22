@@ -38,7 +38,9 @@ export default function BuildInfo(): React.ReactElement {
   const [health, setHealth] = React.useState<Health | null>(null)
   const [online, setOnline] = React.useState(true)
 
-  React.useEffect(() => { setMounted(true) }, [])
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
 
   React.useEffect(() => {
     const id = setInterval(() => setUptime((u) => u + 1), 1000)
@@ -126,7 +128,11 @@ export default function BuildInfo(): React.ReactElement {
           </Typography>
           <Typography variant="caption" sx={{ display: 'block' }}>
             Built:{' '}
-            {mounted ? (BUILD_TIME ? new Date(BUILD_TIME).toLocaleString() : 'local dev') : '…'}
+            {mounted
+              ? BUILD_TIME
+                ? new Date(BUILD_TIME).toLocaleString()
+                : 'local dev'
+              : '…'}
           </Typography>
           <Typography variant="caption" sx={{ display: 'block' }}>
             Session: {uptime}s
@@ -179,7 +185,11 @@ export default function BuildInfo(): React.ReactElement {
         <Typography variant="caption" color="text.secondary">
           ·
         </Typography>
-        <Typography variant="caption" color="text.secondary" suppressHydrationWarning>
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          suppressHydrationWarning
+        >
           built {mounted ? relativeBuild(BUILD_TIME) : '…'}
         </Typography>
       </Stack>

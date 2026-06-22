@@ -5,9 +5,19 @@ import { createServerClient } from '@supabase/ssr'
 const PROTECTED_EXACT = new Set(['/transfer', '/send'])
 // Prefix paths — the path itself AND all sub-paths require auth
 // Note: /transfer/[slug] (download pages) are intentionally PUBLIC — share links must work without login
-const PROTECTED_PREFIX = ['/transfer/history', '/account', '/profile', '/admin', '/stats', '/download', '/tools']
+const PROTECTED_PREFIX = [
+  '/transfer/history',
+  '/account',
+  '/profile',
+  '/admin',
+  '/stats',
+  '/download',
+  '/tools',
+]
 
-export default async function proxy(request: NextRequest): Promise<NextResponse> {
+export default async function proxy(
+  request: NextRequest,
+): Promise<NextResponse> {
   const { pathname, host } = request.nextUrl
 
   // ── 1. Canonical redirect: www → non-www ───────────────────────────────────
@@ -36,9 +46,13 @@ export default async function proxy(request: NextRequest): Promise<NextResponse>
 
       const supabase = createServerClient(supabaseUrl, supabaseKey, {
         cookies: {
-          getAll() { return request.cookies.getAll() },
+          getAll() {
+            return request.cookies.getAll()
+          },
           setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+            cookiesToSet.forEach(({ name, value }) =>
+              request.cookies.set(name, value),
+            )
             response = NextResponse.next({ request })
             cookiesToSet.forEach(({ name, value, options }) =>
               response.cookies.set(name, value, options),
@@ -47,7 +61,9 @@ export default async function proxy(request: NextRequest): Promise<NextResponse>
         },
       })
 
-      const { data: { user } } = await supabase.auth.getUser()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
 
       if (!user) {
         const fwdHost = request.headers.get('x-forwarded-host')

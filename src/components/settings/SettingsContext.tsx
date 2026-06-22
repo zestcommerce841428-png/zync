@@ -221,7 +221,15 @@ export function SettingsProvider({
   }, [])
 
   const value = React.useMemo(
-    () => ({ settings, update, reset, openPanel, panelOpen, setPanelOpen, panelTab }),
+    () => ({
+      settings,
+      update,
+      reset,
+      openPanel,
+      panelOpen,
+      setPanelOpen,
+      panelTab,
+    }),
     [settings, update, reset, openPanel, panelOpen, panelTab],
   )
 

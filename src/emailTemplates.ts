@@ -206,7 +206,9 @@ export function tplTransferSent(d: {
   recipientCount: number
 }): { subject: string; html: string; text: string } {
   const expiry = new Date(d.expiresAt).toLocaleDateString('en-US', {
-    month: 'long', day: 'numeric', year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
   })
   return {
     subject: d.title
@@ -217,13 +219,19 @@ export function tplTransferSent(d: {
       preheader: `Your files are uploaded and ready to share.`,
       heading: d.title ? `"${d.title}" is ready!` : `Your transfer is ready!`,
       intro: `Your files have been uploaded successfully and are ready to share.`,
-      bodyHtml:
-        kv([
-          ['Files', `${d.fileCount} file${d.fileCount !== 1 ? 's' : ''}`],
-          ['Total size', d.totalSize],
-          ['Expires', expiry],
-          ...(d.recipientCount > 0 ? [['Recipients notified', String(d.recipientCount)] as [string, string]] : []),
-        ]),
+      bodyHtml: kv([
+        ['Files', `${d.fileCount} file${d.fileCount !== 1 ? 's' : ''}`],
+        ['Total size', d.totalSize],
+        ['Expires', expiry],
+        ...(d.recipientCount > 0
+          ? [
+              ['Recipients notified', String(d.recipientCount)] as [
+                string,
+                string,
+              ],
+            ]
+          : []),
+      ]),
       button: { label: 'View your transfer', url: d.url },
       footerNote: `Share this link with anyone: ${d.url}`,
     }),
@@ -239,7 +247,9 @@ export function tplTransferReady(d: {
   expiresAt: string
 }): { subject: string; html: string; text: string } {
   const expiry = new Date(d.expiresAt).toLocaleDateString('en-US', {
-    month: 'long', day: 'numeric', year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
   })
   return {
     subject: d.title
@@ -249,13 +259,13 @@ export function tplTransferReady(d: {
     html: baseLayout({
       preheader: `You have ${d.fileCount} file${d.fileCount !== 1 ? 's' : ''} waiting for you.`,
       heading: d.title || `You have files waiting`,
-      intro: d.senderMessage || `Someone shared files with you via ${brand.name}.`,
-      bodyHtml:
-        kv([
-          ['Files', `${d.fileCount} file${d.fileCount !== 1 ? 's' : ''}`],
-          ['Total size', d.totalSize],
-          ['Expires', expiry],
-        ]),
+      intro:
+        d.senderMessage || `Someone shared files with you via ${brand.name}.`,
+      bodyHtml: kv([
+        ['Files', `${d.fileCount} file${d.fileCount !== 1 ? 's' : ''}`],
+        ['Total size', d.totalSize],
+        ['Expires', expiry],
+      ]),
       button: { label: 'Download files', url: d.url },
       footerNote: `This link expires on ${expiry}. Files are stored securely on Cloudflare R2.`,
     }),

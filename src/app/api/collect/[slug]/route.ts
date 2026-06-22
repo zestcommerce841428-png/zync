@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getCollect, updateCollect, listUserCollects } from '../../../../lib/collect'
+import {
+  getCollect,
+  updateCollect,
+  listUserCollects,
+} from '../../../../lib/collect'
 import { getSupabaseServerClient } from '../../../../supabase/server'
 
 export const dynamic = 'force-dynamic'
@@ -14,17 +18,25 @@ export async function GET(
   // GET /api/collect/list — special: list user's collects
   if (slug === 'list') {
     const supabase = await getSupabaseServerClient()
-    if (!supabase) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
+    if (!supabase)
+      return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user)
+      return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
     const collects = await listUserCollects(user.id)
     return NextResponse.json({ collects })
   }
 
   const collect = await getCollect(slug)
-  if (!collect) return NextResponse.json({ error: 'Not found.' }, { status: 404 })
+  if (!collect)
+    return NextResponse.json({ error: 'Not found.' }, { status: 404 })
   if (new Date(collect.expiresAt) < new Date())
-    return NextResponse.json({ error: 'This file request has expired.' }, { status: 410 })
+    return NextResponse.json(
+      { error: 'This file request has expired.' },
+      { status: 410 },
+    )
 
   const supabase = await getSupabaseServerClient()
   const user = supabase ? (await supabase.auth.getUser()).data.user : null
@@ -52,7 +64,8 @@ export async function PATCH(
 ): Promise<NextResponse> {
   const { slug } = await params
   const collect = await getCollect(slug)
-  if (!collect) return NextResponse.json({ error: 'Not found.' }, { status: 404 })
+  if (!collect)
+    return NextResponse.json({ error: 'Not found.' }, { status: 404 })
 
   const supabase = await getSupabaseServerClient()
   const user = supabase ? (await supabase.auth.getUser()).data.user : null
@@ -63,7 +76,8 @@ export async function PATCH(
   const patch: Partial<typeof collect> = {}
   if (typeof body.active === 'boolean') patch.active = body.active
   if (typeof body.title === 'string') patch.title = body.title.slice(0, 200)
-  if (typeof body.description === 'string') patch.description = body.description.slice(0, 1000)
+  if (typeof body.description === 'string')
+    patch.description = body.description.slice(0, 1000)
 
   await updateCollect(slug, patch)
   return NextResponse.json({ ok: true })

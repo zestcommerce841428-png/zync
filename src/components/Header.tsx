@@ -78,12 +78,20 @@ export default function Header(): React.ReactElement {
           </Box>
 
           <Tooltip title="Appearance & themes">
-            <IconButton size="small" aria-label="Open appearance settings" onClick={() => openPanel(0)}>
+            <IconButton
+              size="small"
+              aria-label="Open appearance settings"
+              onClick={() => openPanel(0)}
+            >
               <TuneIcon fontSize="small" />
             </IconButton>
           </Tooltip>
           <Tooltip title="Accessibility">
-            <IconButton size="small" aria-label="Open accessibility settings" onClick={() => openPanel(1)}>
+            <IconButton
+              size="small"
+              aria-label="Open accessibility settings"
+              onClick={() => openPanel(1)}
+            >
               <AccessibilityNewIcon fontSize="small" />
             </IconButton>
           </Tooltip>

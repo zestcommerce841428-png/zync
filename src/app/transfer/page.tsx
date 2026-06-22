@@ -34,11 +34,15 @@ import CloseIcon from '@mui/icons-material/Close'
 import CheckIcon from '@mui/icons-material/Check'
 import { useRecaptcha } from '../../hooks/useRecaptcha'
 import UploadZone from '../../components/transfer/UploadZone'
-import UploadProgress, { FileProgress } from '../../components/transfer/UploadProgress'
+import UploadProgress, {
+  FileProgress,
+} from '../../components/transfer/UploadProgress'
 import ShareCard from '../../components/transfer/ShareCard'
 
 // 200 GB total per transfer (individual files ≤ 5 GB via single presigned PUT)
-const MAX_BYTES = Number(process.env.NEXT_PUBLIC_TRANSFER_MAX_BYTES ?? 200 * 1024 * 1024 * 1024)
+const MAX_BYTES = Number(
+  process.env.NEXT_PUBLIC_TRANSFER_MAX_BYTES ?? 200 * 1024 * 1024 * 1024,
+)
 
 function formatBytes(n: number): string {
   if (n >= 1e12) return `${(n / 1e12).toFixed(0)} TB`
@@ -49,7 +53,10 @@ function formatBytes(n: number): string {
 
 const BACKGROUND_PRESETS: { label: string; value: string }[] = [
   { label: 'Default', value: '' },
-  { label: 'Midnight', value: 'linear-gradient(135deg,#0c0c1d 0%,#1a1a4e 100%)' },
+  {
+    label: 'Midnight',
+    value: 'linear-gradient(135deg,#0c0c1d 0%,#1a1a4e 100%)',
+  },
   { label: 'Sunset', value: 'linear-gradient(135deg,#f093fb 0%,#f5576c 100%)' },
   { label: 'Ocean', value: 'linear-gradient(135deg,#4facfe 0%,#00f2fe 100%)' },
   { label: 'Forest', value: 'linear-gradient(135deg,#43e97b 0%,#38f9d7 100%)' },
@@ -81,7 +88,9 @@ export default function TransferPage(): React.ReactElement {
   const [webhookUrl, setWebhookUrl] = React.useState('')
   const [burnAfterRead, setBurnAfterRead] = React.useState(false)
   const [background, setBackground] = React.useState('')
-  const [templates, setTemplates] = React.useState<Array<{ id: string; name: string; settings: Record<string, unknown> }>>([])
+  const [templates, setTemplates] = React.useState<
+    Array<{ id: string; name: string; settings: Record<string, unknown> }>
+  >([])
   const [saveTemplateName, setSaveTemplateName] = React.useState('')
   const [savingTemplate, setSavingTemplate] = React.useState(false)
   const [stage, setStage] = React.useState<Stage>('idle')
@@ -100,11 +109,16 @@ export default function TransferPage(): React.ReactElement {
   React.useEffect(() => {
     fetch('/api/contacts')
       .then((r) => (r.ok ? r.json() : null))
-      .then((j) => { if (j?.contacts) setSavedContacts(j.contacts.map((c: { email: string }) => c.email)) })
+      .then((j) => {
+        if (j?.contacts)
+          setSavedContacts(j.contacts.map((c: { email: string }) => c.email))
+      })
       .catch(() => {})
     fetch('/api/templates')
       .then((r) => (r.ok ? r.json() : null))
-      .then((j) => { if (j?.templates) setTemplates(j.templates) })
+      .then((j) => {
+        if (j?.templates) setTemplates(j.templates)
+      })
       .catch(() => {})
   }, [])
 
@@ -114,11 +128,20 @@ export default function TransferPage(): React.ReactElement {
     if (typeof s.message === 'string') setMessage(s.message)
     if (typeof s.expiryDays === 'number') setExpiryDays(s.expiryDays)
     if (s.maxDownloads !== undefined) {
-      if (s.maxDownloads === null) { setLimitDownloads(false); setMaxDownloads(5) }
-      else { setLimitDownloads(true); setMaxDownloads(s.maxDownloads as number) }
+      if (s.maxDownloads === null) {
+        setLimitDownloads(false)
+        setMaxDownloads(5)
+      } else {
+        setLimitDownloads(true)
+        setMaxDownloads(s.maxDownloads as number)
+      }
     }
-    if (typeof s.notifyEmail === 'string') { setNotifyMe(!!s.notifyEmail); setNotifyEmail(s.notifyEmail) }
-    if (typeof s.notifyEveryDownload === 'boolean') setNotifyEveryDownload(s.notifyEveryDownload)
+    if (typeof s.notifyEmail === 'string') {
+      setNotifyMe(!!s.notifyEmail)
+      setNotifyEmail(s.notifyEmail)
+    }
+    if (typeof s.notifyEveryDownload === 'boolean')
+      setNotifyEveryDownload(s.notifyEveryDownload)
     if (typeof s.webhookUrl === 'string') setWebhookUrl(s.webhookUrl)
     if (typeof s.burnAfterRead === 'boolean') setBurnAfterRead(s.burnAfterRead)
     if (typeof s.background === 'string') setBackground(s.background)
@@ -134,7 +157,9 @@ export default function TransferPage(): React.ReactElement {
         body: JSON.stringify({
           name: saveTemplateName.trim(),
           settings: {
-            title, message, expiryDays,
+            title,
+            message,
+            expiryDays,
             maxDownloads: limitDownloads ? maxDownloads : null,
             notifyEmail: notifyMe ? notifyEmail : '',
             notifyEveryDownload,
@@ -148,7 +173,9 @@ export default function TransferPage(): React.ReactElement {
       const j = await res.json()
       if (j?.templates) setTemplates(j.templates)
       setSaveTemplateName('')
-    } catch (_e) { /* save failed */ }
+    } catch (_e) {
+      /* save failed */
+    }
     setSavingTemplate(false)
   }
 
@@ -175,11 +202,22 @@ export default function TransferPage(): React.ReactElement {
     setError(null)
     setSpeedBps(0)
     setEtaSeconds(null)
-    setFileProgress(files.map((f) => ({ name: f.name, size: f.size, loaded: 0, progress: 0, done: false, error: false })))
+    setFileProgress(
+      files.map((f) => ({
+        name: f.name,
+        size: f.size,
+        loaded: 0,
+        progress: 0,
+        done: false,
+        error: false,
+      })),
+    )
 
     const startTime = Date.now()
     const loadedPerFile = new Array<number>(files.length).fill(0)
-    const samples: Array<{ t: number; bytes: number }> = [{ t: startTime, bytes: 0 }]
+    const samples: Array<{ t: number; bytes: number }> = [
+      { t: startTime, bytes: 0 },
+    ]
 
     const onProgress = (i: number, loaded: number) => {
       loadedPerFile[i] = loaded
@@ -208,7 +246,12 @@ export default function TransferPage(): React.ReactElement {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          files: files.map((f, i) => ({ name: f.name, size: f.size, type: f.type, path: filePaths[i] || f.name })),
+          files: files.map((f, i) => ({
+            name: f.name,
+            size: f.size,
+            type: f.type,
+            path: filePaths[i] || f.name,
+          })),
           title,
           message,
           password: password || undefined,
@@ -230,42 +273,46 @@ export default function TransferPage(): React.ReactElement {
       const { slug, uploadUrls, expiresAt } = await createRes.json()
 
       await Promise.all(
-        files.map((file, i) =>
-          new Promise<void>((resolve, reject) => {
-            const xhr = new XMLHttpRequest()
-            xhr.open('PUT', uploadUrls[i])
-            xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream')
-            xhr.upload.addEventListener('progress', (e) => {
-              if (e.lengthComputable) onProgress(i, e.loaded)
-            })
-            xhr.addEventListener('load', () => {
-              if (xhr.status >= 200 && xhr.status < 300) {
-                onProgress(i, file.size)
-                setFileProgress((prev) => {
-                  const next = [...prev]
-                  next[i] = { ...next[i], progress: 100, done: true }
-                  return next
-                })
-                resolve()
-              } else {
+        files.map(
+          (file, i) =>
+            new Promise<void>((resolve, reject) => {
+              const xhr = new XMLHttpRequest()
+              xhr.open('PUT', uploadUrls[i])
+              xhr.setRequestHeader(
+                'Content-Type',
+                file.type || 'application/octet-stream',
+              )
+              xhr.upload.addEventListener('progress', (e) => {
+                if (e.lengthComputable) onProgress(i, e.loaded)
+              })
+              xhr.addEventListener('load', () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                  onProgress(i, file.size)
+                  setFileProgress((prev) => {
+                    const next = [...prev]
+                    next[i] = { ...next[i], progress: 100, done: true }
+                    return next
+                  })
+                  resolve()
+                } else {
+                  setFileProgress((prev) => {
+                    const next = [...prev]
+                    next[i] = { ...next[i], error: true }
+                    return next
+                  })
+                  reject(new Error(`Upload failed for ${file.name}`))
+                }
+              })
+              xhr.addEventListener('error', () => {
                 setFileProgress((prev) => {
                   const next = [...prev]
                   next[i] = { ...next[i], error: true }
                   return next
                 })
-                reject(new Error(`Upload failed for ${file.name}`))
-              }
-            })
-            xhr.addEventListener('error', () => {
-              setFileProgress((prev) => {
-                const next = [...prev]
-                next[i] = { ...next[i], error: true }
-                return next
+                reject(new Error(`Network error uploading ${file.name}`))
               })
-              reject(new Error(`Network error uploading ${file.name}`))
-            })
-            xhr.send(file)
-          }),
+              xhr.send(file)
+            }),
         ),
       )
 
@@ -289,8 +336,12 @@ export default function TransferPage(): React.ReactElement {
   const overallProgress =
     fileProgress.length === 0
       ? 0
-      : fileProgress.reduce((s, f) => s + f.loaded, 0) /
-        Math.max(1, fileProgress.reduce((s, f) => s + f.size, 0)) * 100
+      : (fileProgress.reduce((s, f) => s + f.loaded, 0) /
+          Math.max(
+            1,
+            fileProgress.reduce((s, f) => s + f.size, 0),
+          )) *
+        100
 
   const reset = () => {
     setFiles([])
@@ -328,11 +379,19 @@ export default function TransferPage(): React.ReactElement {
         <Typography color="text.secondary">
           Upload files and share a link — no account needed, always free.
         </Typography>
-        <Stack direction="row" spacing={1} sx={{ justifyContent: 'center', flexWrap: 'wrap' }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{ justifyContent: 'center', flexWrap: 'wrap' }}
+        >
           <Chip label={`Up to ${formatBytes(MAX_BYTES)}`} size="small" />
           <Chip label="20 files per transfer" size="small" />
           <Chip label="Zero egress fees" size="small" />
-          <Chip label="1-year links when signed in" size="small" variant="outlined" />
+          <Chip
+            label="1-year links when signed in"
+            size="small"
+            variant="outlined"
+          />
         </Stack>
       </Stack>
 
@@ -340,38 +399,68 @@ export default function TransferPage(): React.ReactElement {
         <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
           {stage === 'done' ? (
             <Stack spacing={3}>
-              <ShareCard slug={resultSlug} expiresAt={resultExpiry} title={resultTitle} burnAfterRead={resultBurn} />
+              <ShareCard
+                slug={resultSlug}
+                expiresAt={resultExpiry}
+                title={resultTitle}
+                burnAfterRead={resultBurn}
+              />
               <Button variant="outlined" onClick={reset}>
                 Send another transfer
               </Button>
             </Stack>
           ) : (
             <Stack spacing={3}>
-              <UploadZone files={files} onChange={setFiles} onPaths={setFilePaths} paths={filePaths} disabled={stage === 'uploading'} />
+              <UploadZone
+                files={files}
+                onChange={setFiles}
+                onPaths={setFilePaths}
+                paths={filePaths}
+                disabled={stage === 'uploading'}
+              />
 
               {stage === 'uploading' && (
-                <UploadProgress files={fileProgress} overallProgress={overallProgress} speedBps={speedBps} etaSeconds={etaSeconds} />
+                <UploadProgress
+                  files={fileProgress}
+                  overallProgress={overallProgress}
+                  speedBps={speedBps}
+                  etaSeconds={etaSeconds}
+                />
               )}
 
-              {stage !== 'uploading' && files.length === 0 && templates.length > 0 && (
-                <Stack spacing={1}>
-                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                    Load a preset
-                  </Typography>
-                  <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
-                    {templates.map((t) => (
-                      <Chip
-                        key={t.id}
-                        label={t.name}
-                        onClick={() => applyTemplate(t)}
-                        variant="outlined"
-                        size="small"
-                        sx={{ cursor: 'pointer' }}
-                      />
-                    ))}
+              {stage !== 'uploading' &&
+                files.length === 0 &&
+                templates.length > 0 && (
+                  <Stack spacing={1}>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                        letterSpacing: 0.5,
+                      }}
+                    >
+                      Load a preset
+                    </Typography>
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      sx={{ flexWrap: 'wrap' }}
+                    >
+                      {templates.map((t) => (
+                        <Chip
+                          key={t.id}
+                          label={t.name}
+                          onClick={() => applyTemplate(t)}
+                          variant="outlined"
+                          size="small"
+                          sx={{ cursor: 'pointer' }}
+                        />
+                      ))}
+                    </Stack>
                   </Stack>
-                </Stack>
-              )}
+                )}
 
               {stage !== 'uploading' && files.length > 0 && (
                 <>
@@ -400,9 +489,20 @@ export default function TransferPage(): React.ReactElement {
                   />
 
                   {/* Options */}
-                  <Accordion disableGutters elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, '&:before': { display: 'none' } }}>
+                  <Accordion
+                    disableGutters
+                    elevation={0}
+                    sx={{
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      borderRadius: 1,
+                      '&:before': { display: 'none' },
+                    }}
+                  >
                     <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>Options</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        Options
+                      </Typography>
                     </AccordionSummary>
                     <AccordionDetails>
                       <Stack spacing={2.5}>
@@ -412,15 +512,25 @@ export default function TransferPage(): React.ReactElement {
                           <Select
                             value={expiryDays}
                             label="Link expires after"
-                            onChange={(e) => setExpiryDays(Number(e.target.value))}
+                            onChange={(e) =>
+                              setExpiryDays(Number(e.target.value))
+                            }
                           >
                             <MenuItem value={1}>1 day</MenuItem>
                             <MenuItem value={3}>3 days</MenuItem>
                             <MenuItem value={7}>7 days</MenuItem>
-                            <MenuItem value={30}>30 days (sign in required)</MenuItem>
-                            <MenuItem value={90}>90 days (sign in required)</MenuItem>
-                            <MenuItem value={180}>180 days (sign in required)</MenuItem>
-                            <MenuItem value={365}>1 year (sign in required)</MenuItem>
+                            <MenuItem value={30}>
+                              30 days (sign in required)
+                            </MenuItem>
+                            <MenuItem value={90}>
+                              90 days (sign in required)
+                            </MenuItem>
+                            <MenuItem value={180}>
+                              180 days (sign in required)
+                            </MenuItem>
+                            <MenuItem value={365}>
+                              1 year (sign in required)
+                            </MenuItem>
                           </Select>
                         </FormControl>
 
@@ -441,7 +551,11 @@ export default function TransferPage(): React.ReactElement {
                                   onClick={() => setShowPassword((p) => !p)}
                                   edge="end"
                                 >
-                                  {showPassword ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
+                                  {showPassword ? (
+                                    <VisibilityOffIcon fontSize="small" />
+                                  ) : (
+                                    <VisibilityIcon fontSize="small" />
+                                  )}
                                 </IconButton>
                               ),
                             },
@@ -455,18 +569,28 @@ export default function TransferPage(): React.ReactElement {
                             control={
                               <Switch
                                 checked={limitDownloads}
-                                onChange={(e) => setLimitDownloads(e.target.checked)}
+                                onChange={(e) =>
+                                  setLimitDownloads(e.target.checked)
+                                }
                                 size="small"
                               />
                             }
-                            label={<Typography variant="body2">Limit number of downloads</Typography>}
+                            label={
+                              <Typography variant="body2">
+                                Limit number of downloads
+                              </Typography>
+                            }
                           />
                           <Collapse in={limitDownloads}>
                             <TextField
                               type="number"
                               label="Max downloads"
                               value={maxDownloads}
-                              onChange={(e) => setMaxDownloads(Math.max(1, Number(e.target.value)))}
+                              onChange={(e) =>
+                                setMaxDownloads(
+                                  Math.max(1, Number(e.target.value)),
+                                )
+                              }
                               size="small"
                               slotProps={{ htmlInput: { min: 1, max: 1000 } }}
                               sx={{ width: 160 }}
@@ -483,7 +607,9 @@ export default function TransferPage(): React.ReactElement {
                             <TextField
                               label="Recipient email"
                               value={recipientInput}
-                              onChange={(e) => setRecipientInput(e.target.value)}
+                              onChange={(e) =>
+                                setRecipientInput(e.target.value)
+                              }
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter' || e.key === ',') {
                                   e.preventDefault()
@@ -494,42 +620,67 @@ export default function TransferPage(): React.ReactElement {
                               fullWidth
                               helperText="Press Enter or comma to add multiple"
                             />
-                            <Button variant="outlined" onClick={addRecipient} sx={{ minWidth: 0, px: 2 }}>
+                            <Button
+                              variant="outlined"
+                              onClick={addRecipient}
+                              sx={{ minWidth: 0, px: 2 }}
+                            >
                               <AddIcon fontSize="small" />
                             </Button>
                           </Stack>
                           {/* Contact suggestions */}
-                          {savedContacts.length > 0 && (() => {
-                            const q = recipientInput.toLowerCase()
-                            const suggestions = savedContacts.filter(
-                              (c) => !recipientEmails.includes(c) && (q.length < 2 || c.toLowerCase().includes(q))
-                            ).slice(0, 8)
-                            if (suggestions.length === 0) return null
-                            return (
-                              <Stack spacing={0.5}>
-                                <Typography variant="caption" color="text.secondary">
-                                  {q.length >= 2 ? 'Matching contacts' : 'Recent contacts'}
-                                </Typography>
-                                <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 0.5 }}>
-                                  {suggestions.map((email) => (
-                                    <Chip
-                                      key={email}
-                                      label={email}
-                                      size="small"
-                                      variant="outlined"
-                                      onClick={() => {
-                                        setRecipientEmails((prev) => [...new Set([...prev, email])].slice(0, 20))
-                                        setRecipientInput('')
-                                      }}
-                                      icon={<AddIcon />}
-                                    />
-                                  ))}
+                          {savedContacts.length > 0 &&
+                            (() => {
+                              const q = recipientInput.toLowerCase()
+                              const suggestions = savedContacts
+                                .filter(
+                                  (c) =>
+                                    !recipientEmails.includes(c) &&
+                                    (q.length < 2 ||
+                                      c.toLowerCase().includes(q)),
+                                )
+                                .slice(0, 8)
+                              if (suggestions.length === 0) return null
+                              return (
+                                <Stack spacing={0.5}>
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                  >
+                                    {q.length >= 2
+                                      ? 'Matching contacts'
+                                      : 'Recent contacts'}
+                                  </Typography>
+                                  <Stack
+                                    direction="row"
+                                    sx={{ flexWrap: 'wrap', gap: 0.5 }}
+                                  >
+                                    {suggestions.map((email) => (
+                                      <Chip
+                                        key={email}
+                                        label={email}
+                                        size="small"
+                                        variant="outlined"
+                                        onClick={() => {
+                                          setRecipientEmails((prev) =>
+                                            [
+                                              ...new Set([...prev, email]),
+                                            ].slice(0, 20),
+                                          )
+                                          setRecipientInput('')
+                                        }}
+                                        icon={<AddIcon />}
+                                      />
+                                    ))}
+                                  </Stack>
                                 </Stack>
-                              </Stack>
-                            )
-                          })()}
+                              )
+                            })()}
                           {recipientEmails.length > 0 && (
-                            <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 0.5 }}>
+                            <Stack
+                              direction="row"
+                              sx={{ flexWrap: 'wrap', gap: 0.5 }}
+                            >
                               {recipientEmails.map((email) => (
                                 <Chip
                                   key={email}
@@ -548,16 +699,24 @@ export default function TransferPage(): React.ReactElement {
                           control={
                             <Switch
                               checked={burnAfterRead}
-                              onChange={(e) => setBurnAfterRead(e.target.checked)}
+                              onChange={(e) =>
+                                setBurnAfterRead(e.target.checked)
+                              }
                               size="small"
                               color="error"
                             />
                           }
                           label={
                             <Stack>
-                              <Typography variant="body2">Delete files after first download</Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                Files are permanently removed 30 s after the first download starts
+                              <Typography variant="body2">
+                                Delete files after first download
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                Files are permanently removed 30 s after the
+                                first download starts
                               </Typography>
                             </Stack>
                           }
@@ -573,7 +732,11 @@ export default function TransferPage(): React.ReactElement {
                                 size="small"
                               />
                             }
-                            label={<Typography variant="body2">Notify me when downloaded</Typography>}
+                            label={
+                              <Typography variant="body2">
+                                Notify me when downloaded
+                              </Typography>
+                            }
                           />
                           <Collapse in={notifyMe}>
                             <Stack spacing={1}>
@@ -589,11 +752,17 @@ export default function TransferPage(): React.ReactElement {
                                 control={
                                   <Switch
                                     checked={notifyEveryDownload}
-                                    onChange={(e) => setNotifyEveryDownload(e.target.checked)}
+                                    onChange={(e) =>
+                                      setNotifyEveryDownload(e.target.checked)
+                                    }
                                     size="small"
                                   />
                                 }
-                                label={<Typography variant="body2">Notify on every download (not just first)</Typography>}
+                                label={
+                                  <Typography variant="body2">
+                                    Notify on every download (not just first)
+                                  </Typography>
+                                }
                               />
                             </Stack>
                           </Collapse>
@@ -614,15 +783,34 @@ export default function TransferPage(): React.ReactElement {
                   </Accordion>
 
                   {/* Background / Customize */}
-                  <Accordion disableGutters elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, '&:before': { display: 'none' } }}>
+                  <Accordion
+                    disableGutters
+                    elevation={0}
+                    sx={{
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      borderRadius: 1,
+                      '&:before': { display: 'none' },
+                    }}
+                  >
                     <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                      <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>Customize background</Typography>
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        sx={{ alignItems: 'center' }}
+                      >
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          Customize background
+                        </Typography>
                         {background && (
                           <Box
                             sx={{
-                              width: 16, height: 16, borderRadius: '50%',
-                              background, border: '1px solid', borderColor: 'divider',
+                              width: 16,
+                              height: 16,
+                              borderRadius: '50%',
+                              background,
+                              border: '1px solid',
+                              borderColor: 'divider',
                               flexShrink: 0,
                             }}
                           />
@@ -634,9 +822,16 @@ export default function TransferPage(): React.ReactElement {
                         <Typography variant="caption" color="text.secondary">
                           Choose a background for your download page
                         </Typography>
-                        <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1 }}>
+                        <Stack
+                          direction="row"
+                          sx={{ flexWrap: 'wrap', gap: 1 }}
+                        >
                           {BACKGROUND_PRESETS.map((preset) => (
-                            <Tooltip key={preset.label} title={preset.label} arrow>
+                            <Tooltip
+                              key={preset.label}
+                              title={preset.label}
+                              arrow
+                            >
                               <Box
                                 onClick={() => setBackground(preset.value)}
                                 sx={{
@@ -646,14 +841,18 @@ export default function TransferPage(): React.ReactElement {
                                   cursor: 'pointer',
                                   background: preset.value || 'transparent',
                                   border: '2px solid',
-                                  borderColor: background === preset.value ? 'primary.main' : 'divider',
+                                  borderColor:
+                                    background === preset.value
+                                      ? 'primary.main'
+                                      : 'divider',
                                   display: 'flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
                                   transition: 'border-color 0.15s',
                                   '&:hover': { borderColor: 'primary.light' },
                                   ...(preset.value === '' && {
-                                    background: 'repeating-conic-gradient(#e0e0e0 0% 25%, #fff 0% 50%) 0 0 / 12px 12px',
+                                    background:
+                                      'repeating-conic-gradient(#e0e0e0 0% 25%, #fff 0% 50%) 0 0 / 12px 12px',
                                   }),
                                 }}
                               >
@@ -661,9 +860,13 @@ export default function TransferPage(): React.ReactElement {
                                   <CheckIcon
                                     sx={{
                                       fontSize: 16,
-                                      color: preset.value && !preset.value.includes('ffd200') && !preset.value.includes('43e97b') && !preset.value.includes('4facfe')
-                                        ? '#fff'
-                                        : 'text.primary',
+                                      color:
+                                        preset.value &&
+                                        !preset.value.includes('ffd200') &&
+                                        !preset.value.includes('43e97b') &&
+                                        !preset.value.includes('4facfe')
+                                          ? '#fff'
+                                          : 'text.primary',
                                     }}
                                   />
                                 )}
@@ -672,13 +875,33 @@ export default function TransferPage(): React.ReactElement {
                           ))}
                         </Stack>
                         {/* Custom color input */}
-                        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          sx={{ alignItems: 'center' }}
+                        >
                           <Box
                             component="input"
                             type="color"
-                            value={background.startsWith('#') && !BACKGROUND_PRESETS.find(p => p.value === background) ? background : '#667eea'}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setBackground(e.target.value)}
-                            sx={{ width: 36, height: 36, border: 'none', borderRadius: 1, cursor: 'pointer', p: 0 }}
+                            value={
+                              background.startsWith('#') &&
+                              !BACKGROUND_PRESETS.find(
+                                (p) => p.value === background,
+                              )
+                                ? background
+                                : '#667eea'
+                            }
+                            onChange={(
+                              e: React.ChangeEvent<HTMLInputElement>,
+                            ) => setBackground(e.target.value)}
+                            sx={{
+                              width: 36,
+                              height: 36,
+                              border: 'none',
+                              borderRadius: 1,
+                              cursor: 'pointer',
+                              p: 0,
+                            }}
                           />
                           <Typography variant="caption" color="text.secondary">
                             Or pick a custom solid colour
@@ -689,7 +912,11 @@ export default function TransferPage(): React.ReactElement {
                   </Accordion>
 
                   {/* Save as template */}
-                  <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    sx={{ alignItems: 'center' }}
+                  >
                     <TextField
                       label="Save current settings as preset"
                       placeholder="Preset name…"
@@ -698,7 +925,9 @@ export default function TransferPage(): React.ReactElement {
                       size="small"
                       sx={{ flex: 1 }}
                       slotProps={{ htmlInput: { maxLength: 100 } }}
-                      onKeyDown={(e) => { if (e.key === 'Enter') saveAsTemplate() }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') saveAsTemplate()
+                      }}
                     />
                     <Button
                       variant="outlined"
@@ -730,15 +959,25 @@ export default function TransferPage(): React.ReactElement {
                   )
                 }
                 onClick={upload}
-                disabled={files.length === 0 || overLimit || stage === 'uploading'}
+                disabled={
+                  files.length === 0 || overLimit || stage === 'uploading'
+                }
                 fullWidth
               >
                 {stage === 'uploading' ? 'Uploading…' : 'Upload & get link'}
               </Button>
 
-              <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center' }}>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ textAlign: 'center' }}
+              >
                 By uploading you agree to our{' '}
-                <Box component="a" href="/acceptable-use" sx={{ color: 'inherit' }}>
+                <Box
+                  component="a"
+                  href="/acceptable-use"
+                  sx={{ color: 'inherit' }}
+                >
                   Acceptable Use Policy
                 </Box>
                 . Files are stored securely and automatically deleted on expiry.

@@ -11,7 +11,10 @@ import Alert from '@mui/material/Alert'
 import Divider from '@mui/material/Divider'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
-import { requireUserOrRedirect, getSupabaseServerClient } from '../../../../supabase/server'
+import {
+  requireUserOrRedirect,
+  getSupabaseServerClient,
+} from '../../../../supabase/server'
 import { getCollect } from '../../../../lib/collect'
 import { getStorageClient, getStorageBucket } from '../../../../lib/storage'
 import { GetObjectCommand } from '@aws-sdk/client-s3'
@@ -28,12 +31,19 @@ function formatBytes(n: number): string {
 }
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+  return new Date(iso).toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 
 type Props = { params: Promise<{ slug: string }> }
 
-export default async function CollectReceivedPage({ params }: Props): Promise<React.ReactElement> {
+export default async function CollectReceivedPage({
+  params,
+}: Props): Promise<React.ReactElement> {
   await requireUserOrRedirect('/collect')
   const { slug } = await params
 
@@ -60,18 +70,34 @@ export default async function CollectReceivedPage({ params }: Props): Promise<Re
     filesWithUrls.push(...collect.files.map((f) => ({ ...f })))
   }
 
-  const daysLeft = Math.ceil((new Date(collect.expiresAt).getTime() - Date.now()) / 86400000)
+  const daysLeft = Math.ceil(
+    (new Date(collect.expiresAt).getTime() - Date.now()) / 86400000,
+  )
 
   return (
     <Container maxWidth="md" sx={{ py: { xs: 6, md: 10 } }}>
       <Stack spacing={3}>
-        <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
+        <Stack
+          direction="row"
+          sx={{
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 2,
+          }}
+        >
           <Stack spacing={0.5}>
-            <Typography variant="h4" sx={{ fontWeight: 900 }}>Received files</Typography>
-            <Typography variant="h6" color="text.secondary">{collect.title}</Typography>
+            <Typography variant="h4" sx={{ fontWeight: 900 }}>
+              Received files
+            </Typography>
+            <Typography variant="h6" color="text.secondary">
+              {collect.title}
+            </Typography>
           </Stack>
           <Stack direction="row" spacing={1}>
-            <Button variant="outlined" href="/collect">My requests</Button>
+            <Button variant="outlined" href="/collect">
+              My requests
+            </Button>
           </Stack>
         </Stack>
 
@@ -102,10 +128,20 @@ export default async function CollectReceivedPage({ params }: Props): Promise<Re
           <Card variant="outlined">
             <CardContent>
               <Stack spacing={2} sx={{ alignItems: 'center', py: 4 }}>
-                <Typography color="text.secondary">No files received yet.</Typography>
+                <Typography color="text.secondary">
+                  No files received yet.
+                </Typography>
                 <Typography variant="caption" color="text.secondary">
                   Share your collect link:{' '}
-                  <Box component="span" sx={{ fontFamily: 'monospace', bgcolor: 'action.hover', px: 0.5, borderRadius: 0.5 }}>
+                  <Box
+                    component="span"
+                    sx={{
+                      fontFamily: 'monospace',
+                      bgcolor: 'action.hover',
+                      px: 0.5,
+                      borderRadius: 0.5,
+                    }}
+                  >
                     {`${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/collect/${slug}`}
                   </Box>
                 </Typography>
@@ -118,13 +154,25 @@ export default async function CollectReceivedPage({ params }: Props): Promise<Re
               <Card key={i} variant="outlined">
                 <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
                   <Stack spacing={1}>
-                    <Stack direction="row" sx={{ alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
+                    <Stack
+                      direction="row"
+                      sx={{
+                        alignItems: 'flex-start',
+                        justifyContent: 'space-between',
+                        gap: 1,
+                      }}
+                    >
                       <Stack spacing={0.25} sx={{ flex: 1, minWidth: 0 }}>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 700 }} noWrap>
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ fontWeight: 700 }}
+                          noWrap
+                        >
                           {f.name}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {formatBytes(f.size)} · Uploaded {formatDate(f.uploadedAt)}
+                          {formatBytes(f.size)} · Uploaded{' '}
+                          {formatDate(f.uploadedAt)}
                         </Typography>
                       </Stack>
                       {f.downloadUrl && (
@@ -143,7 +191,11 @@ export default async function CollectReceivedPage({ params }: Props): Promise<Re
                     {f.uploaderNote && (
                       <>
                         <Divider />
-                        <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ fontStyle: 'italic' }}
+                        >
                           Note: {f.uploaderNote}
                         </Typography>
                       </>

@@ -38,7 +38,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     })
     // Send to each recipient (fire-and-forget)
     for (const to of t.recipientEmails) {
-      void sendMail({ to, subject: tpl.subject, html: tpl.html, text: tpl.text })
+      void sendMail({
+        to,
+        subject: tpl.subject,
+        html: tpl.html,
+        text: tpl.text,
+      })
     }
   }
 
@@ -49,10 +54,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     try {
       const supabase = await getSupabaseServerClient()
       if (supabase) {
-        const { data: { user } } = await supabase.auth.getUser()
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
         senderEmail = user?.email ?? null
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     // Fall back to notifyEmail if no account email
     senderEmail = senderEmail ?? t.notifyEmail
     if (senderEmail) {
@@ -64,7 +73,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         expiresAt: t.expiresAt,
         recipientCount: t.recipientEmails.length,
       })
-      void sendMail({ to: senderEmail, subject: tpl.subject, html: tpl.html, text: tpl.text })
+      void sendMail({
+        to: senderEmail,
+        subject: tpl.subject,
+        html: tpl.html,
+        text: tpl.text,
+      })
     }
   }
 
@@ -74,9 +88,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       try {
         const redis = getRedisClient()
         const key = `contacts:${t.ownerId}`
-        for (const email of t.recipientEmails) await redis.zincrby(key, 1, email)
+        for (const email of t.recipientEmails)
+          await redis.zincrby(key, 1, email)
         await redis.expire(key, 365 * 24 * 3600)
-      } catch { /* best-effort */ }
+      } catch {
+        /* best-effort */
+      }
     })()
   }
 
@@ -85,7 +102,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     try {
       const supabase = await getSupabaseServerClient()
       if (supabase) {
-        const { data: { user } } = await supabase.auth.getUser()
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
         if (user) {
           await supabase.from('transfers').insert({
             user_id: user.id,

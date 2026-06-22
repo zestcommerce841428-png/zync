@@ -36,7 +36,11 @@ export default function BackToTop(): React.ReactElement | null {
   if (!mounted || !hasScroll) return null
 
   const goTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
-  const goBottom = () => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' })
+  const goBottom = () =>
+    window.scrollTo({
+      top: document.documentElement.scrollHeight,
+      behavior: 'smooth',
+    })
 
   return (
     <Stack
@@ -51,14 +55,26 @@ export default function BackToTop(): React.ReactElement | null {
     >
       <Zoom in={scrolled}>
         <Tooltip title="Back to top" placement="left">
-          <Fab size="small" color="primary" aria-label="Scroll to top" onClick={goTop} sx={{ boxShadow: 3 }}>
+          <Fab
+            size="small"
+            color="primary"
+            aria-label="Scroll to top"
+            onClick={goTop}
+            sx={{ boxShadow: 3 }}
+          >
             <KeyboardArrowUpIcon />
           </Fab>
         </Tooltip>
       </Zoom>
       <Zoom in={!atBottom}>
         <Tooltip title="Scroll to bottom" placement="left">
-          <Fab size="small" color="default" aria-label="Scroll to bottom" onClick={goBottom} sx={{ boxShadow: 3 }}>
+          <Fab
+            size="small"
+            color="default"
+            aria-label="Scroll to bottom"
+            onClick={goBottom}
+            sx={{ boxShadow: 3 }}
+          >
             <KeyboardArrowDownIcon />
           </Fab>
         </Tooltip>

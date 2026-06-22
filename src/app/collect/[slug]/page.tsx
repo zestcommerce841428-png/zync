@@ -53,7 +53,9 @@ export default function CollectUploaderPage(): React.ReactElement {
   const [note, setNote] = React.useState('')
   const [dragging, setDragging] = React.useState(false)
   const inputRef = React.useRef<HTMLInputElement>(null)
-  const [stage, setStage] = React.useState<'idle' | 'uploading' | 'done' | 'error'>('idle')
+  const [stage, setStage] = React.useState<
+    'idle' | 'uploading' | 'done' | 'error'
+  >('idle')
   const [progress, setProgress] = React.useState(0)
   const [error, setError] = React.useState<string | null>(null)
 
@@ -73,7 +75,10 @@ export default function CollectUploaderPage(): React.ReactElement {
     setFiles((prev) => {
       const merged = [...prev]
       for (const f of Array.from(list)) {
-        if (merged.length < 20 && !merged.find((e) => e.name === f.name && e.size === f.size))
+        if (
+          merged.length < 20 &&
+          !merged.find((e) => e.name === f.name && e.size === f.size)
+        )
           merged.push(f)
       }
       return merged
@@ -90,14 +95,25 @@ export default function CollectUploaderPage(): React.ReactElement {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          files: files.map((f) => ({ name: f.name, size: f.size, type: f.type })),
+          files: files.map((f) => ({
+            name: f.name,
+            size: f.size,
+            type: f.type,
+          })),
           note: note || undefined,
         }),
       })
       const json = await res.json()
-      if (!res.ok) { setError(json.error ?? 'Failed to start upload.'); setStage('error'); return }
+      if (!res.ok) {
+        setError(json.error ?? 'Failed to start upload.')
+        setStage('error')
+        return
+      }
 
-      const { uploadUrls, fileKeys } = json as { uploadUrls: string[]; fileKeys: string[] }
+      const { uploadUrls, fileKeys } = json as {
+        uploadUrls: string[]
+        fileKeys: string[]
+      }
       let done = 0
       await Promise.all(
         files.map(
@@ -105,18 +121,26 @@ export default function CollectUploaderPage(): React.ReactElement {
             new Promise<void>((resolve, reject) => {
               const xhr = new XMLHttpRequest()
               xhr.open('PUT', uploadUrls[i])
-              xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream')
+              xhr.setRequestHeader(
+                'Content-Type',
+                file.type || 'application/octet-stream',
+              )
               xhr.upload.addEventListener('progress', (e) => {
                 if (e.lengthComputable) {
-                  const pct = (done + e.loaded / e.total) / files.length * 100
+                  const pct = ((done + e.loaded / e.total) / files.length) * 100
                   setProgress(Math.round(pct))
                 }
               })
               xhr.addEventListener('load', () => {
-                if (xhr.status >= 200 && xhr.status < 300) { done++; setProgress(Math.round(done / files.length * 100)); resolve() }
-                else reject(new Error(`Upload failed for ${file.name}`))
+                if (xhr.status >= 200 && xhr.status < 300) {
+                  done++
+                  setProgress(Math.round((done / files.length) * 100))
+                  resolve()
+                } else reject(new Error(`Upload failed for ${file.name}`))
               })
-              xhr.addEventListener('error', () => reject(new Error(`Network error uploading ${file.name}`)))
+              xhr.addEventListener('error', () =>
+                reject(new Error(`Network error uploading ${file.name}`)),
+              )
               xhr.send(file)
             }),
         ),
@@ -127,7 +151,12 @@ export default function CollectUploaderPage(): React.ReactElement {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          files: files.map((f, i) => ({ key: fileKeys[i], name: f.name, size: f.size, type: f.type })),
+          files: files.map((f, i) => ({
+            key: fileKeys[i],
+            name: f.name,
+            size: f.size,
+            type: f.type,
+          })),
           note: note || undefined,
         }),
       })
@@ -139,7 +168,9 @@ export default function CollectUploaderPage(): React.ReactElement {
     }
   }
 
-  const daysLeft = info ? Math.ceil((new Date(info.expiresAt).getTime() - Date.now()) / 86400000) : null
+  const daysLeft = info
+    ? Math.ceil((new Date(info.expiresAt).getTime() - Date.now()) / 86400000)
+    : null
 
   return (
     <Container maxWidth="sm" sx={{ py: { xs: 6, md: 10 } }}>
@@ -149,30 +180,46 @@ export default function CollectUploaderPage(): React.ReactElement {
             <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
               <ZyncIcon size={40} />
               <Stack>
-                <Typography variant="h6" sx={{ fontWeight: 800, lineHeight: 1 }}>
+                <Typography
+                  variant="h6"
+                  sx={{ fontWeight: 800, lineHeight: 1 }}
+                >
                   File request
                 </Typography>
-                <Typography variant="caption" color="text.secondary">Powered by {brand.name}</Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Powered by {brand.name}
+                </Typography>
               </Stack>
             </Stack>
 
             {infoError && <Alert severity="error">{infoError}</Alert>}
 
-            {!info && !infoError && <CircularProgress sx={{ alignSelf: 'center' }} />}
+            {!info && !infoError && (
+              <CircularProgress sx={{ alignSelf: 'center' }} />
+            )}
 
             {info && (
               <>
                 {!info.active ? (
-                  <Alert severity="info">This file request is closed and no longer accepting uploads.</Alert>
+                  <Alert severity="info">
+                    This file request is closed and no longer accepting uploads.
+                  </Alert>
                 ) : stage === 'done' ? (
                   <Stack spacing={2} sx={{ alignItems: 'center', py: 2 }}>
                     <CheckIcon sx={{ fontSize: 56, color: 'success.main' }} />
-                    <Typography variant="h6" sx={{ fontWeight: 700, textAlign: 'center' }}>
+                    <Typography
+                      variant="h6"
+                      sx={{ fontWeight: 700, textAlign: 'center' }}
+                    >
                       Files sent!
                     </Typography>
-                    <Typography color="text.secondary" sx={{ textAlign: 'center' }}>
-                      Your {files.length} file{files.length !== 1 ? 's' : ''} have been uploaded successfully.
-                      The requester will be notified.
+                    <Typography
+                      color="text.secondary"
+                      sx={{ textAlign: 'center' }}
+                    >
+                      Your {files.length} file{files.length !== 1 ? 's' : ''}{' '}
+                      have been uploaded successfully. The requester will be
+                      notified.
                     </Typography>
                   </Stack>
                 ) : (
@@ -182,9 +229,15 @@ export default function CollectUploaderPage(): React.ReactElement {
                         {info.title}
                       </Typography>
                       {info.description && (
-                        <Typography variant="body2" color="text.secondary">{info.description}</Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {info.description}
+                        </Typography>
                       )}
-                      <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        sx={{ flexWrap: 'wrap' }}
+                      >
                         {daysLeft !== null && (
                           <Chip
                             icon={<AccessTimeIcon />}
@@ -205,8 +258,15 @@ export default function CollectUploaderPage(): React.ReactElement {
 
                     {stage === 'uploading' ? (
                       <Stack spacing={1}>
-                        <LinearProgress variant="determinate" value={progress} />
-                        <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center' }}>
+                        <LinearProgress
+                          variant="determinate"
+                          value={progress}
+                        />
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ textAlign: 'center' }}
+                        >
                           Uploading… {progress}%
                         </Typography>
                       </Stack>
@@ -214,9 +274,16 @@ export default function CollectUploaderPage(): React.ReactElement {
                       <>
                         {/* Drop zone */}
                         <Box
-                          onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
+                          onDragOver={(e) => {
+                            e.preventDefault()
+                            setDragging(true)
+                          }}
                           onDragLeave={() => setDragging(false)}
-                          onDrop={(e) => { e.preventDefault(); setDragging(false); addFiles(e.dataTransfer.files) }}
+                          onDrop={(e) => {
+                            e.preventDefault()
+                            setDragging(false)
+                            addFiles(e.dataTransfer.files)
+                          }}
                           onClick={() => inputRef.current?.click()}
                           sx={{
                             border: '2px dashed',
@@ -225,31 +292,64 @@ export default function CollectUploaderPage(): React.ReactElement {
                             p: 4,
                             textAlign: 'center',
                             cursor: 'pointer',
-                            bgcolor: dragging ? 'action.hover' : 'background.paper',
+                            bgcolor: dragging
+                              ? 'action.hover'
+                              : 'background.paper',
                             transition: 'border-color .2s, background .2s',
-                            '&:hover': { borderColor: 'primary.main', bgcolor: 'action.hover' },
+                            '&:hover': {
+                              borderColor: 'primary.main',
+                              bgcolor: 'action.hover',
+                            },
                           }}
                         >
-                          <UploadFileIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 1 }} />
+                          <UploadFileIcon
+                            sx={{
+                              fontSize: 48,
+                              color: 'text.secondary',
+                              mb: 1,
+                            }}
+                          />
                           <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                            {files.length === 0 ? 'Drop files here or click to browse' : `${files.length} file${files.length !== 1 ? 's' : ''} selected`}
+                            {files.length === 0
+                              ? 'Drop files here or click to browse'
+                              : `${files.length} file${files.length !== 1 ? 's' : ''} selected`}
                           </Typography>
                           <Box
                             component="input"
                             ref={inputRef}
                             type="file"
                             multiple
-                            sx={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => { addFiles(e.target.files); e.target.value = '' }}
+                            sx={{
+                              position: 'absolute',
+                              width: 1,
+                              height: 1,
+                              opacity: 0,
+                              pointerEvents: 'none',
+                            }}
+                            onChange={(
+                              e: React.ChangeEvent<HTMLInputElement>,
+                            ) => {
+                              addFiles(e.target.files)
+                              e.target.value = ''
+                            }}
                           />
                         </Box>
 
                         {files.length > 0 && (
                           <List dense disablePadding>
                             {files.map((f, i) => (
-                              <ListItem key={i} disableGutters
+                              <ListItem
+                                key={i}
+                                disableGutters
                                 secondaryAction={
-                                  <IconButton size="small" onClick={() => setFiles((p) => p.filter((_, j) => j !== i))}>
+                                  <IconButton
+                                    size="small"
+                                    onClick={() =>
+                                      setFiles((p) =>
+                                        p.filter((_, j) => j !== i),
+                                      )
+                                    }
+                                  >
                                     <DeleteIcon fontSize="small" />
                                   </IconButton>
                                 }
@@ -257,7 +357,12 @@ export default function CollectUploaderPage(): React.ReactElement {
                                 <ListItemText
                                   primary={f.name}
                                   secondary={formatBytes(f.size)}
-                                  slotProps={{ primary: { noWrap: true, sx: { maxWidth: '80%' } } }}
+                                  slotProps={{
+                                    primary: {
+                                      noWrap: true,
+                                      sx: { maxWidth: '80%' },
+                                    },
+                                  }}
                                 />
                               </ListItem>
                             ))}
@@ -281,7 +386,10 @@ export default function CollectUploaderPage(): React.ReactElement {
                           disabled={files.length === 0}
                           fullWidth
                         >
-                          Send {files.length > 0 ? `${files.length} file${files.length !== 1 ? 's' : ''}` : 'files'}
+                          Send{' '}
+                          {files.length > 0
+                            ? `${files.length} file${files.length !== 1 ? 's' : ''}`
+                            : 'files'}
                         </Button>
                       </>
                     )}

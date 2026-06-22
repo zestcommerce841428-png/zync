@@ -16,16 +16,31 @@ const BodySchema = z.object({
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const ip = getClientIp(req)
-  const rl = await rateLimit(`collect-create:${ip}`, { limit: 20, windowSeconds: 3600 })
-  if (!rl.success) return NextResponse.json({ error: 'Too many requests.' }, { status: 429 })
+  const rl = await rateLimit(`collect-create:${ip}`, {
+    limit: 20,
+    windowSeconds: 3600,
+  })
+  if (!rl.success)
+    return NextResponse.json({ error: 'Too many requests.' }, { status: 429 })
 
   const supabase = await getSupabaseServerClient()
-  if (!supabase) return NextResponse.json({ error: 'Authentication required.' }, { status: 401 })
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Sign in to create a file request.' }, { status: 401 })
+  if (!supabase)
+    return NextResponse.json(
+      { error: 'Authentication required.' },
+      { status: 401 },
+    )
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user)
+    return NextResponse.json(
+      { error: 'Sign in to create a file request.' },
+      { status: 401 },
+    )
 
   const body = BodySchema.safeParse(await req.json().catch(() => null))
-  if (!body.success) return NextResponse.json({ error: 'Invalid payload.' }, { status: 400 })
+  if (!body.success)
+    return NextResponse.json({ error: 'Invalid payload.' }, { status: 400 })
 
   const { title, description, expiryDays, maxFiles } = body.data
   const slug = await generateShortSlug()

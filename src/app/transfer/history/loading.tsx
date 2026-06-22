@@ -11,7 +11,10 @@ function TransferCardSkeleton(): React.ReactElement {
     <Card variant="outlined">
       <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
         <Stack spacing={1.5}>
-          <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+          <Stack
+            direction="row"
+            sx={{ justifyContent: 'space-between', alignItems: 'center' }}
+          >
             <Stack spacing={0.5} sx={{ flex: 1 }}>
               <Skeleton variant="text" width="50%" height={24} />
               <Skeleton variant="text" width="70%" height={18} />
@@ -28,7 +31,10 @@ function TransferCardSkeleton(): React.ReactElement {
             ))}
           </Stack>
           <Divider />
-          <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
+          <Stack
+            direction="row"
+            sx={{ alignItems: 'center', justifyContent: 'space-between' }}
+          >
             <Skeleton variant="text" width="55%" height={16} />
             <Skeleton variant="rounded" width={70} height={32} />
           </Stack>
@@ -41,7 +47,14 @@ function TransferCardSkeleton(): React.ReactElement {
 export default function HistoryLoading(): React.ReactElement {
   return (
     <Container maxWidth="md" sx={{ py: { xs: 6, md: 10 } }}>
-      <Stack direction="row" sx={{ justifyContent: 'space-between', mb: 4, alignItems: 'flex-start' }}>
+      <Stack
+        direction="row"
+        sx={{
+          justifyContent: 'space-between',
+          mb: 4,
+          alignItems: 'flex-start',
+        }}
+      >
         <Stack spacing={0.5}>
           <Skeleton variant="text" width={200} height={48} />
           <Skeleton variant="text" width={360} height={24} />
@@ -49,7 +62,9 @@ export default function HistoryLoading(): React.ReactElement {
         <Skeleton variant="rounded" width={130} height={40} />
       </Stack>
       <Stack spacing={2}>
-        {[1, 2, 3].map((i) => <TransferCardSkeleton key={i} />)}
+        {[1, 2, 3].map((i) => (
+          <TransferCardSkeleton key={i} />
+        ))}
       </Stack>
     </Container>
   )

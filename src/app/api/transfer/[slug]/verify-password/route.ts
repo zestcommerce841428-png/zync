@@ -16,7 +16,10 @@ export async function POST(
 
   // Strict brute-force protection: 5 attempts per 10 min per IP+slug
   const ip = getClientIp(req)
-  const rl = await rateLimit(`verify-pw:${ip}:${slug}`, { limit: 5, windowSeconds: 600 })
+  const rl = await rateLimit(`verify-pw:${ip}:${slug}`, {
+    limit: 5,
+    windowSeconds: 600,
+  })
   if (!rl.success) return tooManyRequests(rl)
 
   const body = BodySchema.safeParse(await req.json().catch(() => null))

@@ -15,35 +15,71 @@ export type S3StorageClass =
   | 'GLACIER_IR'
 
 type StorageConfig =
-  | { provider: 'r2'; accountId: string; accessKeyId: string; secretAccessKey: string; bucket: string }
-  | { provider: 's3'; accessKeyId: string; secretAccessKey: string; region: string; bucket: string; storageClass: S3StorageClass }
+  | {
+      provider: 'r2'
+      accountId: string
+      accessKeyId: string
+      secretAccessKey: string
+      bucket: string
+    }
+  | {
+      provider: 's3'
+      accessKeyId: string
+      secretAccessKey: string
+      region: string
+      bucket: string
+      storageClass: S3StorageClass
+    }
 
 async function getStorageConfig(): Promise<StorageConfig | null> {
   try {
     const s = await getAllSettings()
 
-    const provider = (s.storage_provider as StorageProvider | undefined) ||
-      (s.r2_account_id || process.env.R2_ACCOUNT_ID ? 'r2' :
-       s.s3_access_key_id || process.env.AWS_ACCESS_KEY_ID ? 's3' : null)
+    const provider =
+      (s.storage_provider as StorageProvider | undefined) ||
+      (s.r2_account_id || process.env.R2_ACCOUNT_ID
+        ? 'r2'
+        : s.s3_access_key_id || process.env.AWS_ACCESS_KEY_ID
+          ? 's3'
+          : null)
 
     if (provider === 'r2') {
       const accountId = s.r2_account_id || process.env.R2_ACCOUNT_ID
       const accessKeyId = s.r2_access_key_id || process.env.R2_ACCESS_KEY_ID
-      const secretAccessKey = s.r2_secret_access_key || process.env.R2_SECRET_ACCESS_KEY
-      const bucket = s.r2_bucket_name || process.env.R2_BUCKET_NAME || 'zync-transfers'
+      const secretAccessKey =
+        s.r2_secret_access_key || process.env.R2_SECRET_ACCESS_KEY
+      const bucket =
+        s.r2_bucket_name || process.env.R2_BUCKET_NAME || 'zync-transfers'
       if (accountId && accessKeyId && secretAccessKey) {
-        return { provider: 'r2', accountId, accessKeyId, secretAccessKey, bucket }
+        return {
+          provider: 'r2',
+          accountId,
+          accessKeyId,
+          secretAccessKey,
+          bucket,
+        }
       }
     }
 
     if (provider === 's3') {
       const accessKeyId = s.s3_access_key_id || process.env.AWS_ACCESS_KEY_ID
-      const secretAccessKey = s.s3_secret_access_key || process.env.AWS_SECRET_ACCESS_KEY
+      const secretAccessKey =
+        s.s3_secret_access_key || process.env.AWS_SECRET_ACCESS_KEY
       const region = s.s3_region || process.env.AWS_REGION || 'us-east-1'
-      const bucket = s.s3_bucket || process.env.AWS_S3_BUCKET || 'zync-transfers'
-      const storageClass = (s.s3_storage_class as S3StorageClass | undefined) || 'INTELLIGENT_TIERING'
+      const bucket =
+        s.s3_bucket || process.env.AWS_S3_BUCKET || 'zync-transfers'
+      const storageClass =
+        (s.s3_storage_class as S3StorageClass | undefined) ||
+        'INTELLIGENT_TIERING'
       if (accessKeyId && secretAccessKey) {
-        return { provider: 's3', accessKeyId, secretAccessKey, region, bucket, storageClass }
+        return {
+          provider: 's3',
+          accessKeyId,
+          secretAccessKey,
+          region,
+          bucket,
+          storageClass,
+        }
       }
     }
   } catch {
@@ -51,7 +87,11 @@ async function getStorageConfig(): Promise<StorageConfig | null> {
   }
 
   // Pure env-var fallback (no DB available).
-  if (process.env.R2_ACCOUNT_ID && process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY) {
+  if (
+    process.env.R2_ACCOUNT_ID &&
+    process.env.R2_ACCESS_KEY_ID &&
+    process.env.R2_SECRET_ACCESS_KEY
+  ) {
     return {
       provider: 'r2',
       accountId: process.env.R2_ACCOUNT_ID,
@@ -82,12 +122,18 @@ function buildClient(cfg: StorageConfig): S3Client {
     return new S3Client({
       region: 'auto',
       endpoint: `https://${cfg.accountId}.r2.cloudflarestorage.com`,
-      credentials: { accessKeyId: cfg.accessKeyId, secretAccessKey: cfg.secretAccessKey },
+      credentials: {
+        accessKeyId: cfg.accessKeyId,
+        secretAccessKey: cfg.secretAccessKey,
+      },
     })
   }
   return new S3Client({
     region: cfg.region,
-    credentials: { accessKeyId: cfg.accessKeyId, secretAccessKey: cfg.secretAccessKey },
+    credentials: {
+      accessKeyId: cfg.accessKeyId,
+      secretAccessKey: cfg.secretAccessKey,
+    },
   })
 }
 

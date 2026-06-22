@@ -22,17 +22,20 @@ export function useRecaptcha() {
     document.body.appendChild(s)
   }, [])
 
-  const getToken = React.useCallback(async (action: string): Promise<string | undefined> => {
-    if (!SITE_KEY || !window.grecaptcha) return undefined
-    return new Promise((resolve) => {
-      window.grecaptcha!.ready(() => {
-        window.grecaptcha!
-          .execute(SITE_KEY, { action })
-          .then(resolve)
-          .catch(() => resolve(undefined))
+  const getToken = React.useCallback(
+    async (action: string): Promise<string | undefined> => {
+      if (!SITE_KEY || !window.grecaptcha) return undefined
+      return new Promise((resolve) => {
+        window.grecaptcha!.ready(() => {
+          window
+            .grecaptcha!.execute(SITE_KEY, { action })
+            .then(resolve)
+            .catch(() => resolve(undefined))
+        })
       })
-    })
-  }, [])
+    },
+    [],
+  )
 
   return { getToken }
 }

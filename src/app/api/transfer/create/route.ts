@@ -2,7 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { PutObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-import { getStorageClient, getStorageBucket, getStorageClass, isStorageConfigured } from '../../../../lib/storage'
+import {
+  getStorageClient,
+  getStorageBucket,
+  getStorageClass,
+  isStorageConfigured,
+} from '../../../../lib/storage'
 import {
   saveTransfer,
   expiryDate,
@@ -22,7 +27,9 @@ export const dynamic = 'force-dynamic'
 
 // 200 GB total per transfer; individual files are limited by S3/R2 single-PUT cap (~5 GB).
 // For > 5 GB single files, multipart upload support can be added as a future enhancement.
-const MAX_BYTES = Number(process.env.NEXT_PUBLIC_TRANSFER_MAX_BYTES ?? 200 * 1024 * 1024 * 1024)
+const MAX_BYTES = Number(
+  process.env.NEXT_PUBLIC_TRANSFER_MAX_BYTES ?? 200 * 1024 * 1024 * 1024,
+)
 const MAX_FILES = 20
 
 const FileSchema = z.object({
@@ -50,26 +57,43 @@ const BodySchema = z.object({
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const ip = getClientIp(req)
-  const rl = await rateLimit(`transfer-create:${ip}`, { limit: 10, windowSeconds: 600 })
+  const rl = await rateLimit(`transfer-create:${ip}`, {
+    limit: 10,
+    windowSeconds: 600,
+  })
   if (!rl.success) return tooManyRequests(rl)
 
-  if (!await isStorageConfigured()) {
-    return err('Cloud transfers are not configured on this server.', { status: 503 })
+  if (!(await isStorageConfigured())) {
+    return err('Cloud transfers are not configured on this server.', {
+      status: 503,
+    })
   }
 
   const body = BodySchema.safeParse(await req.json().catch(() => null))
   if (!body.success) return err('Invalid payload.')
 
   const {
-    files, title, message, password, maxDownloads,
-    notifyEmail, notifyEveryDownload, webhookUrl, recipientEmails, burnAfterRead, background, recaptchaToken,
+    files,
+    title,
+    message,
+    password,
+    maxDownloads,
+    notifyEmail,
+    notifyEveryDownload,
+    webhookUrl,
+    recipientEmails,
+    burnAfterRead,
+    background,
+    recaptchaToken,
   } = body.data
 
   const captcha = await verifyRecaptcha(recaptchaToken, { minScore: 0.3 })
-  if (!captcha.ok) return err('Spam check failed. Please try again.', { status: 400 })
+  if (!captcha.ok)
+    return err('Spam check failed. Please try again.', { status: 400 })
 
   const totalSize = files.reduce((s, f) => s + f.size, 0)
-  if (totalSize > MAX_BYTES) return err(`Total size exceeds ${formatBytes(MAX_BYTES)} limit.`)
+  if (totalSize > MAX_BYTES)
+    return err(`Total size exceeds ${formatBytes(MAX_BYTES)} limit.`)
 
   try {
     // Auth: session cookie OR Bearer API key
@@ -97,7 +121,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     void sweepExpiredTransfers()
 
     const uploadUrls: string[] = []
-    const fileRecords: Array<{ key: string; name: string; size: number; type: string }> = []
+    const fileRecords: Array<{
+      key: string
+      name: string
+      size: number
+      type: string
+    }> = []
 
     for (const f of files) {
       const key = `${slug}/${crypto.randomUUID()}_${f.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`
@@ -112,7 +141,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       // 4-hour window gives enough time for large file uploads to start
       const url = await getSignedUrl(storage, cmd, { expiresIn: 14400 })
       uploadUrls.push(url)
-      fileRecords.push({ key, name: f.name, size: f.size, type: f.type, ...(f.path ? { path: f.path } : {}) })
+      fileRecords.push({
+        key,
+        name: f.name,
+        size: f.size,
+        type: f.type,
+        ...(f.path ? { path: f.path } : {}),
+      })
     }
 
     const expires = expiryDate(expiryDays)

@@ -24,7 +24,9 @@ export type TransferTemplate = {
 const KEY = (userId: string, id: string) => `template:${userId}:${id}`
 const IDX = (userId: string) => `templates:${userId}`
 
-export async function listTemplates(userId: string): Promise<TransferTemplate[]> {
+export async function listTemplates(
+  userId: string,
+): Promise<TransferTemplate[]> {
   const redis = getRedisClient()
   const ids = await redis.smembers(IDX(userId))
   if (ids.length === 0) return []
@@ -32,7 +34,10 @@ export async function listTemplates(userId: string): Promise<TransferTemplate[]>
   return raws
     .filter((r): r is string => r !== null)
     .map((r) => JSON.parse(r) as TransferTemplate)
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    )
 }
 
 export async function saveTemplate(tpl: TransferTemplate): Promise<void> {
@@ -42,7 +47,10 @@ export async function saveTemplate(tpl: TransferTemplate): Promise<void> {
   await redis.sadd(IDX(tpl.userId), tpl.id)
 }
 
-export async function deleteTemplate(userId: string, id: string): Promise<void> {
+export async function deleteTemplate(
+  userId: string,
+  id: string,
+): Promise<void> {
   const redis = getRedisClient()
   await redis.del(KEY(userId, id))
   await redis.srem(IDX(userId), id)
