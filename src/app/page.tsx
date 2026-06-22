@@ -46,7 +46,7 @@ const FEATURES = [
   {
     icon: LockIcon,
     title: 'Encrypted end-to-end',
-    body: 'Every P2P transfer rides on WebRTC’s mandatory DTLS encryption. Cloud transfers use password protection with SHA-256 hashing and rate-limited verify endpoints.',
+    body: 'P2P transfers use WebRTC’s mandatory DTLS encryption. Cloud transfers support optional AES-256-GCM in-browser encryption — files are encrypted before upload so the server only ever stores ciphertext.',
   },
   {
     icon: BoltIcon,
@@ -66,7 +66,7 @@ const FEATURES = [
   {
     icon: VpnKeyIcon,
     title: 'You stay in control',
-    body: 'Password-protect, set a download limit, or burn-after-read (auto-deletes 30 s after first download). Cloud links expire after up to 1 year for signed-in users.',
+    body: 'Password-protect, set a download cap, burn-after-read, webhooks, or save transfer templates. Edit any setting after upload. API keys for programmatic access. Cloud links up to 1 year.',
   },
   {
     icon: AllInclusiveIcon,

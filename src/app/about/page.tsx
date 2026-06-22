@@ -48,6 +48,7 @@ const FEATURES = [
       'Persistent shareable link — up to 1 year for registered users',
       'Email notification to recipient(s) on upload complete',
       'Download alert email to sender on first download',
+      'Optional AES-256-GCM client-side encryption — key in URL fragment, server stores only ciphertext',
       'Password protection (SHA-256, rate-limited verify endpoint)',
       'Per-link download cap and burn-after-read mode',
       'Inline image / video / PDF preview without downloading',
@@ -76,6 +77,20 @@ const FEATURES = [
       'Cron cleanup every 5 min via Alpine container (batch S3 DeleteObjects)',
       'Redis — rate limiting, cleanup queue, presence coordination',
       'Watchtower — zero-downtime auto-updates from GHCR on every push',
+    ],
+  },
+  {
+    section: 'Transfer management',
+    items: [
+      'Transfer history with bulk delete, inline edit, and storage usage bar',
+      'Edit title, message, password, expiry, and download cap after upload',
+      'Per-download email notifications (first download or every download)',
+      'Webhook callbacks — POST JSON payload to any URL on every download',
+      'Transfer templates / presets — save and reapply common settings',
+      'File request inbox (Collect) — receive files from anyone via link or QR',
+      'API keys — Bearer token auth for programmatic transfer creation',
+      'Storage dashboard — total bytes, file count, transfer count',
+      'OpenGraph image per transfer link for rich social previews',
     ],
   },
   {
