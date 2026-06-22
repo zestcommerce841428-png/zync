@@ -409,11 +409,19 @@ export default function CollectPage(): React.ReactElement {
 
   React.useEffect(() => {
     const supabase = getSupabaseBrowserClient()
-    if (!supabase) { setAuthChecked(true); return }
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) router.replace('/login?next=/collect')
-      else setAuthChecked(true)
-    }).catch(() => { setAuthChecked(true) })
+    if (!supabase) {
+      setAuthChecked(true)
+      return
+    }
+    supabase.auth
+      .getUser()
+      .then(({ data }) => {
+        if (!data.user) router.replace('/login?next=/collect')
+        else setAuthChecked(true)
+      })
+      .catch(() => {
+        setAuthChecked(true)
+      })
   }, [router])
 
   if (!authChecked) return <></>
