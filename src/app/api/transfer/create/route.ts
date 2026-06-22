@@ -39,6 +39,7 @@ const BodySchema = z.object({
   expiryDays: z.number().int().min(1).max(365).optional(),
   maxDownloads: z.number().int().positive().nullable().default(null),
   notifyEmail: z.string().email().optional().or(z.literal('')),
+  notifyEveryDownload: z.boolean().default(false),
   recipientEmails: z.array(z.string().email()).max(20).default([]),
   burnAfterRead: z.boolean().default(false),
   background: z.string().max(500).optional(),
@@ -59,7 +60,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   const {
     files, title, message, password, maxDownloads,
-    notifyEmail, recipientEmails, burnAfterRead, background, recaptchaToken,
+    notifyEmail, notifyEveryDownload, recipientEmails, burnAfterRead, background, recaptchaToken,
   } = body.data
 
   const captcha = await verifyRecaptcha(recaptchaToken, { minScore: 0.3 })
@@ -120,6 +121,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       message,
       passwordHash: password ? hashPassword(password) : null,
       notifyEmail: notifyEmail || null,
+      notifyEveryDownload,
       notifiedAt: null,
       recipientEmails,
       burnAfterRead,

@@ -32,6 +32,7 @@ export type TransferRecord = {
   message: string
   passwordHash: string | null
   notifyEmail: string | null
+  notifyEveryDownload: boolean
   notifiedAt: string | null
   recipientEmails: string[]
   createdAt: string

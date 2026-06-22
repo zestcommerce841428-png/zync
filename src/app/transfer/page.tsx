@@ -77,6 +77,7 @@ export default function TransferPage(): React.ReactElement {
   const [savedContacts, setSavedContacts] = React.useState<string[]>([])
   const [notifyMe, setNotifyMe] = React.useState(false)
   const [notifyEmail, setNotifyEmail] = React.useState('')
+  const [notifyEveryDownload, setNotifyEveryDownload] = React.useState(false)
   const [burnAfterRead, setBurnAfterRead] = React.useState(false)
   const [background, setBackground] = React.useState('')
   const [stage, setStage] = React.useState<Stage>('idle')
@@ -162,6 +163,7 @@ export default function TransferPage(): React.ReactElement {
           expiryDays,
           maxDownloads: limitDownloads ? maxDownloads : null,
           notifyEmail: notifyMe && notifyEmail ? notifyEmail : undefined,
+          notifyEveryDownload: notifyMe ? notifyEveryDownload : false,
           recipientEmails,
           burnAfterRead,
           background: background || undefined,
@@ -250,6 +252,7 @@ export default function TransferPage(): React.ReactElement {
     setRecipientInput('')
     setNotifyMe(false)
     setNotifyEmail('')
+    setNotifyEveryDownload(false)
     setBurnAfterRead(false)
     setBackground('')
     setStage('idle')
@@ -499,14 +502,26 @@ export default function TransferPage(): React.ReactElement {
                             label={<Typography variant="body2">Notify me when downloaded</Typography>}
                           />
                           <Collapse in={notifyMe}>
-                            <TextField
-                              label="Your email"
-                              type="email"
-                              value={notifyEmail}
-                              onChange={(e) => setNotifyEmail(e.target.value)}
-                              size="small"
-                              fullWidth
-                            />
+                            <Stack spacing={1}>
+                              <TextField
+                                label="Your email"
+                                type="email"
+                                value={notifyEmail}
+                                onChange={(e) => setNotifyEmail(e.target.value)}
+                                size="small"
+                                fullWidth
+                              />
+                              <FormControlLabel
+                                control={
+                                  <Switch
+                                    checked={notifyEveryDownload}
+                                    onChange={(e) => setNotifyEveryDownload(e.target.checked)}
+                                    size="small"
+                                  />
+                                }
+                                label={<Typography variant="body2">Notify on every download (not just first)</Typography>}
+                              />
+                            </Stack>
                           </Collapse>
                         </Stack>
                       </Stack>

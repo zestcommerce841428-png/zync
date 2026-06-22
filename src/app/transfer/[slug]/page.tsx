@@ -22,9 +22,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = await getTransfer(slug)
   if (!t || !t.completed) return { title: 'Transfer not found' }
   const label = t.title || `${t.files.length} file${t.files.length !== 1 ? 's' : ''}`
+  const ogImageUrl = `${brand.url}/api/og/transfer/${slug}`
   return {
     title: `Download ${label} · ${brand.name}`,
     description: t.message || `${t.files.length} file(s) shared via ${brand.name}`,
+    openGraph: {
+      title: label,
+      description: t.message || `${t.files.length} file(s) shared via ${brand.name}`,
+      images: [{ url: ogImageUrl, width: 1200, height: 630 }],
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: label,
+      description: t.message || `${t.files.length} file(s) shared via ${brand.name}`,
+      images: [ogImageUrl],
+    },
   }
 }
 

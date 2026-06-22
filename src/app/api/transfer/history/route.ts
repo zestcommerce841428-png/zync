@@ -14,9 +14,11 @@ export async function GET(): Promise<NextResponse> {
   const transfers = await listUserTransfers(user.id)
 
   return NextResponse.json(
-    transfers.map(({ passwordHash, notifyEmail, notifiedAt, recipientEmails, files, ...rest }) => ({
+    transfers.map(({ passwordHash, notifiedAt, recipientEmails, files, notifyEmail, notifyEveryDownload, ...rest }) => ({
       ...rest,
       passwordProtected: !!passwordHash,
+      notifyEmail: notifyEmail ?? null,
+      notifyEveryDownload: notifyEveryDownload ?? false,
       fileCount: files.length,
       files: files.map(({ name, size, type }) => ({ name, size, type })),
     })),

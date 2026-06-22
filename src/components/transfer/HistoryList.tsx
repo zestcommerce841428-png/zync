@@ -25,6 +25,8 @@ import MenuItem from '@mui/material/MenuItem'
 import Select from '@mui/material/Select'
 import InputLabel from '@mui/material/InputLabel'
 import FormControl from '@mui/material/FormControl'
+import FormControlLabel from '@mui/material/FormControlLabel'
+import Switch from '@mui/material/Switch'
 import LinearProgress from '@mui/material/LinearProgress'
 import LinkIcon from '@mui/icons-material/Link'
 import DeleteIcon from '@mui/icons-material/Delete'
@@ -49,6 +51,8 @@ type TransferSummary = {
   downloadCount: number
   maxDownloads: number | null
   passwordProtected: boolean
+  notifyEmail?: string | null
+  notifyEveryDownload?: boolean
   createdAt: string
 }
 
@@ -89,6 +93,8 @@ function EditDialog({ open, transfer, onClose, onSaved }: EditDialogProps): Reac
   const [extendDays, setExtendDays] = React.useState('')
   const [password, setPassword] = React.useState('')
   const [clearPassword, setClearPassword] = React.useState(false)
+  const [notifyEmail, setNotifyEmail] = React.useState(transfer.notifyEmail ?? '')
+  const [notifyEveryDownload, setNotifyEveryDownload] = React.useState(transfer.notifyEveryDownload ?? false)
   const [saving, setSaving] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 
@@ -105,6 +111,8 @@ function EditDialog({ open, transfer, onClose, onSaved }: EditDialogProps): Reac
       if (extendDays) body.extendDays = Number(extendDays)
       if (password) body.password = password
       if (clearPassword) body.clearPassword = true
+      if (notifyEmail !== (transfer.notifyEmail ?? '')) body.notifyEmail = notifyEmail
+      if (notifyEveryDownload !== (transfer.notifyEveryDownload ?? false)) body.notifyEveryDownload = notifyEveryDownload
 
       const res = await fetch(`/api/transfer/${transfer.slug}`, {
         method: 'PATCH',
@@ -196,6 +204,26 @@ function EditDialog({ open, transfer, onClose, onSaved }: EditDialogProps): Reac
               {clearPassword ? 'Will remove password' : 'Remove password'}
             </Button>
           )}
+          <TextField
+            label="Notify email (blank = disabled)"
+            type="email"
+            value={notifyEmail}
+            onChange={(e) => setNotifyEmail(e.target.value)}
+            size="small"
+            fullWidth
+            placeholder="your@email.com"
+          />
+          <FormControlLabel
+            control={
+              <Switch
+                checked={notifyEveryDownload}
+                onChange={(e) => setNotifyEveryDownload(e.target.checked)}
+                size="small"
+                disabled={!notifyEmail}
+              />
+            }
+            label={<Typography variant="body2">Notify on every download (not just first)</Typography>}
+          />
         </Stack>
       </DialogContent>
       <DialogActions>

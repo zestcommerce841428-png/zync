@@ -90,9 +90,9 @@ export async function POST(
       country,
     })
 
-    // Notify sender on first ever download
-    if (transfer.notifyEmail && !transfer.notifiedAt) {
-      void updateTransfer(slug, { notifiedAt: new Date().toISOString() })
+    // Notify sender: on first download always; on every download if notifyEveryDownload is set
+    if (transfer.notifyEmail && (!transfer.notifiedAt || transfer.notifyEveryDownload)) {
+      if (!transfer.notifiedAt) void updateTransfer(slug, { notifiedAt: new Date().toISOString() })
       const tpl = tplTransferDownloaded({
         title: transfer.title,
         url: `${brand.url}/transfer/${slug}`,

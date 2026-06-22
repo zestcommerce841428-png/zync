@@ -83,6 +83,7 @@ const PatchSchema = z.object({
   password: z.string().max(200).optional(),
   clearPassword: z.boolean().optional(),
   notifyEmail: z.string().email().optional().or(z.literal('')),
+  notifyEveryDownload: z.boolean().optional(),
 })
 
 export async function PATCH(
@@ -101,13 +102,14 @@ export async function PATCH(
   const body = PatchSchema.safeParse(await req.json().catch(() => null))
   if (!body.success) return NextResponse.json({ error: 'Invalid payload.' }, { status: 400 })
 
-  const { title, message, extendDays, maxDownloads, password, clearPassword, notifyEmail } = body.data
+  const { title, message, extendDays, maxDownloads, password, clearPassword, notifyEmail, notifyEveryDownload } = body.data
   const patch: Partial<Parameters<typeof updateTransfer>[1]> = {}
 
   if (title !== undefined) patch.title = title
   if (message !== undefined) patch.message = message
   if (maxDownloads !== undefined) patch.maxDownloads = maxDownloads
   if (notifyEmail !== undefined) patch.notifyEmail = notifyEmail || null
+  if (notifyEveryDownload !== undefined) patch.notifyEveryDownload = notifyEveryDownload
 
   if (clearPassword) {
     patch.passwordHash = null
