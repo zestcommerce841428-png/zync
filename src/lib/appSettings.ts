@@ -32,6 +32,7 @@ export type SettingKey =
   | 'feature_guest_uploads'
   | 'feature_registration'
   | 'feature_cloud_transfers'
+  | 'feature_white_label_emails'
 
 export type SettingsMap = Partial<Record<SettingKey, string>>
 

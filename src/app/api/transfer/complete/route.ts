@@ -6,6 +6,7 @@ import { getSupabaseServerClient } from '../../../../supabase/server'
 import { sendMail } from '../../../../email'
 import { tplTransferReady, tplTransferSent } from '../../../../emailTemplates'
 import { brand } from '../../../../brand'
+import { isFeatureEnabled } from '../../../../lib/appSettings'
 
 export const dynamic = 'force-dynamic'
 
@@ -40,6 +41,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     // Skip recipient emails if transfer is scheduled for future delivery
     if (!t.scheduledAt || new Date(t.scheduledAt) <= new Date()) {
+      const whiteLabelEmails = await isFeatureEnabled(
+        'feature_white_label_emails',
+        false,
+      )
       for (const to of t.recipientEmails) {
         const token = emailTokenMap[to]
         const url = token ? `${baseUrl}?rt=${token}` : baseUrl
@@ -51,12 +56,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           totalSize: formatBytes(t.totalSize),
           expiresAt: t.expiresAt,
           senderName: t.senderName || undefined,
+          emailAccentColor: t.emailAccentColor || undefined,
+          hideBranding: whiteLabelEmails,
         })
         void sendMail({
           to,
           subject: tpl.subject,
           html: tpl.html,
           text: tpl.text,
+          replyTo: t.replyTo || undefined,
         })
       }
       await updateTransfer(body.data.slug, { notificationSent: true })

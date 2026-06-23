@@ -8,6 +8,7 @@ import { getRedisClient } from '../../../../redisClient'
 import { sendMail } from '../../../../email'
 import { tplTransferReady } from '../../../../emailTemplates'
 import { brand } from '../../../../brand'
+import { isFeatureEnabled } from '../../../../lib/appSettings'
 
 export const dynamic = 'force-dynamic'
 
@@ -67,6 +68,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       if (!t.scheduledAt || new Date(t.scheduledAt).getTime() > now) continue
 
       const baseUrl = `${brand.url}/transfer/${t.slug}`
+      const whiteLabelEmails = await isFeatureEnabled(
+        'feature_white_label_emails',
+        false,
+      )
       for (const to of t.recipientEmails) {
         // find token for this email
         const token = Object.entries(t.recipientTokens ?? {}).find(
@@ -81,12 +86,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           totalSize: formatBytes(t.totalSize),
           expiresAt: t.expiresAt,
           senderName: t.senderName || undefined,
+          emailAccentColor: t.emailAccentColor || undefined,
+          hideBranding: whiteLabelEmails,
         })
         void sendMail({
           to,
           subject: tpl.subject,
           html: tpl.html,
           text: tpl.text,
+          replyTo: t.replyTo || undefined,
         })
       }
 

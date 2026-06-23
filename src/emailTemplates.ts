@@ -30,6 +30,8 @@ export function baseLayout(opts: {
   bodyHtml: string
   button?: EmailButton
   footerNote?: string
+  accentColor?: string
+  hideBranding?: boolean
 }): string {
   const {
     preheader = '',
@@ -38,7 +40,10 @@ export function baseLayout(opts: {
     bodyHtml,
     button,
     footerNote,
+    accentColor,
+    hideBranding = false,
   } = opts
+  const ACCENT = accentColor || PRIMARY
   const year = new Date().getFullYear()
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"/>
@@ -59,20 +64,24 @@ export function baseLayout(opts: {
       <div style="font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:${TEXT};">${bodyHtml}</div>
       ${
         button
-          ? `<div style="text-align:center;margin:28px 0 8px;"><a href="${esc(button.url)}" style="display:inline-block;background:${PRIMARY};color:#fff;text-decoration:none;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-weight:700;font-size:15px;padding:13px 28px;border-radius:10px;">${esc(button.label)}</a></div>`
+          ? `<div style="text-align:center;margin:28px 0 8px;"><a href="${esc(button.url)}" style="display:inline-block;background:${ACCENT};color:#fff;text-decoration:none;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-weight:700;font-size:15px;padding:13px 28px;border-radius:10px;">${esc(button.label)}</a></div>`
           : ''
       }
       ${footerNote ? `<p style="margin:20px 0 0;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:1.6;color:${MUTED};">${footerNote}</p>` : ''}
     </td></tr>
-    <tr><td style="padding:20px 12px;text-align:center;">
+    ${
+      !hideBranding
+        ? `<tr><td style="padding:20px 12px;text-align:center;">
       <p style="margin:0 0 6px;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:12px;color:${MUTED};">
         ${esc(brand.tagline || 'Private peer-to-peer file transfer')}
       </p>
       <p style="margin:0;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:12px;color:${MUTED};">
-        <a href="${esc(brand.url)}" style="color:${PRIMARY};text-decoration:none;">${esc(brand.url.replace(/^https?:\/\//, ''))}</a>
+        <a href="${esc(brand.url)}" style="color:${ACCENT};text-decoration:none;">${esc(brand.url.replace(/^https?:\/\//, ''))}</a>
         &nbsp;·&nbsp; © ${year} ${esc(brand.org.legalName || brand.name)}
       </p>
-    </td></tr>
+    </td></tr>`
+        : `<tr><td style="padding:12px;text-align:center;"><p style="margin:0;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:12px;color:${MUTED};">© ${year} ${esc(brand.org.legalName || brand.name)}</p></td></tr>`
+    }
   </table>
 </td></tr></table></body></html>`
 }
@@ -247,6 +256,8 @@ export function tplTransferReady(d: {
   expiresAt: string
   recipientName?: string
   senderName?: string
+  emailAccentColor?: string
+  hideBranding?: boolean
 }): { subject: string; html: string; text: string } {
   const expiry = new Date(d.expiresAt).toLocaleDateString('en-US', {
     month: 'long',
@@ -275,6 +286,8 @@ export function tplTransferReady(d: {
       ]),
       button: { label: 'Download files', url: d.url },
       footerNote: `This link expires on ${expiry}. Files are stored securely on Cloudflare R2.`,
+      accentColor: d.emailAccentColor || undefined,
+      hideBranding: d.hideBranding,
     }),
   }
 }

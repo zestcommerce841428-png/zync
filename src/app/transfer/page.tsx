@@ -114,6 +114,8 @@ export default function TransferPage(): React.ReactElement {
   const [senderName, setSenderName] = React.useState('')
   const [scheduledAt, setScheduledAt] = React.useState('')
   const [slackWebhookUrl, setSlackWebhookUrl] = React.useState('')
+  const [emailAccentColor, setEmailAccentColor] = React.useState('')
+  const [replyTo, setReplyTo] = React.useState('')
 
   const { getToken } = useRecaptcha()
 
@@ -365,6 +367,8 @@ export default function TransferPage(): React.ReactElement {
           senderName: senderName.trim() || undefined,
           scheduledAt: scheduledAt || undefined,
           slackWebhookUrl: slackWebhookUrl.trim() || undefined,
+          emailAccentColor: emailAccentColor || undefined,
+          replyTo: replyTo.trim() || undefined,
         }),
       })
       if (!createRes.ok) {
@@ -474,6 +478,8 @@ export default function TransferPage(): React.ReactElement {
     setSenderName('')
     setScheduledAt('')
     setSlackWebhookUrl('')
+    setEmailAccentColor('')
+    setReplyTo('')
     setStage('idle')
     setFileProgress([])
     setSpeedBps(0)
@@ -1177,6 +1183,50 @@ export default function TransferPage(): React.ReactElement {
                           fullWidth
                           helperText="Paste an Incoming Webhook URL from your Slack app settings."
                         />
+                        <TextField
+                          label="Reply-To email (recipients can reply directly to you)"
+                          placeholder="you@example.com"
+                          value={replyTo}
+                          onChange={(e) => setReplyTo(e.target.value)}
+                          size="small"
+                          fullWidth
+                          type="email"
+                        />
+                        <Stack
+                          direction="row"
+                          spacing={1.5}
+                          sx={{ alignItems: 'center' }}
+                        >
+                          <Typography variant="body2" color="text.secondary">
+                            Email button colour
+                          </Typography>
+                          <Box
+                            component="input"
+                            type="color"
+                            aria-label="Email button colour"
+                            title="Email button colour"
+                            value={emailAccentColor || '#4f46e5'}
+                            onChange={(
+                              e: React.ChangeEvent<HTMLInputElement>,
+                            ) => setEmailAccentColor(e.target.value)}
+                            sx={{
+                              width: 36,
+                              height: 28,
+                              border: 'none',
+                              cursor: 'pointer',
+                              borderRadius: 1,
+                              p: 0,
+                            }}
+                          />
+                          {emailAccentColor && (
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              {emailAccentColor}
+                            </Typography>
+                          )}
+                        </Stack>
                       </Stack>
                     </AccordionDetails>
                   </Accordion>

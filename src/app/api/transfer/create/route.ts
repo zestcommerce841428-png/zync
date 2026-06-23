@@ -68,6 +68,11 @@ const BodySchema = z.object({
   senderName: z.string().max(80).optional().or(z.literal('')),
   scheduledAt: z.string().datetime().optional(),
   slackWebhookUrl: z.string().url().max(500).optional().or(z.literal('')),
+  emailAccentColor: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/)
+    .optional(),
+  replyTo: z.string().email().max(200).optional().or(z.literal('')),
 })
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
@@ -114,6 +119,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     senderName,
     scheduledAt,
     slackWebhookUrl,
+    emailAccentColor,
+    replyTo,
   } = body.data
 
   const captcha = await verifyRecaptcha(recaptchaToken, { minScore: 0.3 })
@@ -226,6 +233,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       boardIds: [],
       customSlug: isCustomSlug,
       slackWebhookUrl: slackWebhookUrl || null,
+      emailAccentColor: emailAccentColor || null,
+      replyTo: replyTo || null,
       createdAt: new Date().toISOString(),
       completed: false,
     })

@@ -70,6 +70,8 @@ export type TransferRecord = {
   boardIds: string[] // board slugs this transfer belongs to
   customSlug: boolean // true if slug was user-chosen (not random)
   slackWebhookUrl: string | null // Slack incoming webhook — notified on each download
+  emailAccentColor: string | null // hex color for CTA button in recipient emails
+  replyTo: string | null // Reply-To header in recipient emails (sender's email)
 }
 
 const KEY = (slug: string) => `transfer:${slug}`
@@ -133,6 +135,8 @@ export async function getTransfer(
     r.boardIds ??= []
     r.customSlug ??= false
     r.slackWebhookUrl ??= null
+    r.emailAccentColor ??= null
+    r.replyTo ??= null
     return r
   } catch {
     return null

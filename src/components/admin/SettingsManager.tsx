@@ -43,6 +43,7 @@ type Settings = {
   feature_guest_uploads?: string
   feature_registration?: string
   feature_cloud_transfers?: string
+  feature_white_label_emails?: string
 }
 
 function SecretField({
@@ -467,6 +468,12 @@ export default function SettingsManager(): React.ReactElement {
                 description="Allow users to upload files to cloud storage (R2/S3). When disabled, the transfer page shows a maintenance notice and uploads are blocked."
                 value={s.feature_cloud_transfers}
                 onChange={(v) => patch({ feature_cloud_transfers: v })}
+              />
+              <FeatureToggle
+                label="White-label emails"
+                description="Hide the Zync branding footer in all outgoing transfer emails. Senders see only the copyright line."
+                value={s.feature_white_label_emails}
+                onChange={(v) => patch({ feature_white_label_emails: v })}
               />
               <FeatureToggle
                 label="Email notifications"
