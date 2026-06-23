@@ -183,6 +183,7 @@ export default async function TransferDownloadPage({
                     burnAfterRead={!!transfer.burnAfterRead}
                     autoDownload={autoDownload}
                     encrypted={!!transfer.encrypted}
+                    scanStatus={transfer.scanStatus}
                   />
 
                   {/* Transfer tracking — only visible to the owner */}

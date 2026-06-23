@@ -32,6 +32,7 @@ export async function GET(): Promise<NextResponse> {
     'smtp_pass',
     'r2_secret_access_key',
     's3_secret_access_key',
+    'virustotal_api_key',
   ]
   for (const k of secretKeys) {
     if (masked[k]) masked[k] = '__masked__'
@@ -65,6 +66,8 @@ const PatchSchema = z.object({
   feature_registration: z.enum(['true', 'false']).optional(),
   feature_cloud_transfers: z.enum(['true', 'false']).optional(),
   feature_white_label_emails: z.enum(['true', 'false']).optional(),
+  feature_virus_scan: z.enum(['true', 'false']).optional(),
+  virustotal_api_key: z.string().max(200).optional(),
 })
 
 export async function PATCH(req: NextRequest): Promise<NextResponse> {

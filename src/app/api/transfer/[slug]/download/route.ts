@@ -73,6 +73,12 @@ export async function POST(
       return err('Incorrect password.', { status: 403 })
   }
 
+  if (transfer.scanStatus === 'infected')
+    return err(
+      'This transfer has been flagged as malicious and download has been suspended.',
+      { status: 451 },
+    )
+
   const file = transfer.files[body.data.fileIndex]
   if (!file) return notFound('File not found.')
 

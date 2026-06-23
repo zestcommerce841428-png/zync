@@ -44,6 +44,8 @@ type Settings = {
   feature_registration?: string
   feature_cloud_transfers?: string
   feature_white_label_emails?: string
+  feature_virus_scan?: string
+  virustotal_api_key?: string
 }
 
 function SecretField({
@@ -279,6 +281,13 @@ export default function SettingsManager(): React.ReactElement {
                 onChange={(e) => patch({ smtp_from: e.target.value })}
                 placeholder="Zync <noreply@example.com>"
               />
+              <Divider />
+              <SecretField
+                label="VirusTotal API Key"
+                value={s.virustotal_api_key ?? ''}
+                onChange={(v) => patch({ virustotal_api_key: v })}
+                helperText="Required for virus scanning. Get a free key at virustotal.com."
+              />
             </Stack>
           )}
 
@@ -504,6 +513,12 @@ export default function SettingsManager(): React.ReactElement {
                 description="Allow new users to sign up. Disable to make the site invite-only."
                 value={s.feature_registration}
                 onChange={(v) => patch({ feature_registration: v })}
+              />
+              <FeatureToggle
+                label="Virus scanning"
+                description="Scan uploaded files with VirusTotal before allowing downloads. Requires a VirusTotal API key."
+                value={s.feature_virus_scan}
+                onChange={(v) => patch({ feature_virus_scan: v })}
               />
             </Stack>
           )}

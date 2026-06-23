@@ -7,6 +7,7 @@ import { sendMail } from '../../../../email'
 import { tplTransferReady, tplTransferSent } from '../../../../emailTemplates'
 import { brand } from '../../../../brand'
 import { isFeatureEnabled } from '../../../../lib/appSettings'
+import { enqueueScan } from '../../../../lib/virusScan'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,6 +27,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   await updateTransfer(body.data.slug, { completed: true })
   const t = await getTransfer(body.data.slug)
+
+  // Enqueue virus scan if feature is enabled (fire-and-forget)
+  if (t) {
+    void isFeatureEnabled('feature_virus_scan', false).then(async (enabled) => {
+      if (enabled) {
+        await updateTransfer(body.data.slug, { scanStatus: 'pending' })
+        await enqueueScan(body.data.slug)
+      }
+    })
+  }
 
   if (t && t.recipientEmails.length > 0) {
     const baseUrl = `${brand.url}/transfer/${t.slug}`

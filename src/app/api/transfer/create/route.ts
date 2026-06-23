@@ -235,6 +235,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       slackWebhookUrl: slackWebhookUrl || null,
       emailAccentColor: emailAccentColor || null,
       replyTo: replyTo || null,
+      pageViewCount: 0,
+      emailOpenCount: 0,
+      expireWarnedAt: null,
+      workspaceId: null,
+      scanStatus: null,
+      scanAnalysisId: null,
       createdAt: new Date().toISOString(),
       completed: false,
     })

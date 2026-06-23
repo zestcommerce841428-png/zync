@@ -75,6 +75,16 @@ export type TransferRecord = {
   pageViewCount: number // how many times the download page was opened
   emailOpenCount: number // how many times the recipient email tracking pixel was loaded
   expireWarnedAt: string | null // ISO timestamp when the expiry-warning email was sent
+  workspaceId: string | null // workspace this transfer belongs to
+  scanStatus:
+    | 'pending'
+    | 'scanning'
+    | 'clean'
+    | 'infected'
+    | 'error'
+    | 'skipped'
+    | null
+  scanAnalysisId: string | null // VirusTotal analysis ID while polling
 }
 
 const KEY = (slug: string) => `transfer:${slug}`
@@ -143,6 +153,9 @@ export async function getTransfer(
     r.pageViewCount ??= 0
     r.emailOpenCount ??= 0
     r.expireWarnedAt ??= null
+    r.workspaceId ??= null
+    r.scanStatus ??= null
+    r.scanAnalysisId ??= null
     return r
   } catch {
     return null

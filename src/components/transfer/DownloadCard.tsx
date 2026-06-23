@@ -50,6 +50,7 @@ type Props = {
   burnAfterRead?: boolean
   autoDownload?: boolean
   encrypted?: boolean
+  scanStatus?: string | null
 }
 
 function formatBytes(n: number): string {
@@ -110,6 +111,7 @@ export default function DownloadCard({
   burnAfterRead,
   autoDownload,
   encrypted,
+  scanStatus,
 }: Props): React.ReactElement {
   const [now, setNow] = React.useState<number | null>(null)
   React.useEffect(() => {
@@ -565,6 +567,28 @@ export default function DownloadCard({
             size="small"
             color={downloadCount >= maxDownloads ? 'error' : 'default'}
           />
+        )}
+        {scanStatus === 'pending' && (
+          <Chip label="Scan pending" size="small" variant="outlined" />
+        )}
+        {scanStatus === 'scanning' && (
+          <Chip
+            label="Scanning…"
+            size="small"
+            color="info"
+            variant="outlined"
+          />
+        )}
+        {scanStatus === 'clean' && (
+          <Chip
+            label="✓ No threats found"
+            size="small"
+            color="success"
+            variant="outlined"
+          />
+        )}
+        {scanStatus === 'infected' && (
+          <Chip label="⚠ Flagged as malicious" size="small" color="error" />
         )}
       </Stack>
 

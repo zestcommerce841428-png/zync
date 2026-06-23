@@ -33,6 +33,8 @@ export type SettingKey =
   | 'feature_registration'
   | 'feature_cloud_transfers'
   | 'feature_white_label_emails'
+  | 'feature_virus_scan'
+  | 'virustotal_api_key'
 
 export type SettingsMap = Partial<Record<SettingKey, string>>
 
