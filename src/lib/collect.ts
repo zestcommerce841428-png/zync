@@ -8,6 +8,7 @@ export type CollectFile = {
   type: string
   uploadedAt: string
   uploaderNote?: string
+  uploaderName?: string
 }
 
 export type CollectRecord = {

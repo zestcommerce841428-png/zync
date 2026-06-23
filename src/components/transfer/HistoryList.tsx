@@ -40,6 +40,8 @@ import EditIcon from '@mui/icons-material/Edit'
 import PublicIcon from '@mui/icons-material/Public'
 import DownloadIcon from '@mui/icons-material/Download'
 import Checkbox from '@mui/material/Checkbox'
+import InputAdornment from '@mui/material/InputAdornment'
+import SearchIcon from '@mui/icons-material/Search'
 
 type TransferSummary = {
   slug: string
@@ -445,6 +447,10 @@ export default function HistoryList(): React.ReactElement {
   const [editSlug, setEditSlug] = React.useState<string | null>(null)
   const [selected, setSelected] = React.useState<Set<string>>(new Set())
   const [bulkDeleting, setBulkDeleting] = React.useState(false)
+  const [search, setSearch] = React.useState('')
+  const [statusFilter, setStatusFilter] = React.useState<
+    'all' | 'active' | 'expiring'
+  >('all')
   const [storage, setStorage] = React.useState<{
     totalBytes: number
     fileCount: number
@@ -520,9 +526,9 @@ export default function HistoryList(): React.ReactElement {
   }
 
   const toggleSelectAll = () => {
-    if (!transfers) return
-    if (selected.size === transfers.length) setSelected(new Set())
-    else setSelected(new Set(transfers.map((t) => t.slug)))
+    if (!filteredTransfers) return
+    if (selected.size === filteredTransfers.length) setSelected(new Set())
+    else setSelected(new Set(filteredTransfers.map((t) => t.slug)))
   }
 
   const handleBulkDelete = async () => {
@@ -551,6 +557,35 @@ export default function HistoryList(): React.ReactElement {
   }
 
   const editTransfer = transfers?.find((t) => t.slug === editSlug)
+
+  const filteredTransfers = React.useMemo(() => {
+    if (!transfers) return null
+    let list = transfers
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      list = list.filter(
+        (t) =>
+          t.title.toLowerCase().includes(q) ||
+          t.message.toLowerCase().includes(q) ||
+          t.slug.toLowerCase().includes(q),
+      )
+    }
+    if (statusFilter === 'active') {
+      list = list.filter(
+        (t) =>
+          Math.ceil((new Date(t.expiresAt).getTime() - Date.now()) / 86400000) >
+          2,
+      )
+    } else if (statusFilter === 'expiring') {
+      list = list.filter(
+        (t) =>
+          Math.ceil(
+            (new Date(t.expiresAt).getTime() - Date.now()) / 86400000,
+          ) <= 2,
+      )
+    }
+    return list
+  }, [transfers, search, statusFilter])
 
   const MAX_STORAGE_BYTES = 200 * 1024 * 1024 * 1024 // 200 GB display cap
 
@@ -612,14 +647,52 @@ export default function HistoryList(): React.ReactElement {
         </Card>
       )}
 
-      {/* Bulk action bar */}
+      {/* Search + filter bar */}
       {transfers !== null && transfers.length > 0 && (
+        <Stack direction="row" spacing={1} sx={{ mb: 1.5, flexWrap: 'wrap' }}>
+          <TextField
+            size="small"
+            placeholder="Search by title, message or slug…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            sx={{ flex: 1, minWidth: 180 }}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+              },
+            }}
+          />
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel>Status</InputLabel>
+            <Select
+              label="Status"
+              value={statusFilter}
+              onChange={(e) =>
+                setStatusFilter(e.target.value as typeof statusFilter)
+              }
+            >
+              <MenuItem value="all">All</MenuItem>
+              <MenuItem value="active">Active (&gt;2d)</MenuItem>
+              <MenuItem value="expiring">Expiring soon</MenuItem>
+            </Select>
+          </FormControl>
+        </Stack>
+      )}
+
+      {/* Bulk action bar */}
+      {filteredTransfers !== null && filteredTransfers.length > 0 && (
         <Stack direction="row" sx={{ alignItems: 'center', mb: 1.5, gap: 1 }}>
           <Checkbox
             size="small"
-            checked={selected.size > 0 && selected.size === transfers.length}
+            checked={
+              selected.size > 0 && selected.size === filteredTransfers.length
+            }
             indeterminate={
-              selected.size > 0 && selected.size < transfers.length
+              selected.size > 0 && selected.size < filteredTransfers.length
             }
             onChange={toggleSelectAll}
           />
@@ -675,9 +748,18 @@ export default function HistoryList(): React.ReactElement {
         </Card>
       )}
 
-      {transfers !== null && transfers.length > 0 && (
+      {filteredTransfers !== null &&
+        transfers !== null &&
+        transfers.length > 0 &&
+        filteredTransfers.length === 0 && (
+          <Alert severity="info">
+            No transfers match your search. Try different keywords.
+          </Alert>
+        )}
+
+      {filteredTransfers !== null && filteredTransfers.length > 0 && (
         <Stack spacing={2}>
-          {transfers.map((t) => {
+          {filteredTransfers.map((t) => {
             const daysLeft = Math.ceil(
               (new Date(t.expiresAt).getTime() - Date.now()) / 86400000,
             )

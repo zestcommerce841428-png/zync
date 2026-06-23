@@ -12,6 +12,8 @@ import Box from '@mui/material/Box'
 import { ZyncIcon } from '../../../components/Logo'
 import DownloadCard from '../../../components/transfer/DownloadCard'
 import { BackgroundSetter } from '../../../components/transfer/BackgroundSetter'
+import PageViewPing from '../../../components/transfer/PageViewPing'
+import OwnerActions from '../../../components/transfer/OwnerActions'
 import { getTransfer } from '../../../lib/transfer'
 import { getSupabaseServerClient } from '../../../supabase/server'
 import { brand } from '../../../brand'
@@ -162,6 +164,7 @@ export default async function TransferDownloadPage({
                 </Alert>
               ) : (
                 <>
+                  <PageViewPing slug={transfer.slug} />
                   <DownloadCard
                     slug={transfer.slug}
                     files={transfer.files.map(({ name, size, type, path }) => ({
@@ -199,6 +202,10 @@ export default async function TransferDownloadPage({
                           >
                             Transfer tracking
                           </Typography>
+                          <Chip
+                            label={`${transfer.pageViewCount ?? 0} view${(transfer.pageViewCount ?? 0) !== 1 ? 's' : ''}`}
+                            size="small"
+                          />
                           <Chip
                             label={`${transfer.downloadCount} download${transfer.downloadCount !== 1 ? 's' : ''}`}
                             size="small"
@@ -493,7 +500,7 @@ export default async function TransferDownloadPage({
                           </Stack>
                         )}
 
-                        {/* Owner actions: Renew, Duplicate, CSV export */}
+                        {/* Owner actions: static links */}
                         <Stack
                           direction="row"
                           spacing={1}
@@ -516,6 +523,11 @@ export default async function TransferDownloadPage({
                             clickable
                           />
                         </Stack>
+                        {/* Owner actions: interactive (resend, add to board) */}
+                        <OwnerActions
+                          slug={transfer.slug}
+                          recipientCount={transfer.recipientEmails.length}
+                        />
 
                         {/* Scheduled sending info */}
                         {transfer.scheduledAt && !transfer.notificationSent && (

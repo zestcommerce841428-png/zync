@@ -24,6 +24,7 @@ const BodySchema = z.object({
     .min(1)
     .max(20),
   note: z.string().max(500).optional(),
+  uploaderName: z.string().max(100).optional(),
 })
 
 function formatBytes(n: number): string {
@@ -67,6 +68,7 @@ export async function POST(
     type: f.type,
     uploadedAt: new Date().toISOString(),
     uploaderNote: body.data.note,
+    uploaderName: body.data.uploaderName,
   }))
 
   const allFiles = [...collect.files, ...newFiles].slice(0, collect.maxFiles)
@@ -81,8 +83,8 @@ export async function POST(
     void sendMail({
       to: collect.ownerEmail,
       subject: `Files received for "${collect.title}" · ${brand.name}`,
-      text: `Someone uploaded ${newFiles.length} file${newFiles.length !== 1 ? 's' : ''} to your file request "${collect.title}".\n\n${fileList}${body.data.note ? `\n\nNote from uploader: ${body.data.note}` : ''}\n\nView all received files: ${receivedUrl}`,
-      html: `<p>Someone uploaded <strong>${newFiles.length} file${newFiles.length !== 1 ? 's' : ''}</strong> to your file request "<strong>${collect.title}</strong>".</p><ul>${newFiles.map((f) => `<li>${f.name} (${formatBytes(f.size)})</li>`).join('')}</ul>${body.data.note ? `<p><em>Note from uploader: ${body.data.note}</em></p>` : ''}<p><a href="${receivedUrl}">View all received files →</a></p>`,
+      text: `${body.data.uploaderName ? body.data.uploaderName : 'Someone'} uploaded ${newFiles.length} file${newFiles.length !== 1 ? 's' : ''} to your file request "${collect.title}".\n\n${fileList}${body.data.note ? `\n\nNote from uploader: ${body.data.note}` : ''}\n\nView all received files: ${receivedUrl}`,
+      html: `<p><strong>${body.data.uploaderName ? body.data.uploaderName : 'Someone'}</strong> uploaded <strong>${newFiles.length} file${newFiles.length !== 1 ? 's' : ''}</strong> to your file request "<strong>${collect.title}</strong>".</p><ul>${newFiles.map((f) => `<li>${f.name} (${formatBytes(f.size)})</li>`).join('')}</ul>${body.data.note ? `<p><em>Note: ${body.data.note}</em></p>` : ''}<p><a href="${receivedUrl}">View all received files →</a></p>`,
     })
   }
 

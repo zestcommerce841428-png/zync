@@ -72,6 +72,7 @@ export type TransferRecord = {
   slackWebhookUrl: string | null // Slack incoming webhook — notified on each download
   emailAccentColor: string | null // hex color for CTA button in recipient emails
   replyTo: string | null // Reply-To header in recipient emails (sender's email)
+  pageViewCount: number // how many times the download page was opened
 }
 
 const KEY = (slug: string) => `transfer:${slug}`
@@ -137,6 +138,7 @@ export async function getTransfer(
     r.slackWebhookUrl ??= null
     r.emailAccentColor ??= null
     r.replyTo ??= null
+    r.pageViewCount ??= 0
     return r
   } catch {
     return null

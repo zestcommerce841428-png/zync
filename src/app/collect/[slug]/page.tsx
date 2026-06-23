@@ -50,6 +50,7 @@ export default function CollectUploaderPage(): React.ReactElement {
   const [info, setInfo] = React.useState<CollectInfo | null>(null)
   const [infoError, setInfoError] = React.useState<string | null>(null)
   const [files, setFiles] = React.useState<File[]>([])
+  const [uploaderName, setUploaderName] = React.useState('')
   const [note, setNote] = React.useState('')
   const [dragging, setDragging] = React.useState(false)
   const inputRef = React.useRef<HTMLInputElement>(null)
@@ -101,6 +102,7 @@ export default function CollectUploaderPage(): React.ReactElement {
             type: f.type,
           })),
           note: note || undefined,
+          uploaderName: uploaderName.trim() || undefined,
         }),
       })
       const json = await res.json()
@@ -158,6 +160,7 @@ export default function CollectUploaderPage(): React.ReactElement {
             type: f.type,
           })),
           note: note || undefined,
+          uploaderName: uploaderName.trim() || undefined,
         }),
       })
 
@@ -369,6 +372,15 @@ export default function CollectUploaderPage(): React.ReactElement {
                           </List>
                         )}
 
+                        <TextField
+                          label="Your name (optional)"
+                          value={uploaderName}
+                          onChange={(e) => setUploaderName(e.target.value)}
+                          size="small"
+                          fullWidth
+                          slotProps={{ htmlInput: { maxLength: 100 } }}
+                          placeholder="So the requester knows who sent these files"
+                        />
                         <TextField
                           label="Note to requester (optional)"
                           value={note}

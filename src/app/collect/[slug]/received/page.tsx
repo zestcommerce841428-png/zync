@@ -173,6 +173,7 @@ export default async function CollectReceivedPage({
                         <Typography variant="caption" color="text.secondary">
                           {formatBytes(f.size)} · Uploaded{' '}
                           {formatDate(f.uploadedAt)}
+                          {f.uploaderName ? ` · from ${f.uploaderName}` : ''}
                         </Typography>
                       </Stack>
                       {f.downloadUrl && (

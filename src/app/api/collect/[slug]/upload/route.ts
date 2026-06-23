@@ -29,6 +29,7 @@ const BodySchema = z.object({
     .min(1)
     .max(20),
   note: z.string().max(500).optional(),
+  uploaderName: z.string().max(100).optional(),
 })
 
 // POST /api/collect/[slug]/upload — get presigned PUT URLs for uploading to a collect request
