@@ -9,6 +9,14 @@ import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import Chip from '@mui/material/Chip'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
+import SendIcon from '@mui/icons-material/Send'
+import LockIcon from '@mui/icons-material/Lock'
+import InboxIcon from '@mui/icons-material/Inbox'
+import TrackChangesIcon from '@mui/icons-material/TrackChanges'
+import StarIcon from '@mui/icons-material/Star'
+import BrandingWatermarkIcon from '@mui/icons-material/BrandingWatermark'
+import AutoDeleteIcon from '@mui/icons-material/AutoDelete'
+import BuildIcon from '@mui/icons-material/Build'
 import { Link as ViewTransitionLink } from 'next-view-transitions'
 import { ZyncIcon } from '../../components/Logo'
 import AnimatedBackground from '../../components/AnimatedBackground'
@@ -16,7 +24,7 @@ import { brand } from '../../brand'
 
 export const metadata: Metadata = {
   title: 'Welcome',
-  description: `Welcome to ${brand.name} — get started sending unlimited, private, peer-to-peer files in seconds.`,
+  description: `Welcome to ${brand.name} — private, encrypted file transfer up to 200 GB with per-recipient tracking, reviews, branded pages and more.`,
   alternates: { canonical: '/welcome' },
 }
 
@@ -24,32 +32,80 @@ const STEPS = [
   {
     n: '1',
     title: 'Create your free account',
-    body: 'A one-time sign-up unlocks unlimited transfers. Use email, a one-time code, or Google.',
+    body: 'Sign up once with Google, magic link, or TOTP 2FA — unlocks 1-year links, history, and every pro feature.',
   },
   {
     n: '2',
-    title: 'Drop a file',
-    body: 'Open the sender and drag in any file — there are no size limits.',
+    title: 'Drop your files',
+    body: 'Drag in up to 20 files (200 GB total). Add a title, message, password, custom expiry, or E2E encryption.',
   },
   {
     n: '3',
-    title: 'Share the link or QR',
-    body: 'Send the link to anyone. Their browser connects straight to yours.',
+    title: 'Share your personalised link',
+    body: 'Add recipient emails — each gets a unique tracked link. Or share a QR code, WhatsApp, Telegram, X or email.',
   },
   {
     n: '4',
-    title: 'Watch it fly',
-    body: 'Track progress and live presence in real time. Close the tab when you’re done — nothing is stored.',
+    title: 'Track, collect feedback',
+    body: 'See who downloaded and when. Recipients leave a star rating. You get an email or webhook on every download.',
+  },
+]
+
+const FEATURES = [
+  {
+    icon: <SendIcon />,
+    label: 'P2P & cloud transfers',
+    desc: 'WebRTC direct browser-to-browser or Cloudflare R2 / AWS S3 cloud links up to 200 GB — zero egress fees.',
+  },
+  {
+    icon: <LockIcon />,
+    label: 'AES-256-GCM encryption',
+    desc: 'Files encrypted in-browser before upload. Decryption key travels only in the URL fragment — server never sees plaintext.',
+  },
+  {
+    icon: <TrackChangesIcon />,
+    label: 'Per-recipient tracking',
+    desc: 'Each email recipient gets a unique download link. See exactly who opened it, and when, in your transfer dashboard.',
+  },
+  {
+    icon: <StarIcon />,
+    label: 'Feedback & reviews',
+    desc: 'After downloading, recipients can leave a star rating and comment. Average rating shown in your analytics panel.',
+  },
+  {
+    icon: <BrandingWatermarkIcon />,
+    label: 'Branded download pages',
+    desc: 'Add a custom logo and background image to your transfer links — make every share feel like yours.',
+  },
+  {
+    icon: <InboxIcon />,
+    label: 'File requests (Collect)',
+    desc: 'Create an open upload inbox or invite a specific person by email — they upload, you get notified instantly.',
+  },
+  {
+    icon: <AutoDeleteIcon />,
+    label: 'Burn after read',
+    desc: 'Files permanently deleted from storage 30 seconds after the first download begins.',
+  },
+  {
+    icon: <BuildIcon />,
+    label: '15 in-browser tools',
+    desc: 'Image compress, PDF merge, video trim, text diff and more — all client-side, nothing uploaded.',
   },
 ]
 
 const PERKS = [
-  'Unlimited file size',
+  'Up to 200 GB per transfer',
+  '1-year link lifetime',
   'End-to-end encrypted',
-  'No server storage',
-  'Resumable transfers',
-  'Live presence',
-  'Password protection',
+  'Per-recipient tracking',
+  'Star ratings & feedback',
+  'Branded pages',
+  'File requests (Collect)',
+  'Webhooks & API keys',
+  'Transfer templates',
+  '15 in-browser tools',
+  'No size limit (P2P)',
 ]
 
 export default function WelcomePage(): React.ReactElement {
@@ -96,8 +152,9 @@ export default function WelcomePage(): React.ReactElement {
               color="text.secondary"
               sx={{ fontWeight: 400, maxWidth: 620 }}
             >
-              The fastest, most private way to send files — straight from your
-              browser to theirs, with no size limits and nothing left behind.
+              Private, encrypted file transfer up to 200 GB — with per-recipient
+              tracking, star ratings, branded pages, file requests and more.
+              WeTransfer Pro features, free.
             </Typography>
             <Stack
               direction={{ xs: 'column', sm: 'row' }}
@@ -115,11 +172,11 @@ export default function WelcomePage(): React.ReactElement {
               </Button>
               <Button
                 component={ViewTransitionLink}
-                href="/send"
+                href="/transfer"
                 variant="outlined"
                 size="large"
               >
-                Send a file
+                Send a file now
               </Button>
             </Stack>
             <Stack
@@ -135,6 +192,7 @@ export default function WelcomePage(): React.ReactElement {
         </Container>
       </Box>
 
+      {/* How it works */}
       <Container maxWidth="lg" sx={{ py: { xs: 6, md: 10 } }}>
         <Typography
           variant="h3"
@@ -178,6 +236,67 @@ export default function WelcomePage(): React.ReactElement {
             </Grid>
           ))}
         </Grid>
+      </Container>
+
+      {/* Feature grid */}
+      <Box sx={{ bgcolor: 'action.hover', py: { xs: 6, md: 10 } }}>
+        <Container maxWidth="lg">
+          <Typography
+            variant="h3"
+            component="h2"
+            sx={{ fontWeight: 800, textAlign: 'center', mb: 6 }}
+          >
+            Everything you need, nothing you don&apos;t
+          </Typography>
+          <Grid container spacing={3}>
+            {FEATURES.map((f) => (
+              <Grid size={{ xs: 12, sm: 6, md: 3 }} key={f.label}>
+                <Card variant="outlined" sx={{ height: '100%', bgcolor: 'background.paper' }}>
+                  <CardContent>
+                    <Box sx={{ color: 'primary.main', mb: 1.5 }}>{f.icon}</Box>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5 }}>
+                      {f.label}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {f.desc}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </Container>
+      </Box>
+
+      {/* CTA */}
+      <Container maxWidth="sm" sx={{ py: { xs: 6, md: 10 }, textAlign: 'center' }}>
+        <Stack spacing={3} sx={{ alignItems: 'center' }}>
+          <Typography variant="h4" sx={{ fontWeight: 800 }}>
+            Ready to send your first file?
+          </Typography>
+          <Typography color="text.secondary">
+            No credit card. No install. Sign up in seconds with Google or email.
+          </Typography>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <Button
+              component={ViewTransitionLink}
+              href="/login?mode=signup"
+              variant="contained"
+              size="large"
+              endIcon={<ArrowForwardIcon />}
+            >
+              Create free account
+            </Button>
+            <Button
+              component={ViewTransitionLink}
+              href="/transfer"
+              variant="outlined"
+              size="large"
+            >
+              Try without signing in
+            </Button>
+          </Stack>
+        </Stack>
       </Container>
     </Box>
   )
