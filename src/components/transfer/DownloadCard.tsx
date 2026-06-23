@@ -16,6 +16,8 @@ import CircularProgress from '@mui/material/CircularProgress'
 import TextField from '@mui/material/TextField'
 import Dialog from '@mui/material/Dialog'
 import DialogContent from '@mui/material/DialogContent'
+import Rating from '@mui/material/Rating'
+import Divider from '@mui/material/Divider'
 import DownloadIcon from '@mui/icons-material/Download'
 import FolderZipIcon from '@mui/icons-material/FolderZip'
 import AccessTimeIcon from '@mui/icons-material/AccessTime'
@@ -30,6 +32,8 @@ import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile'
 import CloseIcon from '@mui/icons-material/Close'
 import ZoomInIcon from '@mui/icons-material/ZoomIn'
+import StarIcon from '@mui/icons-material/Star'
+import SendIcon from '@mui/icons-material/Send'
 
 type FileInfo = { name: string; size: number; type: string; path?: string }
 
@@ -114,12 +118,21 @@ export default function DownloadCard({
 
   // Extract decryption key from URL fragment (#k=<hex>)
   const [encKeyHex, setEncKeyHex] = React.useState<string | null>(null)
+  // Extract recipient token from URL search params (?rt=<token>)
+  const [recipientToken, setRecipientToken] = React.useState<string | null>(
+    null,
+  )
   React.useEffect(() => {
-    if (!encrypted) return
-    const hash = window.location.hash
-    const match = hash.match(/[#&]k=([0-9a-f]{64})/i)
-    if (match) setEncKeyHex(match[1].toLowerCase())
+    if (encrypted) {
+      const hash = window.location.hash
+      const match = hash.match(/[#&]k=([0-9a-f]{64})/i)
+      if (match) setEncKeyHex(match[1].toLowerCase())
+    }
+    const params = new URLSearchParams(window.location.search)
+    const rt = params.get('rt')
+    if (rt && /^[0-9a-f]{32}$/i.test(rt)) setRecipientToken(rt)
   }, [encrypted])
+
   const expiry = new Date(expiresAt)
   const daysLeft =
     now !== null ? Math.ceil((expiry.getTime() - now) / 86400000) : null
@@ -174,7 +187,17 @@ export default function DownloadCard({
     }
   }, [slug, passwordProtected])
 
-  // Fetch inline thumbnails for image files once unlocked
+  const currentPassword = (): string | undefined => {
+    if (!passwordProtected) return undefined
+    try {
+      return sessionStorage.getItem(`transfer-pw-${slug}`) ?? passwordInput
+    } catch {
+      return passwordInput
+    }
+  }
+
+  // Inline thumbnails
+  const [thumbnails, setThumbnails] = React.useState<Record<number, string>>({})
   React.useEffect(() => {
     if (!unlocked) return
     files.forEach((f, i) => {
@@ -199,6 +222,13 @@ export default function DownloadCard({
   const [downloading, setDownloading] = React.useState<Set<number>>(new Set())
   const [zipping, setZipping] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  const [hasDownloaded, setHasDownloaded] = React.useState(false)
+
+  // Review state
+  const [reviewRating, setReviewRating] = React.useState<number | null>(null)
+  const [reviewComment, setReviewComment] = React.useState('')
+  const [reviewSubmitting, setReviewSubmitting] = React.useState(false)
+  const [reviewSubmitted, setReviewSubmitted] = React.useState(false)
 
   // Auto-trigger download when ?direct=1 and card is unlocked and not expired
   const autoTriggered = React.useRef(false)
@@ -208,24 +238,12 @@ export default function DownloadCard({
     void downloadAll()
   }, [autoDownload, unlocked, expired])
 
-  // Inline thumbnails: map fileIndex → presigned URL
-  const [thumbnails, setThumbnails] = React.useState<Record<number, string>>({})
-
   // Preview dialog
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(null)
   const [previewType, setPreviewType] = React.useState<string>('')
   const [previewLoading, setPreviewLoading] = React.useState<number | null>(
     null,
   )
-
-  const currentPassword = (): string | undefined => {
-    if (!passwordProtected) return undefined
-    try {
-      return sessionStorage.getItem(`transfer-pw-${slug}`) ?? passwordInput
-    } catch {
-      return passwordInput
-    }
-  }
 
   const downloadFile = async (index: number) => {
     setDownloading((prev) => new Set(prev).add(index))
@@ -234,7 +252,11 @@ export default function DownloadCard({
       const res = await fetch(`/api/transfer/${slug}/download`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fileIndex: index, password: currentPassword() }),
+        body: JSON.stringify({
+          fileIndex: index,
+          password: currentPassword(),
+          recipientToken: recipientToken ?? undefined,
+        }),
       })
       if (!res.ok) {
         const json = await res.json().catch(() => ({}))
@@ -244,7 +266,6 @@ export default function DownloadCard({
       const { url } = await res.json()
 
       if (encrypted && encKeyHex) {
-        // Fetch ciphertext then decrypt in-browser
         const cipher = await fetch(url).then((r) => r.arrayBuffer())
         const plain = await decryptBlob(cipher, encKeyHex)
         const blob = new Blob([plain], {
@@ -261,6 +282,7 @@ export default function DownloadCard({
         a.download = files[index].name
         a.click()
       }
+      setHasDownloaded(true)
     } catch {
       setError('Network error. Please try again.')
     } finally {
@@ -322,7 +344,11 @@ export default function DownloadCard({
           const res = await fetch(`/api/transfer/${slug}/download`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fileIndex: i, password: currentPassword() }),
+            body: JSON.stringify({
+              fileIndex: i,
+              password: currentPassword(),
+              recipientToken: recipientToken ?? undefined,
+            }),
           })
           if (!res.ok) {
             reject(new Error('Failed to get download URL'))
@@ -346,10 +372,28 @@ export default function DownloadCard({
       a.download = `zync-${slug}.zip`
       a.click()
       setTimeout(() => URL.revokeObjectURL(a.href), 60000)
+      setHasDownloaded(true)
     } catch {
       setError('Failed to create ZIP. Try downloading files individually.')
     } finally {
       setZipping(false)
+    }
+  }
+
+  const submitReview = async () => {
+    if (!reviewRating) return
+    setReviewSubmitting(true)
+    try {
+      await fetch(`/api/transfer/${slug}/review`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rating: reviewRating, comment: reviewComment }),
+      })
+      setReviewSubmitted(true)
+    } catch {
+      setReviewSubmitted(true)
+    } finally {
+      setReviewSubmitting(false)
     }
   }
 
@@ -442,7 +486,7 @@ export default function DownloadCard({
           }}
         >
           <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
-            "{message}"
+            &ldquo;{message}&rdquo;
           </Typography>
         </Box>
       )}
@@ -597,6 +641,69 @@ export default function DownloadCard({
             ? 'Download file'
             : 'Download all as ZIP'}
       </Button>
+
+      {/* Review widget — shown after the first successful download */}
+      {hasDownloaded && (
+        <>
+          <Divider />
+          {reviewSubmitted ? (
+            <Alert severity="success" icon={<StarIcon fontSize="small" />}>
+              Thanks for your feedback!
+            </Alert>
+          ) : (
+            <Stack spacing={1.5}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                How were these files?
+              </Typography>
+              <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                <Rating
+                  value={reviewRating}
+                  onChange={(_e, val) => setReviewRating(val)}
+                  size="large"
+                />
+                {reviewRating && (
+                  <Typography variant="caption" color="text.secondary">
+                    {
+                      ['', 'Poor', 'Fair', 'Good', 'Great', 'Excellent'][
+                        reviewRating
+                      ]
+                    }
+                  </Typography>
+                )}
+              </Stack>
+              {reviewRating && (
+                <TextField
+                  label="Comment (optional)"
+                  placeholder="Anything to add?"
+                  value={reviewComment}
+                  onChange={(e) => setReviewComment(e.target.value)}
+                  size="small"
+                  fullWidth
+                  multiline
+                  rows={2}
+                  slotProps={{ htmlInput: { maxLength: 500 } }}
+                />
+              )}
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={submitReview}
+                disabled={!reviewRating || reviewSubmitting}
+                startIcon={
+                  reviewSubmitting ? (
+                    <CircularProgress size={14} color="inherit" />
+                  ) : (
+                    <SendIcon fontSize="small" />
+                  )
+                }
+                sx={{ alignSelf: 'flex-start' }}
+              >
+                {reviewSubmitting ? 'Sending…' : 'Send feedback'}
+              </Button>
+            </Stack>
+          )}
+        </>
+      )}
 
       {/* Preview dialog */}
       <Dialog

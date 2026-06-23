@@ -20,6 +20,8 @@ import InputLabel from '@mui/material/InputLabel'
 import FormControl from '@mui/material/FormControl'
 import IconButton from '@mui/material/IconButton'
 import Tooltip from '@mui/material/Tooltip'
+import FormControlLabel from '@mui/material/FormControlLabel'
+import Switch from '@mui/material/Switch'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import CheckIcon from '@mui/icons-material/Check'
 import InboxIcon from '@mui/icons-material/Inbox'
@@ -284,6 +286,9 @@ function CreateForm({
   const [description, setDescription] = React.useState('')
   const [expiryDays, setExpiryDays] = React.useState(30)
   const [maxFiles, setMaxFiles] = React.useState(20)
+  const [targetPerson, setTargetPerson] = React.useState(false)
+  const [requestedFromEmail, setRequestedFromEmail] = React.useState('')
+  const [requestedFromName, setRequestedFromName] = React.useState('')
   const [stage, setStage] = React.useState<Stage>('idle')
   const [error, setError] = React.useState<string | null>(null)
 
@@ -295,7 +300,16 @@ function CreateForm({
       const res = await fetch('/api/collect/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, description, expiryDays, maxFiles }),
+        body: JSON.stringify({
+          title,
+          description,
+          expiryDays,
+          maxFiles,
+          requestedFromEmail:
+            targetPerson && requestedFromEmail ? requestedFromEmail : undefined,
+          requestedFromName:
+            targetPerson && requestedFromName ? requestedFromName : undefined,
+        }),
       })
       const json = await res.json()
       if (!res.ok) {
@@ -366,11 +380,60 @@ function CreateForm({
           </Select>
         </FormControl>
       </Stack>
+      {/* Request from specific person */}
+      <Stack spacing={1}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={targetPerson}
+              onChange={(e) => setTargetPerson(e.target.checked)}
+              size="small"
+            />
+          }
+          label={
+            <Stack>
+              <Typography variant="body2">
+                Request from a specific person
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Send an invitation email to one person asking them to upload
+              </Typography>
+            </Stack>
+          }
+        />
+        {targetPerson && (
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <TextField
+              label="Their email *"
+              type="email"
+              value={requestedFromEmail}
+              onChange={(e) => setRequestedFromEmail(e.target.value)}
+              size="small"
+              fullWidth
+              required
+              slotProps={{ htmlInput: { maxLength: 200 } }}
+            />
+            <TextField
+              label="Their name (optional)"
+              value={requestedFromName}
+              onChange={(e) => setRequestedFromName(e.target.value)}
+              size="small"
+              fullWidth
+              slotProps={{ htmlInput: { maxLength: 100 } }}
+            />
+          </Stack>
+        )}
+      </Stack>
+
       <Button
         variant="contained"
         size="large"
         onClick={create}
-        disabled={!title.trim() || stage === 'creating'}
+        disabled={
+          !title.trim() ||
+          stage === 'creating' ||
+          (targetPerson && !requestedFromEmail.includes('@'))
+        }
         startIcon={
           stage === 'creating' ? (
             <CircularProgress size={18} color="inherit" />
@@ -380,7 +443,11 @@ function CreateForm({
         }
         fullWidth
       >
-        {stage === 'creating' ? 'Creating…' : 'Create file request'}
+        {stage === 'creating'
+          ? 'Creating…'
+          : targetPerson
+            ? 'Create & send invitation'
+            : 'Create file request'}
       </Button>
       <Typography
         variant="caption"

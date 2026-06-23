@@ -20,7 +20,7 @@ export async function GET(
     return NextResponse.json({ error: 'Forbidden.' }, { status: 403 })
   }
 
-  // Aggregate country breakdown
+  // Country breakdown
   const countryMap: Record<string, number> = {}
   for (const ev of transfer.downloadEvents) {
     const c = ev.country === 'XX' ? 'Unknown' : ev.country
@@ -30,9 +30,39 @@ export async function GET(
     .sort((a, b) => b[1] - a[1])
     .map(([country, count]) => ({ country, count }))
 
+  // Timeline: group download events by calendar day (UTC)
+  const dayMap: Record<string, number> = {}
+  for (const ev of transfer.downloadEvents) {
+    const day = ev.at.slice(0, 10)
+    dayMap[day] = (dayMap[day] ?? 0) + 1
+  }
+  const timeline = Object.entries(dayMap)
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([date, count]) => ({ date, count }))
+
+  // Per-recipient status
+  const recipients = Object.entries(transfer.recipientTokens ?? {}).map(
+    ([token, info]) => ({
+      email: info.email,
+      downloadedAt: info.downloadedAt ?? null,
+      token,
+    }),
+  )
+
+  // Average review rating
+  const reviews = transfer.reviews ?? []
+  const avgRating =
+    reviews.length > 0
+      ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
+      : null
+
   return NextResponse.json({
     downloadCount: transfer.downloadCount,
     downloadEvents: transfer.downloadEvents,
     countries,
+    timeline,
+    recipients,
+    reviews,
+    avgRating,
   })
 }

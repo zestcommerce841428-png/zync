@@ -8,6 +8,7 @@ import Typography from '@mui/material/Typography'
 import Alert from '@mui/material/Alert'
 import Chip from '@mui/material/Chip'
 import Divider from '@mui/material/Divider'
+import Box from '@mui/material/Box'
 import { ZyncIcon } from '../../../components/Logo'
 import DownloadCard from '../../../components/transfer/DownloadCard'
 import { BackgroundSetter } from '../../../components/transfer/BackgroundSetter'
@@ -82,12 +83,44 @@ export default async function TransferDownloadPage({
     /* non-fatal */
   }
 
+  // Per-recipient status for owner view
+  const recipientList = isOwner
+    ? Object.values(transfer?.recipientTokens ?? {}).map((r) => ({
+        email: r.email,
+        downloadedAt: r.downloadedAt ?? null,
+      }))
+    : []
+
+  // Reviews for owner view
+  const reviews = isOwner ? (transfer?.reviews ?? []) : []
+  const avgRating =
+    reviews.length > 0
+      ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
+      : null
+
   return (
     <>
-      {transfer?.background && (
+      {transfer?.backgroundImageUrl && (
+        <BackgroundSetter
+          background={`url(${transfer.backgroundImageUrl}) center/cover no-repeat fixed`}
+        />
+      )}
+      {!transfer?.backgroundImageUrl && transfer?.background && (
         <BackgroundSetter background={transfer.background} />
       )}
       <Container maxWidth="sm" sx={{ py: { xs: 6, md: 10 } }}>
+        {/* Custom logo for branded pages */}
+        {transfer?.logoUrl && (
+          <Box sx={{ textAlign: 'center', mb: 3 }}>
+            <Box
+              component="img"
+              src={transfer.logoUrl}
+              alt="Logo"
+              sx={{ maxHeight: 64, maxWidth: 240, objectFit: 'contain' }}
+            />
+          </Box>
+        )}
+
         <Card variant="outlined">
           <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
             <Stack spacing={3}>
@@ -140,7 +173,8 @@ export default async function TransferDownloadPage({
                   {isOwner && (
                     <>
                       <Divider />
-                      <Stack spacing={1.5}>
+                      <Stack spacing={2.5}>
+                        {/* Header */}
                         <Stack
                           direction="row"
                           spacing={1}
@@ -159,14 +193,80 @@ export default async function TransferDownloadPage({
                               transfer.downloadCount > 0 ? 'success' : 'default'
                             }
                           />
+                          {avgRating !== null && (
+                            <Chip
+                              label={`★ ${avgRating.toFixed(1)} (${reviews.length})`}
+                              size="small"
+                              color="warning"
+                            />
+                          )}
                         </Stack>
 
+                        {/* Per-recipient status */}
+                        {recipientList.length > 0 && (
+                          <Stack spacing={0.75}>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{
+                                fontWeight: 600,
+                                textTransform: 'uppercase',
+                                letterSpacing: 0.5,
+                              }}
+                            >
+                              Recipients
+                            </Typography>
+                            {recipientList.map((r) => (
+                              <Stack
+                                key={r.email}
+                                direction="row"
+                                spacing={1}
+                                sx={{
+                                  alignItems: 'center',
+                                  py: 0.75,
+                                  px: 1,
+                                  borderRadius: 1,
+                                  bgcolor: 'action.hover',
+                                }}
+                              >
+                                <Typography variant="caption" sx={{ flex: 1 }}>
+                                  {r.email}
+                                </Typography>
+                                <Chip
+                                  label={
+                                    r.downloadedAt
+                                      ? `Downloaded ${formatDate(r.downloadedAt)}`
+                                      : 'Not yet downloaded'
+                                  }
+                                  size="small"
+                                  color={r.downloadedAt ? 'success' : 'default'}
+                                  variant={
+                                    r.downloadedAt ? 'filled' : 'outlined'
+                                  }
+                                />
+                              </Stack>
+                            ))}
+                          </Stack>
+                        )}
+
+                        {/* Download events log */}
                         {transfer.downloadEvents.length === 0 ? (
                           <Typography variant="body2" color="text.secondary">
                             No downloads yet. Share your link to get started.
                           </Typography>
                         ) : (
-                          <Stack spacing={0.5}>
+                          <Stack spacing={0.75}>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{
+                                fontWeight: 600,
+                                textTransform: 'uppercase',
+                                letterSpacing: 0.5,
+                              }}
+                            >
+                              Download log
+                            </Typography>
                             {transfer.downloadEvents
                               .slice()
                               .reverse()
@@ -209,6 +309,66 @@ export default async function TransferDownloadPage({
                                 Showing first 500 events.
                               </Typography>
                             )}
+                          </Stack>
+                        )}
+
+                        {/* Reviews */}
+                        {reviews.length > 0 && (
+                          <Stack spacing={0.75}>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{
+                                fontWeight: 600,
+                                textTransform: 'uppercase',
+                                letterSpacing: 0.5,
+                              }}
+                            >
+                              Feedback ({reviews.length})
+                            </Typography>
+                            {reviews.map((rv, i) => (
+                              <Stack
+                                key={i}
+                                spacing={0.25}
+                                sx={{
+                                  py: 1,
+                                  px: 1.5,
+                                  borderRadius: 1,
+                                  bgcolor: 'action.hover',
+                                }}
+                              >
+                                <Stack
+                                  direction="row"
+                                  spacing={1}
+                                  sx={{ alignItems: 'center' }}
+                                >
+                                  <Typography
+                                    variant="caption"
+                                    sx={{ color: 'warning.main' }}
+                                  >
+                                    {'★'.repeat(rv.rating)}
+                                    {'☆'.repeat(5 - rv.rating)}
+                                  </Typography>
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                  >
+                                    {formatDate(rv.at)} ·{' '}
+                                    {rv.country !== 'XX'
+                                      ? rv.country
+                                      : 'Unknown'}
+                                  </Typography>
+                                </Stack>
+                                {rv.comment && (
+                                  <Typography
+                                    variant="caption"
+                                    sx={{ fontStyle: 'italic' }}
+                                  >
+                                    &ldquo;{rv.comment}&rdquo;
+                                  </Typography>
+                                )}
+                              </Stack>
+                            ))}
                           </Stack>
                         )}
                       </Stack>

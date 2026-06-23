@@ -18,6 +18,18 @@ export type DownloadEvent = {
   country: string // CF-IPCountry header or 'XX'
 }
 
+export type ReviewEntry = {
+  rating: number // 1-5
+  comment: string
+  at: string // ISO timestamp
+  country: string
+}
+
+export type RecipientToken = {
+  email: string
+  downloadedAt?: string // ISO timestamp, set when recipient downloads
+}
+
 export type TransferRecord = {
   slug: string
   ownerId: string | null
@@ -35,12 +47,16 @@ export type TransferRecord = {
   notifyEveryDownload: boolean
   notifiedAt: string | null
   recipientEmails: string[]
+  recipientTokens: Record<string, RecipientToken> // token -> { email, downloadedAt? }
   createdAt: string
   completed: boolean
   burnAfterRead: boolean
   background: string | null // CSS color/gradient string, null = default theme
+  logoUrl: string | null // branded page: custom logo image URL
+  backgroundImageUrl: string | null // branded page: custom background image URL
   webhookUrl: string | null // optional HTTP callback on every download event
   encrypted: boolean // AES-256-GCM client-side encryption; key travels only in URL fragment
+  reviews: ReviewEntry[] // recipient feedback (capped at 100)
 }
 
 const KEY = (slug: string) => `transfer:${slug}`
@@ -93,6 +109,10 @@ export async function getTransfer(
     // Back-compat defaults for records created before these fields existed
     r.downloadEvents ??= []
     r.background ??= null
+    r.recipientTokens ??= {}
+    r.logoUrl ??= null
+    r.backgroundImageUrl ??= null
+    r.reviews ??= []
     return r
   } catch {
     return null
@@ -234,4 +254,29 @@ export async function recordDownloadEvent(
   const events = transfer.downloadEvents ?? []
   if (events.length < 500) events.push(event)
   await updateTransfer(slug, { downloadEvents: events })
+}
+
+// Mark a recipient token as downloaded
+export async function markRecipientDownloaded(
+  slug: string,
+  token: string,
+): Promise<void> {
+  const transfer = await getTransfer(slug)
+  if (!transfer) return
+  const tokens = { ...(transfer.recipientTokens ?? {}) }
+  if (!tokens[token]) return
+  tokens[token] = { ...tokens[token], downloadedAt: new Date().toISOString() }
+  await updateTransfer(slug, { recipientTokens: tokens })
+}
+
+// Append a review (capped at 100)
+export async function recordReview(
+  slug: string,
+  review: ReviewEntry,
+): Promise<void> {
+  const transfer = await getTransfer(slug)
+  if (!transfer) return
+  const reviews = transfer.reviews ?? []
+  if (reviews.length < 100) reviews.push(review)
+  await updateTransfer(slug, { reviews })
 }

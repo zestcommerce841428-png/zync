@@ -245,22 +245,27 @@ export function tplTransferReady(d: {
   fileCount: number
   totalSize: string
   expiresAt: string
+  recipientName?: string
 }): { subject: string; html: string; text: string } {
   const expiry = new Date(d.expiresAt).toLocaleDateString('en-US', {
     month: 'long',
     day: 'numeric',
     year: 'numeric',
   })
+  const greeting = d.recipientName ? `Hi ${d.recipientName}, ` : ''
   return {
     subject: d.title
       ? `${d.title} — file transfer via ${brand.name}`
       : `Someone sent you ${d.fileCount} file${d.fileCount !== 1 ? 's' : ''} via ${brand.name}`,
-    text: `You have a file transfer waiting. Download it at: ${d.url}\nExpires: ${expiry}`,
+    text: `${greeting}You have a file transfer waiting. Download it at: ${d.url}\nExpires: ${expiry}`,
     html: baseLayout({
       preheader: `You have ${d.fileCount} file${d.fileCount !== 1 ? 's' : ''} waiting for you.`,
       heading: d.title || `You have files waiting`,
-      intro:
-        d.senderMessage || `Someone shared files with you via ${brand.name}.`,
+      intro: greeting
+        ? greeting +
+          (d.senderMessage ||
+            `someone shared files with you via ${brand.name}.`)
+        : d.senderMessage || `Someone shared files with you via ${brand.name}.`,
       bodyHtml: kv([
         ['Files', `${d.fileCount} file${d.fileCount !== 1 ? 's' : ''}`],
         ['Total size', d.totalSize],
@@ -287,6 +292,40 @@ export function tplTransferDownloaded(d: {
       bodyHtml: kv([['Downloads so far', String(d.downloadCount)]]),
       button: { label: 'View transfer', url: d.url },
       footerNote: `You received this because you enabled download notifications for this transfer.`,
+    }),
+  }
+}
+
+export function tplCollectInvite(d: {
+  requesterName?: string
+  ownerName: string
+  title: string
+  description: string
+  url: string
+  expiresAt: string
+}): { subject: string; html: string; text: string } {
+  const expiry = new Date(d.expiresAt).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
+  const greeting = d.requesterName ? `Hi ${d.requesterName},` : 'Hi,'
+  return {
+    subject: `${d.ownerName} is requesting files from you — ${brand.name}`,
+    text: `${greeting}\n\n${d.ownerName} has requested files from you: "${d.title}".\n\n${d.description ? d.description + '\n\n' : ''}Upload your files here: ${d.url}\n\nLink expires: ${expiry}`,
+    html: baseLayout({
+      preheader: `${d.ownerName} is requesting files from you.`,
+      heading: `${d.ownerName} wants files from you`,
+      intro: `${greeting} ${d.ownerName} has sent you a file request via ${brand.name}.`,
+      bodyHtml: kv([
+        ['Request', d.title],
+        ...(d.description
+          ? [['Instructions', d.description] as [string, string]]
+          : []),
+        ['Upload by', expiry],
+      ]),
+      button: { label: 'Upload files', url: d.url },
+      footerNote: `This upload link expires on ${expiry}. You can upload up to multiple files at once.`,
     }),
   }
 }

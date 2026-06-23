@@ -27,17 +27,29 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const t = await getTransfer(body.data.slug)
 
   if (t && t.recipientEmails.length > 0) {
-    const url = `${brand.url}/transfer/${t.slug}`
-    const tpl = tplTransferReady({
-      title: t.title,
-      url,
-      senderMessage: t.message,
-      fileCount: t.files.length,
-      totalSize: formatBytes(t.totalSize),
-      expiresAt: t.expiresAt,
-    })
-    // Send to each recipient (fire-and-forget)
+    const baseUrl = `${brand.url}/transfer/${t.slug}`
+    // Generate a unique token per recipient for per-person download tracking
+    const recipientTokens: Record<string, { email: string }> = {}
+    const emailTokenMap: Record<string, string> = {}
+    for (const email of t.recipientEmails) {
+      const token = crypto.randomUUID().replace(/-/g, '')
+      recipientTokens[token] = { email }
+      emailTokenMap[email] = token
+    }
+    await updateTransfer(body.data.slug, { recipientTokens })
+
+    // Send personalized email to each recipient with their unique token URL
     for (const to of t.recipientEmails) {
+      const token = emailTokenMap[to]
+      const url = token ? `${baseUrl}?rt=${token}` : baseUrl
+      const tpl = tplTransferReady({
+        title: t.title,
+        url,
+        senderMessage: t.message,
+        fileCount: t.files.length,
+        totalSize: formatBytes(t.totalSize),
+        expiresAt: t.expiresAt,
+      })
       void sendMail({
         to,
         subject: tpl.subject,

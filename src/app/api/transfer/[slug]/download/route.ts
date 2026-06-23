@@ -11,6 +11,7 @@ import {
   sweepExpiredTransfers,
   scheduleBurn,
   recordDownloadEvent,
+  markRecipientDownloaded,
 } from '../../../../../lib/transfer'
 import { sendMail } from '../../../../../email'
 import { tplTransferDownloaded } from '../../../../../emailTemplates'
@@ -30,6 +31,7 @@ const BodySchema = z.object({
   fileIndex: z.number().int().nonnegative().max(19),
   password: z.string().max(200).optional(),
   preview: z.boolean().default(false),
+  recipientToken: z.string().max(64).optional(),
 })
 
 export async function POST(
@@ -101,6 +103,10 @@ export async function POST(
       ipHash: hashIp(ip),
       country,
     })
+
+    // Mark per-recipient token as downloaded (if recipient opened their personalized link)
+    const rt = body.data.recipientToken
+    if (rt) void markRecipientDownloaded(slug, rt)
 
     // Notify sender: on first download always; on every download if notifyEveryDownload is set
     if (

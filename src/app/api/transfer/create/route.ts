@@ -53,6 +53,8 @@ const BodySchema = z.object({
   burnAfterRead: z.boolean().default(false),
   background: z.string().max(500).optional(),
   encrypted: z.boolean().default(false),
+  logoUrl: z.string().url().max(2000).optional().or(z.literal('')),
+  backgroundImageUrl: z.string().url().max(2000).optional().or(z.literal('')),
   recaptchaToken: z.string().optional(),
 })
 
@@ -86,6 +88,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     burnAfterRead,
     background,
     encrypted,
+    logoUrl,
+    backgroundImageUrl,
     recaptchaToken,
   } = body.data
 
@@ -175,6 +179,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       burnAfterRead,
       background: background || null,
       encrypted,
+      logoUrl: logoUrl || null,
+      backgroundImageUrl: backgroundImageUrl || null,
+      recipientTokens: {},
+      reviews: [],
       createdAt: new Date().toISOString(),
       completed: false,
     })

@@ -89,6 +89,8 @@ export default function TransferPage(): React.ReactElement {
   const [webhookUrl, setWebhookUrl] = React.useState('')
   const [burnAfterRead, setBurnAfterRead] = React.useState(false)
   const [background, setBackground] = React.useState('')
+  const [logoUrl, setLogoUrl] = React.useState('')
+  const [backgroundImageUrl, setBackgroundImageUrl] = React.useState('')
   const [encryptFiles, setEncryptFiles] = React.useState(false)
   const [encryptionKey, setEncryptionKey] = React.useState<string | null>(null)
   const [templates, setTemplates] = React.useState<
@@ -303,6 +305,8 @@ export default function TransferPage(): React.ReactElement {
           burnAfterRead,
           background: background || undefined,
           encrypted: encryptFiles,
+          logoUrl: logoUrl || undefined,
+          backgroundImageUrl: backgroundImageUrl || undefined,
           recaptchaToken,
         }),
       })
@@ -405,6 +409,8 @@ export default function TransferPage(): React.ReactElement {
     setWebhookUrl('')
     setBurnAfterRead(false)
     setBackground('')
+    setLogoUrl('')
+    setBackgroundImageUrl('')
     setEncryptFiles(false)
     setEncryptionKey(null)
     setStage('idle')
@@ -869,7 +875,7 @@ export default function TransferPage(): React.ReactElement {
                     </AccordionDetails>
                   </Accordion>
 
-                  {/* Background / Customize */}
+                  {/* Branding / Customize */}
                   <Accordion
                     disableGutters
                     elevation={0}
@@ -887,7 +893,7 @@ export default function TransferPage(): React.ReactElement {
                         sx={{ alignItems: 'center' }}
                       >
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                          Customize background
+                          Branding &amp; background
                         </Typography>
                         {background && (
                           <Box
@@ -906,8 +912,30 @@ export default function TransferPage(): React.ReactElement {
                     </AccordionSummary>
                     <AccordionDetails>
                       <Stack spacing={1.5}>
+                        {/* Logo URL */}
+                        <TextField
+                          label="Logo image URL (optional)"
+                          placeholder="https://example.com/logo.png"
+                          value={logoUrl}
+                          onChange={(e) => setLogoUrl(e.target.value)}
+                          size="small"
+                          fullWidth
+                          helperText="Shown above the download card — use a transparent PNG or SVG"
+                        />
+                        {/* Background image URL */}
+                        <TextField
+                          label="Background image URL (optional)"
+                          placeholder="https://example.com/bg.jpg"
+                          value={backgroundImageUrl}
+                          onChange={(e) =>
+                            setBackgroundImageUrl(e.target.value)
+                          }
+                          size="small"
+                          fullWidth
+                          helperText="Full-page background image — overrides the colour preset below"
+                        />
                         <Typography variant="caption" color="text.secondary">
-                          Choose a background for your download page
+                          Or choose a background colour preset
                         </Typography>
                         <Stack
                           direction="row"

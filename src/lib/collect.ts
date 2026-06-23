@@ -21,6 +21,7 @@ export type CollectRecord = {
   files: CollectFile[]
   createdAt: string
   active: boolean // false after owner closes
+  requestedFrom: { email: string; name?: string } | null // named file request
 }
 
 const KEY = (slug: string) => `collect:${slug}`
@@ -47,7 +48,9 @@ export async function getCollect(slug: string): Promise<CollectRecord | null> {
   const raw = await redis.get(KEY(slug))
   if (!raw) return null
   try {
-    return JSON.parse(raw) as CollectRecord
+    const r = JSON.parse(raw) as CollectRecord
+    r.requestedFrom ??= null
+    return r
   } catch {
     return null
   }
