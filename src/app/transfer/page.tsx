@@ -107,8 +107,20 @@ export default function TransferPage(): React.ReactElement {
   const [resultExpiry, setResultExpiry] = React.useState('')
   const [resultTitle, setResultTitle] = React.useState('')
   const [resultBurn, setResultBurn] = React.useState(false)
+  const [cloudTransfersEnabled, setCloudTransfersEnabled] =
+    React.useState<boolean | null>(null)
 
   const { getToken } = useRecaptcha()
+
+  // Check feature flags
+  React.useEffect(() => {
+    fetch('/api/flags')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => {
+        if (j != null) setCloudTransfersEnabled(j.cloudTransfers !== false)
+      })
+      .catch(() => setCloudTransfersEnabled(true))
+  }, [])
 
   // Load saved contacts + templates
   React.useEffect(() => {
@@ -448,7 +460,31 @@ export default function TransferPage(): React.ReactElement {
         </Stack>
       </Stack>
 
-      <Card variant="outlined">
+      {cloudTransfersEnabled === false && (
+        <Alert
+          severity="warning"
+          sx={{ mb: 3, borderRadius: 2 }}
+          icon={<CloudUploadIcon />}
+        >
+          <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5 }}>
+            Cloud uploads are temporarily unavailable
+          </Typography>
+          <Typography variant="body2">
+            The administrator has paused cloud file uploads for maintenance.
+            You can still use <strong>P2P (browser-to-browser)</strong> transfers
+            from the{' '}
+            <Box component="a" href="/send" sx={{ color: 'inherit' }}>
+              Send page
+            </Box>
+            . Cloud uploads will return shortly.
+          </Typography>
+        </Alert>
+      )}
+
+      <Card
+        variant="outlined"
+        sx={cloudTransfersEnabled === false ? { opacity: 0.5, pointerEvents: 'none' } : {}}
+      >
         <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
           {stage === 'done' ? (
             <Stack spacing={3}>

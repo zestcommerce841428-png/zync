@@ -31,6 +31,7 @@ export type SettingKey =
   | 'feature_recaptcha'
   | 'feature_guest_uploads'
   | 'feature_registration'
+  | 'feature_cloud_transfers'
 
 export type SettingsMap = Partial<Record<SettingKey, string>>
 

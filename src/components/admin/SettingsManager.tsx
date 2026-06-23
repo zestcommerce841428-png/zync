@@ -42,6 +42,7 @@ type Settings = {
   feature_recaptcha?: string
   feature_guest_uploads?: string
   feature_registration?: string
+  feature_cloud_transfers?: string
 }
 
 function SecretField({
@@ -461,6 +462,12 @@ export default function SettingsManager(): React.ReactElement {
                 within 30 seconds.
               </Typography>
               <Divider />
+              <FeatureToggle
+                label="Cloud transfers (upload)"
+                description="Allow users to upload files to cloud storage (R2/S3). When disabled, the transfer page shows a maintenance notice and uploads are blocked."
+                value={s.feature_cloud_transfers}
+                onChange={(v) => patch({ feature_cloud_transfers: v })}
+              />
               <FeatureToggle
                 label="Email notifications"
                 description="Send transfer-sent, downloaded, and sign-in alert emails."

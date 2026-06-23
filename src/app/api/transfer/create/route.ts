@@ -22,6 +22,7 @@ import { generateShortSlug } from '../../../../slugs'
 import { rateLimit, getClientIp } from '../../../../rateLimit'
 import { tooManyRequests, ok, err } from '../../../../lib/apiResponse'
 import { verifyRecaptcha } from '../../../../recaptcha'
+import { isFeatureEnabled } from '../../../../lib/appSettings'
 
 export const dynamic = 'force-dynamic'
 
@@ -70,6 +71,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return err('Cloud transfers are not configured on this server.', {
       status: 503,
     })
+  }
+
+  if (!(await isFeatureEnabled('feature_cloud_transfers', true))) {
+    return err(
+      'Cloud transfers are temporarily disabled by the administrator. Please try again later.',
+      { status: 503 },
+    )
   }
 
   const body = BodySchema.safeParse(await req.json().catch(() => null))

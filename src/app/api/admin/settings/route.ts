@@ -63,6 +63,7 @@ const PatchSchema = z.object({
   feature_recaptcha: z.enum(['true', 'false']).optional(),
   feature_guest_uploads: z.enum(['true', 'false']).optional(),
   feature_registration: z.enum(['true', 'false']).optional(),
+  feature_cloud_transfers: z.enum(['true', 'false']).optional(),
 })
 
 export async function PATCH(req: NextRequest): Promise<NextResponse> {
