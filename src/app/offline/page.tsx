@@ -2,9 +2,9 @@ import type { Metadata } from 'next'
 import Container from '@mui/material/Container'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
-import Button from '@mui/material/Button'
 import WifiOffIcon from '@mui/icons-material/WifiOff'
 import { brand } from '../../brand'
+import OfflineReloadButton from '../../components/OfflineReloadButton'
 
 export const metadata: Metadata = {
   title: 'Offline',
@@ -23,9 +23,7 @@ export default function OfflinePage(): React.ReactElement {
           {brand.name} needs an internet connection to upload and download files.
           Check your connection and try again.
         </Typography>
-        <Button variant="contained" onClick={() => window.location.reload()}>
-          Try again
-        </Button>
+        <OfflineReloadButton />
       </Stack>
     </Container>
   )
