@@ -6,7 +6,6 @@ import { getSupabaseServerClient } from '../../../../supabase/server'
 import { sendMail } from '../../../../email'
 import { tplTransferReady, tplTransferSent } from '../../../../emailTemplates'
 import { brand } from '../../../../brand'
-import { getRedisClient } from '../../../../redisClient'
 
 export const dynamic = 'force-dynamic'
 
