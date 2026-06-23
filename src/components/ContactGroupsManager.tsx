@@ -200,7 +200,7 @@ export default function ContactGroupsManager(): React.ReactElement {
               onChange={(e) => setNewName(e.target.value)}
               fullWidth
               autoFocus
-              inputProps={{ maxLength: 80 }}
+              slotProps={{ htmlInput: { maxLength: 80 } }}
             />
             <TextField
               label="Email addresses"

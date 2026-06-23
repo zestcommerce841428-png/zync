@@ -228,7 +228,7 @@ export default function BoardsManager(): React.ReactElement {
               onChange={(e) => setNewName(e.target.value)}
               fullWidth
               autoFocus
-              inputProps={{ maxLength: 80 }}
+              slotProps={{ htmlInput: { maxLength: 80 } }}
             />
             <TextField
               label="Description (optional)"
