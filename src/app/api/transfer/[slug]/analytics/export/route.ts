@@ -20,9 +20,7 @@ export async function GET(
     return NextResponse.json({ error: 'Forbidden.' }, { status: 403 })
   }
 
-  const rows: string[] = [
-    'type,timestamp,country,detail',
-  ]
+  const rows: string[] = ['type,timestamp,country,detail']
 
   for (const ev of transfer.downloadEvents) {
     rows.push(`download,${ev.at},${ev.country},`)
@@ -36,7 +34,9 @@ export async function GET(
 
   for (const r of transfer.reviews ?? []) {
     const safeComment = r.comment.replace(/"/g, '""')
-    rows.push(`review,${r.at},${r.country},"${r.rating} stars — ${safeComment}"`)
+    rows.push(
+      `review,${r.at},${r.country},"${r.rating} stars — ${safeComment}"`,
+    )
   }
 
   for (const c of transfer.comments ?? []) {

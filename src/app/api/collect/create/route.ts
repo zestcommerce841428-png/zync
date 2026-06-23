@@ -29,22 +29,41 @@ const BodySchema = z.object({
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const ip = getClientIp(req)
-  const rl = await rateLimit(`collect-create:${ip}`, { limit: 20, windowSeconds: 3600 })
+  const rl = await rateLimit(`collect-create:${ip}`, {
+    limit: 20,
+    windowSeconds: 3600,
+  })
   if (!rl.success)
     return NextResponse.json({ error: 'Too many requests.' }, { status: 429 })
 
   const supabase = await getSupabaseServerClient()
   if (!supabase)
-    return NextResponse.json({ error: 'Authentication required.' }, { status: 401 })
-  const { data: { user } } = await supabase.auth.getUser()
+    return NextResponse.json(
+      { error: 'Authentication required.' },
+      { status: 401 },
+    )
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user)
-    return NextResponse.json({ error: 'Sign in to create a file request.' }, { status: 401 })
+    return NextResponse.json(
+      { error: 'Sign in to create a file request.' },
+      { status: 401 },
+    )
 
   const body = BodySchema.safeParse(await req.json().catch(() => null))
   if (!body.success)
     return NextResponse.json({ error: 'Invalid payload.' }, { status: 400 })
 
-  const { title, description, expiryDays, maxFiles, requestedFromEmail, requestedFromName, requestedFromMany } = body.data
+  const {
+    title,
+    description,
+    expiryDays,
+    maxFiles,
+    requestedFromEmail,
+    requestedFromName,
+    requestedFromMany,
+  } = body.data
   const slug = await generateShortSlug()
   const expiresAt = new Date(Date.now() + expiryDays * 86400000).toISOString()
 
@@ -54,7 +73,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   // Merge single + many into unified list (deduplicate by email)
   const allRespondents = [...requestedFromMany]
-  if (requestedFrom && !allRespondents.find((r) => r.email === requestedFrom.email)) {
+  if (
+    requestedFrom &&
+    !allRespondents.find((r) => r.email === requestedFrom.email)
+  ) {
     allRespondents.push(requestedFrom)
   }
 
@@ -91,7 +113,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       url: uploadUrl,
       expiresAt,
     })
-    void sendMail({ to: respondent.email, subject: tpl.subject, html: tpl.html, text: tpl.text })
+    void sendMail({
+      to: respondent.email,
+      subject: tpl.subject,
+      html: tpl.html,
+      text: tpl.text,
+    })
   }
 
   return NextResponse.json({ slug, expiresAt }, { status: 201 })

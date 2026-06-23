@@ -20,7 +20,8 @@ export async function GET(
   const user = await getCurrentUser()
   if (!user) return err('Unauthorized.', { status: 401 })
   const board = await getBoard(id)
-  if (!board || board.ownerId !== user.id) return err('Not found.', { status: 404 })
+  if (!board || board.ownerId !== user.id)
+    return err('Not found.', { status: 404 })
   return ok({ board })
 }
 
@@ -43,7 +44,9 @@ export async function PATCH(
   if (!body.success) return err('Invalid payload.')
 
   const { addSlug, removeSlug, ...rest } = body.data
-  if (Object.keys(rest).some((k) => rest[k as keyof typeof rest] !== undefined)) {
+  if (
+    Object.keys(rest).some((k) => rest[k as keyof typeof rest] !== undefined)
+  ) {
     await updateBoard(id, rest)
   }
   if (addSlug) await addTransferToBoard(id, addSlug, user.id)

@@ -331,22 +331,52 @@ export default async function TransferDownloadPage({
                             <Typography
                               variant="caption"
                               color="text.secondary"
-                              sx={{ fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}
+                              sx={{
+                                fontWeight: 600,
+                                textTransform: 'uppercase',
+                                letterSpacing: 0.5,
+                              }}
                             >
                               Feedback ({reviews.length})
                             </Typography>
                             {reviews.map((rv, i) => (
-                              <Stack key={i} spacing={0.25} sx={{ py: 1, px: 1.5, borderRadius: 1, bgcolor: 'action.hover' }}>
-                                <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-                                  <Typography variant="caption" sx={{ color: 'warning.main' }}>
-                                    {'★'.repeat(rv.rating)}{'☆'.repeat(5 - rv.rating)}
+                              <Stack
+                                key={i}
+                                spacing={0.25}
+                                sx={{
+                                  py: 1,
+                                  px: 1.5,
+                                  borderRadius: 1,
+                                  bgcolor: 'action.hover',
+                                }}
+                              >
+                                <Stack
+                                  direction="row"
+                                  spacing={1}
+                                  sx={{ alignItems: 'center' }}
+                                >
+                                  <Typography
+                                    variant="caption"
+                                    sx={{ color: 'warning.main' }}
+                                  >
+                                    {'★'.repeat(rv.rating)}
+                                    {'☆'.repeat(5 - rv.rating)}
                                   </Typography>
-                                  <Typography variant="caption" color="text.secondary">
-                                    {formatDate(rv.at)} · {rv.country !== 'XX' ? rv.country : 'Unknown'}
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                  >
+                                    {formatDate(rv.at)} ·{' '}
+                                    {rv.country !== 'XX'
+                                      ? rv.country
+                                      : 'Unknown'}
                                   </Typography>
                                 </Stack>
                                 {rv.comment && (
-                                  <Typography variant="caption" sx={{ fontStyle: 'italic' }}>
+                                  <Typography
+                                    variant="caption"
+                                    sx={{ fontStyle: 'italic' }}
+                                  >
                                     &ldquo;{rv.comment}&rdquo;
                                   </Typography>
                                 )}
@@ -361,17 +391,37 @@ export default async function TransferDownloadPage({
                             <Typography
                               variant="caption"
                               color="text.secondary"
-                              sx={{ fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}
+                              sx={{
+                                fontWeight: 600,
+                                textTransform: 'uppercase',
+                                letterSpacing: 0.5,
+                              }}
                             >
                               Messages from recipients ({comments.length})
                             </Typography>
                             {comments.map((c, i) => (
-                              <Stack key={i} spacing={0.25} sx={{ py: 1, px: 1.5, borderRadius: 1, bgcolor: 'action.hover' }}>
-                                <Typography variant="caption" sx={{ fontStyle: 'italic' }}>
+                              <Stack
+                                key={i}
+                                spacing={0.25}
+                                sx={{
+                                  py: 1,
+                                  px: 1.5,
+                                  borderRadius: 1,
+                                  bgcolor: 'action.hover',
+                                }}
+                              >
+                                <Typography
+                                  variant="caption"
+                                  sx={{ fontStyle: 'italic' }}
+                                >
                                   &ldquo;{c.text}&rdquo;
                                 </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                  {formatDate(c.at)} · {c.country !== 'XX' ? c.country : 'Unknown'}
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                >
+                                  {formatDate(c.at)} ·{' '}
+                                  {c.country !== 'XX' ? c.country : 'Unknown'}
                                 </Typography>
                               </Stack>
                             ))}
@@ -384,24 +434,58 @@ export default async function TransferDownloadPage({
                             <Typography
                               variant="caption"
                               color="text.secondary"
-                              sx={{ fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}
+                              sx={{
+                                fontWeight: 600,
+                                textTransform: 'uppercase',
+                                letterSpacing: 0.5,
+                              }}
                             >
                               Downloads by country
                             </Typography>
                             {topCountries.map(([country, count]) => (
-                              <Stack key={country} direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-                                <Typography variant="caption" sx={{ width: 32, flexShrink: 0, fontFamily: 'monospace' }}>
+                              <Stack
+                                key={country}
+                                direction="row"
+                                spacing={1}
+                                sx={{ alignItems: 'center' }}
+                              >
+                                <Typography
+                                  variant="caption"
+                                  sx={{
+                                    width: 32,
+                                    flexShrink: 0,
+                                    fontFamily: 'monospace',
+                                  }}
+                                >
                                   {country}
                                 </Typography>
-                                <Box sx={{ flex: 1, height: 8, borderRadius: 1, bgcolor: 'action.hover', overflow: 'hidden' }}>
-                                  <Box sx={{
-                                    height: '100%',
-                                    width: `${(count / topCountries[0][1]) * 100}%`,
-                                    bgcolor: 'primary.main',
+                                <Box
+                                  sx={{
+                                    flex: 1,
+                                    height: 8,
                                     borderRadius: 1,
-                                  }} />
+                                    bgcolor: 'action.hover',
+                                    overflow: 'hidden',
+                                  }}
+                                >
+                                  <Box
+                                    sx={{
+                                      height: '100%',
+                                      width: `${(count / topCountries[0][1]) * 100}%`,
+                                      bgcolor: 'primary.main',
+                                      borderRadius: 1,
+                                    }}
+                                  />
                                 </Box>
-                                <Typography variant="caption" color="text.secondary" sx={{ width: 24, textAlign: 'right', flexShrink: 0 }}>
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                  sx={{
+                                    width: 24,
+                                    textAlign: 'right',
+                                    flexShrink: 0,
+                                  }}
+                                >
                                   {count}
                                 </Typography>
                               </Stack>
@@ -410,7 +494,11 @@ export default async function TransferDownloadPage({
                         )}
 
                         {/* Owner actions: Renew, Duplicate, CSV export */}
-                        <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', pt: 1 }}>
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          sx={{ flexWrap: 'wrap', pt: 1 }}
+                        >
                           <Chip
                             component="a"
                             href={`/api/transfer/${transfer.slug}/analytics/export`}

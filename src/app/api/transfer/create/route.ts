@@ -60,7 +60,10 @@ const BodySchema = z.object({
   recaptchaToken: z.string().optional(),
   customSlug: z
     .string()
-    .regex(/^[a-z0-9-]{3,60}$/, 'Slug must be 3–60 lowercase letters, digits or hyphens')
+    .regex(
+      /^[a-z0-9-]{3,60}$/,
+      'Slug must be 3–60 lowercase letters, digits or hyphens',
+    )
     .optional(),
   senderName: z.string().max(80).optional().or(z.literal('')),
   scheduledAt: z.string().datetime().optional(),
@@ -144,7 +147,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     let isCustomSlug = false
     if (requestedSlug && ownerId) {
       if (await slugExists(requestedSlug)) {
-        return err('That link name is already taken. Please choose another.', { status: 409 })
+        return err('That link name is already taken. Please choose another.', {
+          status: 409,
+        })
       }
       slug = requestedSlug
       isCustomSlug = true

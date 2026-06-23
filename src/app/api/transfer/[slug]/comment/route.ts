@@ -16,7 +16,10 @@ export async function POST(
 ): Promise<NextResponse> {
   const { slug } = await params
   const ip = getClientIp(req)
-  const rl = await rateLimit(`comment:${ip}:${slug}`, { limit: 5, windowSeconds: 3600 })
+  const rl = await rateLimit(`comment:${ip}:${slug}`, {
+    limit: 5,
+    windowSeconds: 3600,
+  })
   if (!rl.success) return tooManyRequests(rl)
 
   const transfer = await getTransfer(slug)
@@ -25,8 +28,13 @@ export async function POST(
   const body = BodySchema.safeParse(await req.json().catch(() => null))
   if (!body.success) return err('Invalid payload.')
 
-  const country =
-    (req.headers.get('cf-ipcountry') ?? req.headers.get('x-vercel-ip-country') ?? 'XX').slice(0, 2).toUpperCase()
+  const country = (
+    req.headers.get('cf-ipcountry') ??
+    req.headers.get('x-vercel-ip-country') ??
+    'XX'
+  )
+    .slice(0, 2)
+    .toUpperCase()
 
   await recordComment(slug, {
     text: body.data.text,

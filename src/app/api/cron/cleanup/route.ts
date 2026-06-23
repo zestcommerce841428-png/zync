@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sweepExpiredTransfers, getTransfer, markNotificationSent } from '../../../../lib/transfer'
+import {
+  sweepExpiredTransfers,
+  getTransfer,
+  markNotificationSent,
+} from '../../../../lib/transfer'
 import { getRedisClient } from '../../../../redisClient'
 import { sendMail } from '../../../../email'
 import { tplTransferReady } from '../../../../emailTemplates'
@@ -20,7 +24,10 @@ function formatBytes(n: number): string {
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const secret = process.env.CRON_SECRET
   if (!secret) {
-    return NextResponse.json({ error: 'CRON_SECRET not configured.' }, { status: 503 })
+    return NextResponse.json(
+      { error: 'CRON_SECRET not configured.' },
+      { status: 503 },
+    )
   }
 
   const auth = req.headers.get('authorization')
@@ -42,7 +49,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const redis = getRedisClient()
     // scheduled transfers are stored in a sorted set keyed by sendAt timestamp
     const now = Date.now()
-    const pending = await redis.zrangebyscore('transfer:scheduled', '-inf', now, 'LIMIT', 0, 20)
+    const pending = await redis.zrangebyscore(
+      'transfer:scheduled',
+      '-inf',
+      now,
+      'LIMIT',
+      0,
+      20,
+    )
 
     for (const slug of pending) {
       const t = await getTransfer(slug)
@@ -55,7 +69,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       const baseUrl = `${brand.url}/transfer/${t.slug}`
       for (const to of t.recipientEmails) {
         // find token for this email
-        const token = Object.entries(t.recipientTokens ?? {}).find(([, v]) => v.email === to)?.[0]
+        const token = Object.entries(t.recipientTokens ?? {}).find(
+          ([, v]) => v.email === to,
+        )?.[0]
         const url = token ? `${baseUrl}?rt=${token}` : baseUrl
         const tpl = tplTransferReady({
           title: t.title,
@@ -66,7 +82,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           expiresAt: t.expiresAt,
           senderName: t.senderName || undefined,
         })
-        void sendMail({ to, subject: tpl.subject, html: tpl.html, text: tpl.text })
+        void sendMail({
+          to,
+          subject: tpl.subject,
+          html: tpl.html,
+          text: tpl.text,
+        })
       }
 
       await markNotificationSent(slug)
@@ -77,5 +98,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     console.error('[cron/cleanup] scheduled dispatch error:', e)
   }
 
-  return NextResponse.json({ ok: true, deleted, dispatched, ts: new Date().toISOString() })
+  return NextResponse.json({
+    ok: true,
+    deleted,
+    dispatched,
+    ts: new Date().toISOString(),
+  })
 }

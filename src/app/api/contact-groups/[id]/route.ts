@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getCurrentUser } from '../../../../supabase/server'
-import { getContactGroup, updateContactGroup, deleteContactGroup } from '../../../../lib/contactGroups'
+import {
+  getContactGroup,
+  updateContactGroup,
+  deleteContactGroup,
+} from '../../../../lib/contactGroups'
 import { ok, err } from '../../../../lib/apiResponse'
 
 export const dynamic = 'force-dynamic'
@@ -14,7 +18,8 @@ export async function GET(
   const user = await getCurrentUser()
   if (!user) return err('Unauthorized.', { status: 401 })
   const group = await getContactGroup(id)
-  if (!group || group.ownerId !== user.id) return err('Not found.', { status: 404 })
+  if (!group || group.ownerId !== user.id)
+    return err('Not found.', { status: 404 })
   return ok({ group })
 }
 
@@ -31,7 +36,8 @@ export async function PATCH(
   const user = await getCurrentUser()
   if (!user) return err('Unauthorized.', { status: 401 })
   const group = await getContactGroup(id)
-  if (!group || group.ownerId !== user.id) return err('Not found.', { status: 404 })
+  if (!group || group.ownerId !== user.id)
+    return err('Not found.', { status: 404 })
   const body = PatchSchema.safeParse(await req.json().catch(() => null))
   if (!body.success) return err('Invalid payload.')
   const patch = { ...body.data }

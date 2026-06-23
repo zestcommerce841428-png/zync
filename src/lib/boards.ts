@@ -72,7 +72,9 @@ export async function deleteBoard(id: string, ownerId: string): Promise<void> {
   for (const slug of board.slugs) {
     const t = await getTransfer(slug)
     if (t) {
-      await updateTransfer(slug, { boardIds: (t.boardIds ?? []).filter((b) => b !== id) })
+      await updateTransfer(slug, {
+        boardIds: (t.boardIds ?? []).filter((b) => b !== id),
+      })
     }
   }
   await redis.del(KEY(id))
@@ -114,7 +116,9 @@ export async function removeTransferFromBoard(
   await updateBoard(boardId, { slugs: board.slugs.filter((s) => s !== slug) })
   const t = await getTransfer(slug)
   if (t) {
-    await updateTransfer(slug, { boardIds: (t.boardIds ?? []).filter((b) => b !== boardId) })
+    await updateTransfer(slug, {
+      boardIds: (t.boardIds ?? []).filter((b) => b !== boardId),
+    })
   }
   return true
 }

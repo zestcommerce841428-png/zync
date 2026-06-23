@@ -251,10 +251,16 @@ export default function WelcomePage(): React.ReactElement {
           <Grid container spacing={3}>
             {FEATURES.map((f) => (
               <Grid size={{ xs: 12, sm: 6, md: 3 }} key={f.label}>
-                <Card variant="outlined" sx={{ height: '100%', bgcolor: 'background.paper' }}>
+                <Card
+                  variant="outlined"
+                  sx={{ height: '100%', bgcolor: 'background.paper' }}
+                >
                   <CardContent>
                     <Box sx={{ color: 'primary.main', mb: 1.5 }}>{f.icon}</Box>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5 }}>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ fontWeight: 700, mb: 0.5 }}
+                    >
                       {f.label}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
@@ -269,7 +275,10 @@ export default function WelcomePage(): React.ReactElement {
       </Box>
 
       {/* CTA */}
-      <Container maxWidth="sm" sx={{ py: { xs: 6, md: 10 }, textAlign: 'center' }}>
+      <Container
+        maxWidth="sm"
+        sx={{ py: { xs: 6, md: 10 }, textAlign: 'center' }}
+      >
         <Stack spacing={3} sx={{ alignItems: 'center' }}>
           <Typography variant="h4" sx={{ fontWeight: 800 }}>
             Ready to send your first file?

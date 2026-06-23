@@ -107,8 +107,9 @@ export default function TransferPage(): React.ReactElement {
   const [resultExpiry, setResultExpiry] = React.useState('')
   const [resultTitle, setResultTitle] = React.useState('')
   const [resultBurn, setResultBurn] = React.useState(false)
-  const [cloudTransfersEnabled, setCloudTransfersEnabled] =
-    React.useState<boolean | null>(null)
+  const [cloudTransfersEnabled, setCloudTransfersEnabled] = React.useState<
+    boolean | null
+  >(null)
   const [customSlug, setCustomSlug] = React.useState('')
   const [senderName, setSenderName] = React.useState('')
   const [scheduledAt, setScheduledAt] = React.useState('')
@@ -139,16 +140,25 @@ export default function TransferPage(): React.ReactElement {
         if (s.title) setTitle(s.title)
         if (s.message) setMessage(s.message)
         if (typeof s.expiryDays === 'number') setExpiryDays(s.expiryDays)
-        if (s.maxDownloads != null) { setLimitDownloads(true); setMaxDownloads(s.maxDownloads) }
-        if (s.notifyEmail) { setNotifyMe(true); setNotifyEmail(s.notifyEmail) }
-        if (typeof s.notifyEveryDownload === 'boolean') setNotifyEveryDownload(s.notifyEveryDownload)
+        if (s.maxDownloads != null) {
+          setLimitDownloads(true)
+          setMaxDownloads(s.maxDownloads)
+        }
+        if (s.notifyEmail) {
+          setNotifyMe(true)
+          setNotifyEmail(s.notifyEmail)
+        }
+        if (typeof s.notifyEveryDownload === 'boolean')
+          setNotifyEveryDownload(s.notifyEveryDownload)
         if (s.webhookUrl) setWebhookUrl(s.webhookUrl)
-        if (typeof s.burnAfterRead === 'boolean') setBurnAfterRead(s.burnAfterRead)
+        if (typeof s.burnAfterRead === 'boolean')
+          setBurnAfterRead(s.burnAfterRead)
         if (s.background) setBackground(s.background)
         if (s.logoUrl) setLogoUrl(s.logoUrl)
         if (s.backgroundImageUrl) setBackgroundImageUrl(s.backgroundImageUrl)
         if (s.senderName) setSenderName(s.senderName)
-        if (Array.isArray(s.recipientEmails)) setRecipientEmails(s.recipientEmails)
+        if (Array.isArray(s.recipientEmails))
+          setRecipientEmails(s.recipientEmails)
       })
       .catch(() => {})
   }, [])
@@ -509,8 +519,8 @@ export default function TransferPage(): React.ReactElement {
             Cloud uploads are temporarily unavailable
           </Typography>
           <Typography variant="body2">
-            The administrator has paused cloud file uploads for maintenance.
-            You can still use <strong>P2P (browser-to-browser)</strong> transfers
+            The administrator has paused cloud file uploads for maintenance. You
+            can still use <strong>P2P (browser-to-browser)</strong> transfers
             from the{' '}
             <Box component="a" href="/send" sx={{ color: 'inherit' }}>
               Send page
@@ -522,7 +532,11 @@ export default function TransferPage(): React.ReactElement {
 
       <Card
         variant="outlined"
-        sx={cloudTransfersEnabled === false ? { opacity: 0.5, pointerEvents: 'none' } : {}}
+        sx={
+          cloudTransfersEnabled === false
+            ? { opacity: 0.5, pointerEvents: 'none' }
+            : {}
+        }
       >
         <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
           {stage === 'done' ? (
@@ -1116,7 +1130,9 @@ export default function TransferPage(): React.ReactElement {
                           value={customSlug}
                           onChange={(e) =>
                             setCustomSlug(
-                              e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''),
+                              e.target.value
+                                .toLowerCase()
+                                .replace(/[^a-z0-9-]/g, ''),
                             )
                           }
                           size="small"
@@ -1146,7 +1162,11 @@ export default function TransferPage(): React.ReactElement {
                           size="small"
                           fullWidth
                           helperText="Leave blank to send immediately. Files are uploaded now; emails go out at the scheduled time."
-                          slotProps={{ htmlInput: { min: new Date().toISOString().slice(0, 16) } }}
+                          slotProps={{
+                            htmlInput: {
+                              min: new Date().toISOString().slice(0, 16),
+                            },
+                          }}
                         />
                         <TextField
                           label="Slack webhook URL (notified on each download)"

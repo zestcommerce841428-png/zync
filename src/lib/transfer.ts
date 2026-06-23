@@ -332,8 +332,15 @@ export async function renewTransfer(
   await updateTransfer(slug, { expiresAt: newExpiry })
   // Update cleanup index
   const redis = getRedisClient()
-  await redis.expire(KEY(slug), Math.ceil((current.getTime() - Date.now()) / 1000))
-  await redis.zadd(CLEANUP_KEY, current.getTime(), JSON.stringify({ slug, keys: transfer.files.map(f => f.key) }))
+  await redis.expire(
+    KEY(slug),
+    Math.ceil((current.getTime() - Date.now()) / 1000),
+  )
+  await redis.zadd(
+    CLEANUP_KEY,
+    current.getTime(),
+    JSON.stringify({ slug, keys: transfer.files.map((f) => f.key) }),
+  )
   return newExpiry
 }
 

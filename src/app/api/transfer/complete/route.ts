@@ -52,13 +52,22 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           expiresAt: t.expiresAt,
           senderName: t.senderName || undefined,
         })
-        void sendMail({ to, subject: tpl.subject, html: tpl.html, text: tpl.text })
+        void sendMail({
+          to,
+          subject: tpl.subject,
+          html: tpl.html,
+          text: tpl.text,
+        })
       }
       await updateTransfer(body.data.slug, { notificationSent: true })
     } else if (t.scheduledAt) {
       // Register in the scheduled queue so the cron picks it up
       const redis = getRedisClient()
-      await redis.zadd('transfer:scheduled', new Date(t.scheduledAt).getTime(), t.slug)
+      await redis.zadd(
+        'transfer:scheduled',
+        new Date(t.scheduledAt).getTime(),
+        t.slug,
+      )
     }
   }
 

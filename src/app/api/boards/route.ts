@@ -24,6 +24,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   if (!user) return err('Unauthorized.', { status: 401 })
   const body = CreateSchema.safeParse(await req.json().catch(() => null))
   if (!body.success) return err('Invalid payload.')
-  const board = await createBoard(user.id, body.data.name, body.data.description, body.data.color)
+  const board = await createBoard(
+    user.id,
+    body.data.name,
+    body.data.description,
+    body.data.color,
+  )
   return ok({ board }, { status: 201 })
 }
