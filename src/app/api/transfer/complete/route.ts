@@ -58,6 +58,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           senderName: t.senderName || undefined,
           emailAccentColor: t.emailAccentColor || undefined,
           hideBranding: whiteLabelEmails,
+          trackingPixelUrl: `${brand.url}/api/transfer/${t.slug}/open`,
         })
         void sendMail({
           to,

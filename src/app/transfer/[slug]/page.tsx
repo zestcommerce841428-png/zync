@@ -206,6 +206,17 @@ export default async function TransferDownloadPage({
                             label={`${transfer.pageViewCount ?? 0} view${(transfer.pageViewCount ?? 0) !== 1 ? 's' : ''}`}
                             size="small"
                           />
+                          {transfer.recipientEmails.length > 0 && (
+                            <Chip
+                              label={`${transfer.emailOpenCount ?? 0} email open${(transfer.emailOpenCount ?? 0) !== 1 ? 's' : ''}`}
+                              size="small"
+                              color={
+                                (transfer.emailOpenCount ?? 0) > 0
+                                  ? 'info'
+                                  : 'default'
+                              }
+                            />
+                          )}
                           <Chip
                             label={`${transfer.downloadCount} download${transfer.downloadCount !== 1 ? 's' : ''}`}
                             size="small"

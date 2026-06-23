@@ -64,6 +64,7 @@ export async function POST(
       senderName: transfer.senderName || undefined,
       emailAccentColor: transfer.emailAccentColor || undefined,
       hideBranding: whiteLabelEmails,
+      trackingPixelUrl: `${brand.url}/api/transfer/${transfer.slug}/open`,
     })
     const result = await sendMail({
       to,

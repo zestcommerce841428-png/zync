@@ -258,6 +258,7 @@ export function tplTransferReady(d: {
   senderName?: string
   emailAccentColor?: string
   hideBranding?: boolean
+  trackingPixelUrl?: string
 }): { subject: string; html: string; text: string } {
   const expiry = new Date(d.expiresAt).toLocaleDateString('en-US', {
     month: 'long',
@@ -266,6 +267,9 @@ export function tplTransferReady(d: {
   })
   const greeting = d.recipientName ? `Hi ${d.recipientName}, ` : ''
   const from = d.senderName ? `${d.senderName} via ${brand.name}` : brand.name
+  const pixel = d.trackingPixelUrl
+    ? `<img src="${esc(d.trackingPixelUrl)}" width="1" height="1" style="display:none" alt="" />`
+    : ''
   return {
     subject: d.title
       ? `${d.title} — file transfer via ${from}`
@@ -279,11 +283,12 @@ export function tplTransferReady(d: {
           (d.senderMessage ||
             `someone shared files with you via ${brand.name}.`)
         : d.senderMessage || `Someone shared files with you via ${brand.name}.`,
-      bodyHtml: kv([
-        ['Files', `${d.fileCount} file${d.fileCount !== 1 ? 's' : ''}`],
-        ['Total size', d.totalSize],
-        ['Expires', expiry],
-      ]),
+      bodyHtml:
+        kv([
+          ['Files', `${d.fileCount} file${d.fileCount !== 1 ? 's' : ''}`],
+          ['Total size', d.totalSize],
+          ['Expires', expiry],
+        ]) + pixel,
       button: { label: 'Download files', url: d.url },
       footerNote: `This link expires on ${expiry}. Files are stored securely on Cloudflare R2.`,
       accentColor: d.emailAccentColor || undefined,
@@ -341,6 +346,37 @@ export function tplCollectInvite(d: {
       ]),
       button: { label: 'Upload files', url: d.url },
       footerNote: `This upload link expires on ${expiry}. You can upload up to multiple files at once.`,
+    }),
+  }
+}
+
+export function tplTransferExpiring(d: {
+  title: string
+  url: string
+  expiresAt: string
+  hoursLeft: number
+}): { subject: string; html: string; text: string } {
+  const expiry = new Date(d.expiresAt).toLocaleString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+  const label = d.title ? `"${d.title}"` : 'Your transfer'
+  return {
+    subject: `${label} expires in ${d.hoursLeft}h — ${brand.name}`,
+    text: `${label} will expire in ${d.hoursLeft} hours (${expiry}). Renew or download now: ${d.url}`,
+    html: baseLayout({
+      preheader: `${label} is expiring soon.`,
+      heading: `Your transfer is expiring soon`,
+      intro: `${label} will expire in approximately ${d.hoursLeft} hours.`,
+      bodyHtml: kv([
+        ['Transfer', d.title || '(untitled)'],
+        ['Expires', expiry],
+      ]),
+      button: { label: 'View & renew transfer', url: d.url },
+      footerNote: `You received this because you created this transfer. Renew from the transfer page to extend its life.`,
     }),
   }
 }

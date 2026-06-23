@@ -3,10 +3,14 @@ import {
   sweepExpiredTransfers,
   getTransfer,
   markNotificationSent,
+  updateTransfer,
 } from '../../../../lib/transfer'
 import { getRedisClient } from '../../../../redisClient'
 import { sendMail } from '../../../../email'
-import { tplTransferReady } from '../../../../emailTemplates'
+import {
+  tplTransferReady,
+  tplTransferExpiring,
+} from '../../../../emailTemplates'
 import { brand } from '../../../../brand'
 import { isFeatureEnabled } from '../../../../lib/appSettings'
 
@@ -88,6 +92,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           senderName: t.senderName || undefined,
           emailAccentColor: t.emailAccentColor || undefined,
           hideBranding: whiteLabelEmails,
+          trackingPixelUrl: `${brand.url}/api/transfer/${t.slug}/open`,
         })
         void sendMail({
           to,
@@ -106,10 +111,65 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     console.error('[cron/cleanup] scheduled dispatch error:', e)
   }
 
+  // Send expiry warning emails (24h window, once per transfer)
+  let warned = 0
+  try {
+    const redis = getRedisClient()
+    const now = Date.now()
+    const in24h = now + 24 * 3600 * 1000
+    // Find cleanup entries expiring within the next 24h
+    const expiringSoon = await redis.zrangebyscore(
+      'transfer:cleanup',
+      now,
+      in24h,
+      'LIMIT',
+      0,
+      50,
+    )
+    for (const entry of expiringSoon) {
+      try {
+        const { slug } = JSON.parse(entry) as { slug: string }
+        const t = await getTransfer(slug)
+        if (!t || !t.completed || t.expireWarnedAt) continue
+        // Only warn if transfer has a notifyEmail or owner
+        const to = t.notifyEmail
+        if (!to) {
+          // Mark warned anyway so we don't re-process every tick
+          await updateTransfer(slug, {
+            expireWarnedAt: new Date().toISOString(),
+          })
+          continue
+        }
+        const hoursLeft = Math.round(
+          (new Date(t.expiresAt).getTime() - now) / 3600000,
+        )
+        const tpl = tplTransferExpiring({
+          title: t.title,
+          url: `${brand.url}/transfer/${t.slug}`,
+          expiresAt: t.expiresAt,
+          hoursLeft,
+        })
+        void sendMail({
+          to,
+          subject: tpl.subject,
+          html: tpl.html,
+          text: tpl.text,
+        })
+        await updateTransfer(slug, { expireWarnedAt: new Date().toISOString() })
+        warned++
+      } catch {
+        /* best-effort per-transfer */
+      }
+    }
+  } catch (e) {
+    console.error('[cron/cleanup] expiry warning error:', e)
+  }
+
   return NextResponse.json({
     ok: true,
     deleted,
     dispatched,
+    warned,
     ts: new Date().toISOString(),
   })
 }
