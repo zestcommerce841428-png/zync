@@ -237,7 +237,7 @@ export default function BoardsManager(): React.ReactElement {
               fullWidth
               multiline
               rows={2}
-              inputProps={{ maxLength: 200 }}
+              slotProps={{ htmlInput: { maxLength: 200 } }}
             />
             <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
               <Typography variant="body2" color="text.secondary">
