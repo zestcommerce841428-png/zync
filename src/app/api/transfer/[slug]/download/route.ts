@@ -14,7 +14,10 @@ import {
   markRecipientDownloaded,
 } from '../../../../../lib/transfer'
 import { sendMail } from '../../../../../email'
-import { tplTransferDownloaded } from '../../../../../emailTemplates'
+import {
+  tplTransferDownloaded,
+  tplDownloadReceipt,
+} from '../../../../../emailTemplates'
 import { brand } from '../../../../../brand'
 import { rateLimit, getClientIp } from '../../../../../rateLimit'
 import {
@@ -106,7 +109,33 @@ export async function POST(
 
     // Mark per-recipient token as downloaded (if recipient opened their personalized link)
     const rt = body.data.recipientToken
-    if (rt) void markRecipientDownloaded(slug, rt)
+    if (rt) {
+      const recipientInfo = transfer.recipientTokens[rt]
+      // Send receipt to recipient on their first download
+      if (recipientInfo && !recipientInfo.downloadedAt) {
+        const sizeStr = (() => {
+          const n = transfer.totalSize
+          if (n >= 1e9) return `${(n / 1e9).toFixed(1)} GB`
+          if (n >= 1e6) return `${(n / 1e6).toFixed(1)} MB`
+          if (n >= 1e3) return `${(n / 1e3).toFixed(1)} KB`
+          return `${n} B`
+        })()
+        const tpl = tplDownloadReceipt({
+          title: transfer.title,
+          url: `${brand.url}/transfer/${slug}`,
+          fileCount: transfer.files.length,
+          totalSize: sizeStr,
+          senderName: transfer.senderName || undefined,
+        })
+        void sendMail({
+          to: recipientInfo.email,
+          subject: tpl.subject,
+          html: tpl.html,
+          text: tpl.text,
+        })
+      }
+      void markRecipientDownloaded(slug, rt)
+    }
 
     // Notify sender: on first download always; on every download if notifyEveryDownload is set
     if (

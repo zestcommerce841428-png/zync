@@ -350,6 +350,32 @@ export function tplCollectInvite(d: {
   }
 }
 
+export function tplDownloadReceipt(d: {
+  title: string
+  url: string
+  fileCount: number
+  totalSize: string
+  senderName?: string
+}): { subject: string; html: string; text: string } {
+  const from = d.senderName ? d.senderName : brand.name
+  return {
+    subject: `Download confirmed — ${d.title || 'your files'} from ${from}`,
+    text: `You successfully downloaded ${d.fileCount} file${d.fileCount !== 1 ? 's' : ''} from ${from}. Transfer link: ${d.url}`,
+    html: baseLayout({
+      preheader: `You downloaded ${d.fileCount} file${d.fileCount !== 1 ? 's' : ''}.`,
+      heading: `Download confirmed`,
+      intro: `You've successfully downloaded files sent by ${from} via ${brand.name}.`,
+      bodyHtml: kv([
+        ...(d.title ? [['Transfer', d.title] as [string, string]] : []),
+        ['Files', `${d.fileCount} file${d.fileCount !== 1 ? 's' : ''}`],
+        ['Size', d.totalSize],
+      ]),
+      button: { label: 'View transfer', url: d.url },
+      footerNote: `You received this because you downloaded files from this transfer link.`,
+    }),
+  }
+}
+
 export function tplTransferExpiring(d: {
   title: string
   url: string
