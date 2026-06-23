@@ -230,6 +230,28 @@ export default function DownloadCard({
   const [reviewSubmitting, setReviewSubmitting] = React.useState(false)
   const [reviewSubmitted, setReviewSubmitted] = React.useState(false)
 
+  // Comment (open message) state
+  const [commentText, setCommentText] = React.useState('')
+  const [commentSubmitting, setCommentSubmitting] = React.useState(false)
+  const [commentSubmitted, setCommentSubmitted] = React.useState(false)
+
+  const submitComment = async () => {
+    if (!commentText.trim()) return
+    setCommentSubmitting(true)
+    try {
+      await fetch(`/api/transfer/${slug}/comment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: commentText.trim() }),
+      })
+      setCommentSubmitted(true)
+    } catch {
+      setCommentSubmitted(true)
+    } finally {
+      setCommentSubmitting(false)
+    }
+  }
+
   // Auto-trigger download when ?direct=1 and card is unlocked and not expired
   const autoTriggered = React.useRef(false)
   React.useEffect(() => {
@@ -699,6 +721,48 @@ export default function DownloadCard({
                 sx={{ alignSelf: 'flex-start' }}
               >
                 {reviewSubmitting ? 'Sending…' : 'Send feedback'}
+              </Button>
+            </Stack>
+          )}
+        </>
+      )}
+
+      {/* Comment widget — shown after download alongside review */}
+      {hasDownloaded && (
+        <>
+          <Divider />
+          {commentSubmitted ? (
+            <Alert severity="success">Message sent to sender!</Alert>
+          ) : (
+            <Stack spacing={1}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                Leave a message for the sender
+              </Typography>
+              <TextField
+                placeholder="Write a message…"
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                size="small"
+                fullWidth
+                multiline
+                rows={2}
+                slotProps={{ htmlInput: { maxLength: 1000 } }}
+              />
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={submitComment}
+                disabled={!commentText.trim() || commentSubmitting}
+                startIcon={
+                  commentSubmitting ? (
+                    <CircularProgress size={14} color="inherit" />
+                  ) : (
+                    <SendIcon fontSize="small" />
+                  )
+                }
+                sx={{ alignSelf: 'flex-start' }}
+              >
+                {commentSubmitting ? 'Sending…' : 'Send message'}
               </Button>
             </Stack>
           )}

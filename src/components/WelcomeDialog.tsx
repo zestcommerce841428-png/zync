@@ -16,40 +16,64 @@ import LockIcon from '@mui/icons-material/Lock'
 import BuildIcon from '@mui/icons-material/Build'
 import AutoDeleteIcon from '@mui/icons-material/AutoDelete'
 import ShareIcon from '@mui/icons-material/Share'
+import InboxIcon from '@mui/icons-material/Inbox'
+import StarIcon from '@mui/icons-material/Star'
+import BrandingWatermarkIcon from '@mui/icons-material/BrandingWatermark'
+import TrackChangesIcon from '@mui/icons-material/TrackChanges'
 import { brand } from '../brand'
 
-const STORAGE_KEY = 'zync.welcomed.v1'
+const STORAGE_KEY = 'zync.welcomed.v3'
 
 const FEATURES = [
   {
     icon: <SendIcon fontSize="small" />,
     label: 'P2P & cloud transfers',
-    desc: 'WebRTC real-time or Cloudflare R2 cloud links up to 2 GB',
+    desc: 'WebRTC real-time or Cloudflare R2 / AWS S3 cloud links up to 200 GB',
   },
   {
     icon: <LockIcon fontSize="small" />,
-    label: 'Password & expiry',
-    desc: 'Protect links with a password, set custom expiry 1–30 days',
+    label: 'End-to-end encryption',
+    desc: 'AES-256-GCM in-browser — server stores only ciphertext, key in link only',
+  },
+  {
+    icon: <TrackChangesIcon fontSize="small" />,
+    label: 'Per-recipient tracking',
+    desc: 'See exactly who downloaded and when — unique link per email recipient',
+  },
+  {
+    icon: <StarIcon fontSize="small" />,
+    label: 'Feedback & reviews',
+    desc: 'Recipients leave a star rating after downloading — you see it in your dashboard',
+  },
+  {
+    icon: <BrandingWatermarkIcon fontSize="small" />,
+    label: 'Branded download pages',
+    desc: 'Add your logo and background image to every transfer link you share',
+  },
+  {
+    icon: <InboxIcon fontSize="small" />,
+    label: 'File requests (Collect)',
+    desc: 'Create an upload link or invite a specific person — they upload, you receive',
   },
   {
     icon: <AutoDeleteIcon fontSize="small" />,
     label: 'Burn after read',
-    desc: 'Files deleted from storage 30 s after first download',
+    desc: 'Files permanently deleted from storage 30 s after the first download',
   },
   {
     icon: <FolderZipIcon fontSize="small" />,
     label: 'Download as ZIP',
-    desc: 'Download all files in one ZIP directly in the browser',
+    desc: 'All files bundled in a single ZIP, built in-browser with no server',
   },
   {
     icon: <ShareIcon fontSize="small" />,
     label: 'Share anywhere',
-    desc: 'WhatsApp, Telegram, Twitter, Email, QR code & Web Share',
+    desc: 'WhatsApp, Telegram, X, Email, QR code, webhooks & Web Share API',
   },
   {
     icon: <BuildIcon fontSize="small" />,
     label: '15 in-browser tools',
-    desc: 'Image, PDF, text, video tools — no upload, all client-side',
+    desc: 'Image, PDF, text and video tools — no upload, fully client-side',
   },
 ]
 
@@ -119,12 +143,12 @@ export default function WelcomeDialog(): React.ReactElement | null {
             sx={{ bgcolor: 'rgba(255,255,255,.2)', color: '#fff' }}
           />
           <Chip
-            label="Up to 2 GB (cloud)"
+            label="Up to 200 GB (cloud)"
             size="small"
             sx={{ bgcolor: 'rgba(255,255,255,.2)', color: '#fff' }}
           />
           <Chip
-            label="Zero tracking"
+            label="1-year links"
             size="small"
             sx={{ bgcolor: 'rgba(255,255,255,.2)', color: '#fff' }}
           />
@@ -177,7 +201,8 @@ export default function WelcomeDialog(): React.ReactElement | null {
           color="text.secondary"
           sx={{ display: 'block', textAlign: 'center' }}
         >
-          Sign in with Google to get 30-day links, transfer history &amp; more.
+          Sign in with Google to unlock 1-year links, transfer history,
+          recipient tracking, reviews &amp; more.
         </Typography>
       </DialogContent>
 

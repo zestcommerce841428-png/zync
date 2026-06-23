@@ -21,7 +21,8 @@ export type CollectRecord = {
   files: CollectFile[]
   createdAt: string
   active: boolean // false after owner closes
-  requestedFrom: { email: string; name?: string } | null // named file request
+  requestedFrom: { email: string; name?: string } | null // named file request (single)
+  requestedFromMany: Array<{ email: string; name?: string }> // multi-respondent invites
 }
 
 const KEY = (slug: string) => `collect:${slug}`
@@ -50,6 +51,7 @@ export async function getCollect(slug: string): Promise<CollectRecord | null> {
   try {
     const r = JSON.parse(raw) as CollectRecord
     r.requestedFrom ??= null
+    r.requestedFromMany ??= []
     return r
   } catch {
     return null

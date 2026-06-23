@@ -146,6 +146,18 @@ export async function POST(
       }).catch(() => {})
     }
 
+    // Slack notification (fire-and-forget)
+    if (transfer.slackWebhookUrl) {
+      const country = req.headers.get('cf-ipcountry') ?? 'XX'
+      const text = `📥 *${transfer.title || 'Untitled transfer'}* was downloaded (${newCount} total) · ${country} · <${brand.url}/transfer/${slug}|View transfer>`
+      void fetch(transfer.slackWebhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+        signal: AbortSignal.timeout(5000),
+      }).catch(() => {})
+    }
+
     if (transfer.burnAfterRead) {
       void scheduleBurn(
         slug,

@@ -23,6 +23,7 @@ import { rateLimit, getClientIp } from '../../../../rateLimit'
 import { tooManyRequests, ok, err } from '../../../../lib/apiResponse'
 import { verifyRecaptcha } from '../../../../recaptcha'
 import { isFeatureEnabled } from '../../../../lib/appSettings'
+import { slugExists } from '../../../../lib/transfer'
 
 export const dynamic = 'force-dynamic'
 
@@ -57,6 +58,13 @@ const BodySchema = z.object({
   logoUrl: z.string().url().max(2000).optional().or(z.literal('')),
   backgroundImageUrl: z.string().url().max(2000).optional().or(z.literal('')),
   recaptchaToken: z.string().optional(),
+  customSlug: z
+    .string()
+    .regex(/^[a-z0-9-]{3,60}$/, 'Slug must be 3–60 lowercase letters, digits or hyphens')
+    .optional(),
+  senderName: z.string().max(80).optional().or(z.literal('')),
+  scheduledAt: z.string().datetime().optional(),
+  slackWebhookUrl: z.string().url().max(500).optional().or(z.literal('')),
 })
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
@@ -99,6 +107,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     logoUrl,
     backgroundImageUrl,
     recaptchaToken,
+    customSlug: requestedSlug,
+    senderName,
+    scheduledAt,
+    slackWebhookUrl,
   } = body.data
 
   const captcha = await verifyRecaptcha(recaptchaToken, { minScore: 0.3 })
@@ -127,7 +139,18 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const maxDays = ownerId ? 365 : 7
     const expiryDays = Math.min(days, maxDays)
 
-    const slug = await generateShortSlug()
+    // Resolve slug: custom (logged-in only) or random
+    let slug: string
+    let isCustomSlug = false
+    if (requestedSlug && ownerId) {
+      if (await slugExists(requestedSlug)) {
+        return err('That link name is already taken. Please choose another.', { status: 409 })
+      }
+      slug = requestedSlug
+      isCustomSlug = true
+    } else {
+      slug = await generateShortSlug()
+    }
     const storage = await getStorageClient()
     const bucket = await getStorageBucket()
     const storageClass = await getStorageClass()
@@ -191,6 +214,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       backgroundImageUrl: backgroundImageUrl || null,
       recipientTokens: {},
       reviews: [],
+      comments: [],
+      senderName: senderName || null,
+      scheduledAt: scheduledAt || null,
+      notificationSent: !scheduledAt,
+      boardIds: [],
+      customSlug: isCustomSlug,
+      slackWebhookUrl: slackWebhookUrl || null,
       createdAt: new Date().toISOString(),
       completed: false,
     })

@@ -30,6 +30,12 @@ export type RecipientToken = {
   downloadedAt?: string // ISO timestamp, set when recipient downloads
 }
 
+export type CommentEntry = {
+  text: string
+  at: string
+  country: string
+}
+
 export type TransferRecord = {
   slug: string
   ownerId: string | null
@@ -51,12 +57,19 @@ export type TransferRecord = {
   createdAt: string
   completed: boolean
   burnAfterRead: boolean
-  background: string | null // CSS color/gradient string, null = default theme
-  logoUrl: string | null // branded page: custom logo image URL
-  backgroundImageUrl: string | null // branded page: custom background image URL
-  webhookUrl: string | null // optional HTTP callback on every download event
-  encrypted: boolean // AES-256-GCM client-side encryption; key travels only in URL fragment
-  reviews: ReviewEntry[] // recipient feedback (capped at 100)
+  background: string | null
+  logoUrl: string | null
+  backgroundImageUrl: string | null
+  webhookUrl: string | null
+  encrypted: boolean
+  reviews: ReviewEntry[]
+  comments: CommentEntry[] // recipient open-text messages (capped at 200)
+  senderName: string | null // custom "From" display name in recipient emails
+  scheduledAt: string | null // ISO timestamp: hold notification emails until this time
+  notificationSent: boolean // true once scheduled email has been dispatched
+  boardIds: string[] // board slugs this transfer belongs to
+  customSlug: boolean // true if slug was user-chosen (not random)
+  slackWebhookUrl: string | null // Slack incoming webhook — notified on each download
 }
 
 const KEY = (slug: string) => `transfer:${slug}`
@@ -113,6 +126,13 @@ export async function getTransfer(
     r.logoUrl ??= null
     r.backgroundImageUrl ??= null
     r.reviews ??= []
+    r.comments ??= []
+    r.senderName ??= null
+    r.scheduledAt ??= null
+    r.notificationSent ??= true // existing records already sent
+    r.boardIds ??= []
+    r.customSlug ??= false
+    r.slackWebhookUrl ??= null
     return r
   } catch {
     return null
@@ -279,4 +299,45 @@ export async function recordReview(
   const reviews = transfer.reviews ?? []
   if (reviews.length < 100) reviews.push(review)
   await updateTransfer(slug, { reviews })
+}
+
+// Append a recipient comment (capped at 200)
+export async function recordComment(
+  slug: string,
+  comment: CommentEntry,
+): Promise<void> {
+  const transfer = await getTransfer(slug)
+  if (!transfer) return
+  const comments = transfer.comments ?? []
+  if (comments.length < 200) comments.push(comment)
+  await updateTransfer(slug, { comments })
+}
+
+// Check if a slug is already taken
+export async function slugExists(slug: string): Promise<boolean> {
+  const redis = getRedisClient()
+  return (await redis.exists(KEY(slug))) === 1
+}
+
+// Extend expiry of a transfer by N additional days (owner action)
+export async function renewTransfer(
+  slug: string,
+  addDays: number,
+): Promise<string | null> {
+  const transfer = await getTransfer(slug)
+  if (!transfer) return null
+  const current = new Date(transfer.expiresAt)
+  current.setDate(current.getDate() + addDays)
+  const newExpiry = current.toISOString()
+  await updateTransfer(slug, { expiresAt: newExpiry })
+  // Update cleanup index
+  const redis = getRedisClient()
+  await redis.expire(KEY(slug), Math.ceil((current.getTime() - Date.now()) / 1000))
+  await redis.zadd(CLEANUP_KEY, current.getTime(), JSON.stringify({ slug, keys: transfer.files.map(f => f.key) }))
+  return newExpiry
+}
+
+// Mark scheduled notification as sent
+export async function markNotificationSent(slug: string): Promise<void> {
+  await updateTransfer(slug, { notificationSent: true })
 }

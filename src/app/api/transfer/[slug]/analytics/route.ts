@@ -64,5 +64,9 @@ export async function GET(
     recipients,
     reviews,
     avgRating,
+    comments: transfer.comments ?? [],
+    scheduledAt: transfer.scheduledAt ?? null,
+    notificationSent: transfer.notificationSent ?? true,
+    boardIds: transfer.boardIds ?? [],
   })
 }

@@ -64,5 +64,13 @@ export default function manifest(): MetadataRoute.Manifest {
       },
     ],
     screenshots: [],
+    share_target: {
+      action: '/transfer',
+      method: 'GET',
+      params: { title: 'title', text: 'text', url: 'url' },
+    },
+    protocol_handlers: [],
+    prefer_related_applications: false,
+    related_applications: [],
   }
 }

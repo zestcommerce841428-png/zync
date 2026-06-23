@@ -246,6 +246,7 @@ export function tplTransferReady(d: {
   totalSize: string
   expiresAt: string
   recipientName?: string
+  senderName?: string
 }): { subject: string; html: string; text: string } {
   const expiry = new Date(d.expiresAt).toLocaleDateString('en-US', {
     month: 'long',
@@ -253,10 +254,11 @@ export function tplTransferReady(d: {
     year: 'numeric',
   })
   const greeting = d.recipientName ? `Hi ${d.recipientName}, ` : ''
+  const from = d.senderName ? `${d.senderName} via ${brand.name}` : brand.name
   return {
     subject: d.title
-      ? `${d.title} — file transfer via ${brand.name}`
-      : `Someone sent you ${d.fileCount} file${d.fileCount !== 1 ? 's' : ''} via ${brand.name}`,
+      ? `${d.title} — file transfer via ${from}`
+      : `${d.senderName ? d.senderName + ' sent' : 'Someone sent'} you ${d.fileCount} file${d.fileCount !== 1 ? 's' : ''} via ${brand.name}`,
     text: `${greeting}You have a file transfer waiting. Download it at: ${d.url}\nExpires: ${expiry}`,
     html: baseLayout({
       preheader: `You have ${d.fileCount} file${d.fileCount !== 1 ? 's' : ''} waiting for you.`,

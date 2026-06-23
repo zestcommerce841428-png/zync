@@ -109,6 +109,10 @@ export default function TransferPage(): React.ReactElement {
   const [resultBurn, setResultBurn] = React.useState(false)
   const [cloudTransfersEnabled, setCloudTransfersEnabled] =
     React.useState<boolean | null>(null)
+  const [customSlug, setCustomSlug] = React.useState('')
+  const [senderName, setSenderName] = React.useState('')
+  const [scheduledAt, setScheduledAt] = React.useState('')
+  const [slackWebhookUrl, setSlackWebhookUrl] = React.useState('')
 
   const { getToken } = useRecaptcha()
 
@@ -120,6 +124,33 @@ export default function TransferPage(): React.ReactElement {
         if (j != null) setCloudTransfersEnabled(j.cloudTransfers !== false)
       })
       .catch(() => setCloudTransfersEnabled(true))
+  }, [])
+
+  // Pre-fill from duplicate
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const dupSlug = params.get('duplicate')
+    if (!dupSlug) return
+    fetch(`/api/transfer/${dupSlug}/duplicate`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => {
+        const s = j?.settings
+        if (!s) return
+        if (s.title) setTitle(s.title)
+        if (s.message) setMessage(s.message)
+        if (typeof s.expiryDays === 'number') setExpiryDays(s.expiryDays)
+        if (s.maxDownloads != null) { setLimitDownloads(true); setMaxDownloads(s.maxDownloads) }
+        if (s.notifyEmail) { setNotifyMe(true); setNotifyEmail(s.notifyEmail) }
+        if (typeof s.notifyEveryDownload === 'boolean') setNotifyEveryDownload(s.notifyEveryDownload)
+        if (s.webhookUrl) setWebhookUrl(s.webhookUrl)
+        if (typeof s.burnAfterRead === 'boolean') setBurnAfterRead(s.burnAfterRead)
+        if (s.background) setBackground(s.background)
+        if (s.logoUrl) setLogoUrl(s.logoUrl)
+        if (s.backgroundImageUrl) setBackgroundImageUrl(s.backgroundImageUrl)
+        if (s.senderName) setSenderName(s.senderName)
+        if (Array.isArray(s.recipientEmails)) setRecipientEmails(s.recipientEmails)
+      })
+      .catch(() => {})
   }, [])
 
   // Load saved contacts + templates
@@ -320,6 +351,10 @@ export default function TransferPage(): React.ReactElement {
           logoUrl: logoUrl || undefined,
           backgroundImageUrl: backgroundImageUrl || undefined,
           recaptchaToken,
+          customSlug: customSlug.trim() || undefined,
+          senderName: senderName.trim() || undefined,
+          scheduledAt: scheduledAt || undefined,
+          slackWebhookUrl: slackWebhookUrl.trim() || undefined,
         }),
       })
       if (!createRes.ok) {
@@ -425,6 +460,10 @@ export default function TransferPage(): React.ReactElement {
     setBackgroundImageUrl('')
     setEncryptFiles(false)
     setEncryptionKey(null)
+    setCustomSlug('')
+    setSenderName('')
+    setScheduledAt('')
+    setSlackWebhookUrl('')
     setStage('idle')
     setFileProgress([])
     setSpeedBps(0)
@@ -1058,6 +1097,66 @@ export default function TransferPage(): React.ReactElement {
                             Or pick a custom solid colour
                           </Typography>
                         </Stack>
+                      </Stack>
+                    </AccordionDetails>
+                  </Accordion>
+
+                  {/* Advanced delivery options */}
+                  <Accordion variant="outlined" sx={{ borderRadius: 1 }}>
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        Advanced delivery options
+                      </Typography>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      <Stack spacing={2}>
+                        <TextField
+                          label="Custom link name (signed-in only)"
+                          placeholder="my-project-files"
+                          value={customSlug}
+                          onChange={(e) =>
+                            setCustomSlug(
+                              e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''),
+                            )
+                          }
+                          size="small"
+                          fullWidth
+                          helperText={
+                            customSlug
+                              ? `Your link: /transfer/${customSlug}`
+                              : 'Leave blank for a random link. 3–60 chars, a–z 0–9 -'
+                          }
+                          slotProps={{ htmlInput: { maxLength: 60 } }}
+                        />
+                        <TextField
+                          label="Your name (shown in recipient email)"
+                          placeholder="e.g. Alex from Acme"
+                          value={senderName}
+                          onChange={(e) => setSenderName(e.target.value)}
+                          size="small"
+                          fullWidth
+                          helperText="Recipients see 'Alex from Acme sent you files via Zync'"
+                          slotProps={{ htmlInput: { maxLength: 80 } }}
+                        />
+                        <TextField
+                          label="Schedule delivery (send emails at)"
+                          type="datetime-local"
+                          value={scheduledAt}
+                          onChange={(e) => setScheduledAt(e.target.value)}
+                          size="small"
+                          fullWidth
+                          helperText="Leave blank to send immediately. Files are uploaded now; emails go out at the scheduled time."
+                          slotProps={{ htmlInput: { min: new Date().toISOString().slice(0, 16) } }}
+                        />
+                        <TextField
+                          label="Slack webhook URL (notified on each download)"
+                          placeholder="https://hooks.slack.com/services/…"
+                          value={slackWebhookUrl}
+                          onChange={(e) => setSlackWebhookUrl(e.target.value)}
+                          size="small"
+                          fullWidth
+                          helperText="Paste an Incoming Webhook URL from your Slack app settings."
+                        />
                       </Stack>
                     </AccordionDetails>
                   </Accordion>

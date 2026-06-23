@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getTransfer, updateTransfer } from '../../../../lib/transfer'
+import { getRedisClient } from '../../../../redisClient'
 import { getSupabaseServerClient } from '../../../../supabase/server'
 import { sendMail } from '../../../../email'
 import { tplTransferReady, tplTransferSent } from '../../../../emailTemplates'
@@ -38,24 +39,27 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }
     await updateTransfer(body.data.slug, { recipientTokens })
 
-    // Send personalized email to each recipient with their unique token URL
-    for (const to of t.recipientEmails) {
-      const token = emailTokenMap[to]
-      const url = token ? `${baseUrl}?rt=${token}` : baseUrl
-      const tpl = tplTransferReady({
-        title: t.title,
-        url,
-        senderMessage: t.message,
-        fileCount: t.files.length,
-        totalSize: formatBytes(t.totalSize),
-        expiresAt: t.expiresAt,
-      })
-      void sendMail({
-        to,
-        subject: tpl.subject,
-        html: tpl.html,
-        text: tpl.text,
-      })
+    // Skip recipient emails if transfer is scheduled for future delivery
+    if (!t.scheduledAt || new Date(t.scheduledAt) <= new Date()) {
+      for (const to of t.recipientEmails) {
+        const token = emailTokenMap[to]
+        const url = token ? `${baseUrl}?rt=${token}` : baseUrl
+        const tpl = tplTransferReady({
+          title: t.title,
+          url,
+          senderMessage: t.message,
+          fileCount: t.files.length,
+          totalSize: formatBytes(t.totalSize),
+          expiresAt: t.expiresAt,
+          senderName: t.senderName || undefined,
+        })
+        void sendMail({ to, subject: tpl.subject, html: tpl.html, text: tpl.text })
+      }
+      await updateTransfer(body.data.slug, { notificationSent: true })
+    } else if (t.scheduledAt) {
+      // Register in the scheduled queue so the cron picks it up
+      const redis = getRedisClient()
+      await redis.zadd('transfer:scheduled', new Date(t.scheduledAt).getTime(), t.slug)
     }
   }
 
