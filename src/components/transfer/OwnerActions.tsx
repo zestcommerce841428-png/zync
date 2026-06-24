@@ -17,6 +17,8 @@ import Snackbar from '@mui/material/Snackbar'
 import EmailIcon from '@mui/icons-material/Email'
 import FolderIcon from '@mui/icons-material/Folder'
 import AddIcon from '@mui/icons-material/Add'
+import AutorenewIcon from '@mui/icons-material/Autorenew'
+import TextField from '@mui/material/TextField'
 
 type Board = { id: string; name: string; slugs: string[] }
 
@@ -29,6 +31,9 @@ export default function OwnerActions({
 }): React.ReactElement {
   const [snack, setSnack] = React.useState('')
   const [resending, setResending] = React.useState(false)
+  const [renewDialogOpen, setRenewDialogOpen] = React.useState(false)
+  const [renewDays, setRenewDays] = React.useState(30)
+  const [renewing, setRenewing] = React.useState(false)
   const [boardDialogOpen, setBoardDialogOpen] = React.useState(false)
   const [boards, setBoards] = React.useState<Board[]>([])
   const [boardsLoading, setBoardsLoading] = React.useState(false)
@@ -53,6 +58,30 @@ export default function OwnerActions({
       setSnack('Network error.')
     } finally {
       setResending(false)
+    }
+  }
+
+  const renewTransfer = async () => {
+    setRenewing(true)
+    try {
+      const res = await fetch(`/api/transfer/${slug}/renew`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ addDays: renewDays }),
+      })
+      const json = await res.json()
+      if (res.ok) {
+        setSnack(
+          `Transfer extended. New expiry: ${new Date(json.expiresAt).toLocaleDateString()}`,
+        )
+        setRenewDialogOpen(false)
+      } else {
+        setSnack(json.error ?? 'Failed to renew.')
+      }
+    } catch {
+      setSnack('Network error.')
+    } finally {
+      setRenewing(false)
     }
   }
 
@@ -115,6 +144,14 @@ export default function OwnerActions({
           />
         )}
         <Chip
+          icon={<AutorenewIcon />}
+          label="Renew"
+          size="small"
+          variant="outlined"
+          onClick={() => setRenewDialogOpen(true)}
+          clickable
+        />
+        <Chip
           icon={<AddIcon />}
           label="Add to board"
           size="small"
@@ -123,6 +160,40 @@ export default function OwnerActions({
           clickable
         />
       </Stack>
+
+      {/* Renew dialog */}
+      <Dialog
+        open={renewDialogOpen}
+        onClose={() => setRenewDialogOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Renew transfer</DialogTitle>
+        <DialogContent>
+          <TextField
+            label="Extend by (days)"
+            type="number"
+            value={renewDays}
+            onChange={(e) =>
+              setRenewDays(Math.max(1, Math.min(365, Number(e.target.value))))
+            }
+            size="small"
+            fullWidth
+            sx={{ mt: 1 }}
+            slotProps={{ htmlInput: { min: 1, max: 365 } }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setRenewDialogOpen(false)}>Cancel</Button>
+          <Button
+            variant="contained"
+            onClick={renewTransfer}
+            disabled={renewing}
+          >
+            {renewing ? 'Renewing…' : 'Renew'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Board picker dialog */}
       <Dialog

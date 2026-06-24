@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { getSupabaseServerClient } from '../../../../../supabase/server'
 import { getWorkspace, createInvite } from '../../../../../lib/workspace'
 import { sendMail } from '../../../../../email'
+import { tplWorkspaceInvite } from '../../../../../emailTemplates'
 import { brand } from '../../../../../brand'
 
 export const dynamic = 'force-dynamic'
@@ -50,15 +51,12 @@ export async function POST(
   const inviteUrl = `${brand.url}/workspaces/join/${token}`
   const inviterName = user.user_metadata?.full_name || user.email || 'Someone'
 
-  void sendMail({
-    to: body.data.email,
-    subject: `${inviterName} invited you to "${ws.name}" on ${brand.name}`,
-    html: `<p>Hi,</p>
-<p><strong>${inviterName}</strong> has invited you to join the workspace <strong>${ws.name}</strong> on ${brand.name}.</p>
-<p><a href="${inviteUrl}" style="background:#4f46e5;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700;display:inline-block;">Accept invitation</a></p>
-<p style="color:#666;font-size:13px;">This invite expires in 7 days. If you did not expect this, you can safely ignore it.</p>`,
-    text: `${inviterName} invited you to join "${ws.name}" on ${brand.name}.\n\nAccept: ${inviteUrl}\n\nExpires in 7 days.`,
+  const tpl = tplWorkspaceInvite({
+    inviterName,
+    workspaceName: ws.name,
+    inviteUrl,
   })
+  void sendMail({ to: body.data.email, ...tpl })
 
   return NextResponse.json({ ok: true, token })
 }

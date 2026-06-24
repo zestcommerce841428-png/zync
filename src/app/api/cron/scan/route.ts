@@ -10,7 +10,11 @@ import {
 } from '../../../../lib/virusScan'
 import { getSetting, isFeatureEnabled } from '../../../../lib/appSettings'
 import { sendMail } from '../../../../email'
+import { tplMalwareAlert } from '../../../../emailTemplates'
 import { brand } from '../../../../brand'
+
+// Max poll attempts before giving up on a stuck VirusTotal analysis (~1h at 5-min cron)
+const MAX_POLL_ATTEMPTS = 12
 
 export const dynamic = 'force-dynamic'
 
@@ -33,11 +37,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const apiKey = await getSetting('virustotal_api_key')
   if (!apiKey) return NextResponse.json({ ok: true, skipped: 'no_api_key' })
 
-  // Process pending scans
-  const slugs = await dequeueScanBatch(5)
+  // Queue entries are "slug" or "slug:attempt" for polling retries.
+  const entries = await dequeueScanBatch(5)
   let scanned = 0
 
-  for (const slug of slugs) {
+  for (const entry of entries) {
+    const colonIdx = entry.lastIndexOf(':')
+    const hasAttempt = colonIdx > 0 && !isNaN(Number(entry.slice(colonIdx + 1)))
+    const slug = hasAttempt ? entry.slice(0, colonIdx) : entry
+    const attempt = hasAttempt ? Number(entry.slice(colonIdx + 1)) : 0
+
     try {
       const t = await getTransfer(slug)
       if (!t || !t.completed) continue
@@ -52,18 +61,25 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             scanAnalysisId: null,
           })
           if (status === 'infected' && t.notifyEmail) {
-            void sendMail({
-              to: t.notifyEmail,
-              subject: `⚠️ Malware detected in your transfer — ${brand.name}`,
-              html: `<p>Our virus scanner detected malicious content in your transfer${t.title ? ` <strong>${t.title}</strong>` : ''}.</p><p>The transfer has been flagged and download access has been suspended. Please review and delete this transfer.</p><p><a href="${brand.url}/transfer/${slug}">View transfer</a></p>`,
-              text: `Malware detected in your transfer${t.title ? ` "${t.title}"` : ''}. Access suspended. View: ${brand.url}/transfer/${slug}`,
+            const tpl = tplMalwareAlert({
+              title: t.title,
+              url: `${brand.url}/transfer/${slug}`,
+              slug,
             })
+            void sendMail({ to: t.notifyEmail, ...tpl })
           }
           scanned++
+        } else if (attempt >= MAX_POLL_ATTEMPTS) {
+          // Give up — VirusTotal never resolved
+          await updateTransfer(slug, {
+            scanStatus: 'error',
+            scanAnalysisId: null,
+          })
+          scanned++
         } else {
-          // Still in progress — re-queue for next cron run
+          // Still in progress — re-queue with incremented counter
           const { getRedisClient } = await import('../../../../redisClient')
-          await getRedisClient().lpush('scan:queue', slug)
+          await getRedisClient().lpush('scan:queue', `${slug}:${attempt + 1}`)
         }
         continue
       }
@@ -95,13 +111,19 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           scanStatus: 'scanning',
           scanAnalysisId: analysisId,
         })
-        // Re-queue to poll result on next run
+        // Re-queue at attempt 0 to poll on next run
         const { getRedisClient } = await import('../../../../redisClient')
-        await getRedisClient().lpush('scan:queue', slug)
+        await getRedisClient().lpush('scan:queue', `${slug}:0`)
       }
       scanned++
     } catch (e) {
       console.error(`[cron/scan] error scanning ${slug}:`, e)
+      try {
+        await updateTransfer(slug, {
+          scanStatus: 'error',
+          scanAnalysisId: null,
+        })
+      } catch {}
     }
   }
 

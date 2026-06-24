@@ -116,8 +116,22 @@ export default function TransferPage(): React.ReactElement {
   const [slackWebhookUrl, setSlackWebhookUrl] = React.useState('')
   const [emailAccentColor, setEmailAccentColor] = React.useState('')
   const [replyTo, setReplyTo] = React.useState('')
+  const [workspaceId, setWorkspaceId] = React.useState('')
+  const [workspaces, setWorkspaces] = React.useState<
+    Array<{ id: string; name: string }>
+  >([])
 
   const { getToken } = useRecaptcha()
+
+  // Load workspaces for workspace selector (signed-in only — silently empty for guests)
+  React.useEffect(() => {
+    fetch('/api/workspaces')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => {
+        if (j?.workspaces) setWorkspaces(j.workspaces)
+      })
+      .catch(() => {})
+  }, [])
 
   // Check feature flags
   React.useEffect(() => {
@@ -369,6 +383,7 @@ export default function TransferPage(): React.ReactElement {
           slackWebhookUrl: slackWebhookUrl.trim() || undefined,
           emailAccentColor: emailAccentColor || undefined,
           replyTo: replyTo.trim() || undefined,
+          workspaceId: workspaceId || undefined,
         }),
       })
       if (!createRes.ok) {
@@ -480,6 +495,7 @@ export default function TransferPage(): React.ReactElement {
     setSlackWebhookUrl('')
     setEmailAccentColor('')
     setReplyTo('')
+    setWorkspaceId('')
     setStage('idle')
     setFileProgress([])
     setSpeedBps(0)
@@ -1192,6 +1208,25 @@ export default function TransferPage(): React.ReactElement {
                           fullWidth
                           type="email"
                         />
+                        {workspaces.length > 0 && (
+                          <FormControl size="small" fullWidth>
+                            <InputLabel>
+                              Assign to workspace (optional)
+                            </InputLabel>
+                            <Select
+                              label="Assign to workspace (optional)"
+                              value={workspaceId}
+                              onChange={(e) => setWorkspaceId(e.target.value)}
+                            >
+                              <MenuItem value="">None</MenuItem>
+                              {workspaces.map((ws) => (
+                                <MenuItem key={ws.id} value={ws.id}>
+                                  {ws.name}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                        )}
                         <Stack
                           direction="row"
                           spacing={1.5}

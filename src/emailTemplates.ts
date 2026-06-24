@@ -407,6 +407,51 @@ export function tplTransferExpiring(d: {
   }
 }
 
+export function tplMalwareAlert(d: {
+  title: string
+  url: string
+  slug: string
+}): { subject: string; html: string; text: string } {
+  return {
+    subject: `⚠️ Malware detected in your transfer — ${brand.name}`,
+    text: `Our virus scanner detected malicious content in your transfer${d.title ? ` "${d.title}"` : ''}. Access has been suspended. View: ${d.url}`,
+    html: baseLayout({
+      preheader: `Malicious content detected in your transfer.`,
+      heading: `Malware detected`,
+      intro: `Our virus scanner flagged malicious content in your transfer${d.title ? ` "${d.title}"` : ''}. Download access has been automatically suspended.`,
+      bodyHtml: kv([
+        ...(d.title ? [['Transfer', d.title] as [string, string]] : []),
+        ['Action taken', 'Download access suspended'],
+      ]),
+      button: { label: 'Review transfer', url: d.url },
+      footerNote: `Please review and delete this transfer. If you believe this is a false positive, contact support.`,
+    }),
+  }
+}
+
+export function tplWorkspaceInvite(d: {
+  inviterName: string
+  workspaceName: string
+  inviteUrl: string
+}): { subject: string; html: string; text: string } {
+  return {
+    subject: `${d.inviterName} invited you to "${d.workspaceName}" on ${brand.name}`,
+    text: `${d.inviterName} has invited you to join the workspace "${d.workspaceName}" on ${brand.name}.\n\nAccept: ${d.inviteUrl}\n\nExpires in 7 days.`,
+    html: baseLayout({
+      preheader: `You've been invited to join ${d.workspaceName}.`,
+      heading: `You're invited to a workspace`,
+      intro: `${d.inviterName} has invited you to join the workspace "${d.workspaceName}" on ${brand.name}.`,
+      bodyHtml: kv([
+        ['Workspace', d.workspaceName],
+        ['Invited by', d.inviterName],
+        ['Expires', '7 days'],
+      ]),
+      button: { label: 'Accept invitation', url: d.inviteUrl },
+      footerNote: `If you did not expect this invitation, you can safely ignore this email.`,
+    }),
+  }
+}
+
 export function tplCriticalAlert(d: { event: string; detail: string }): {
   subject: string
   html: string
