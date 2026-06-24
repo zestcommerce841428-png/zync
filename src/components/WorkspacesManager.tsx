@@ -26,6 +26,8 @@ import MenuItem from '@mui/material/MenuItem'
 import InputLabel from '@mui/material/InputLabel'
 import FormControl from '@mui/material/FormControl'
 import AddIcon from '@mui/icons-material/Add'
+import FolderOpenIcon from '@mui/icons-material/FolderOpen'
+import OpenInNewIcon from '@mui/icons-material/OpenInNew'
 import DeleteIcon from '@mui/icons-material/Delete'
 import PersonAddIcon from '@mui/icons-material/PersonAdd'
 import GroupIcon from '@mui/icons-material/Group'
@@ -37,6 +39,13 @@ type Member = {
   email: string
   role: 'owner' | 'admin' | 'member'
   joinedAt: string
+}
+
+type TransferStub = {
+  slug: string
+  title: string
+  expiresAt: string
+  totalSize: number
 }
 
 type Invite = {
@@ -90,6 +99,27 @@ function WorkspaceCard({
 
   const [deleteOpen, setDeleteOpen] = React.useState(false)
   const [deleting, setDeleting] = React.useState(false)
+  const [transfers, setTransfers] = React.useState<TransferStub[] | null>(null)
+
+  React.useEffect(() => {
+    fetch('/api/transfer/history')
+      .then((r) => (r.ok ? r.json() : null))
+      .then(
+        (
+          j: Array<{
+            slug: string
+            title: string
+            expiresAt: string
+            totalSize: number
+            workspaceId?: string | null
+          }> | null,
+        ) => {
+          if (Array.isArray(j))
+            setTransfers(j.filter((t) => t.workspaceId === ws.id))
+        },
+      )
+      .catch(() => {})
+  }, [ws.id])
 
   const sendInvite = async () => {
     if (!inviteEmail.trim()) return
@@ -301,6 +331,68 @@ function WorkspaceCard({
           )}
         </Stack>
       </CardContent>
+
+      {/* Workspace transfers */}
+      {transfers !== null && (
+        <CardContent sx={{ pt: 0 }}>
+          <Divider sx={{ mb: 1.5 }} />
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{ alignItems: 'center', mb: 1 }}
+          >
+            <FolderOpenIcon fontSize="small" color="action" />
+            <Typography
+              variant="caption"
+              sx={{
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                letterSpacing: 0.5,
+              }}
+            >
+              Transfers ({transfers.length})
+            </Typography>
+          </Stack>
+          {transfers.length === 0 ? (
+            <Typography variant="caption" color="text.secondary">
+              No transfers assigned to this workspace.
+            </Typography>
+          ) : (
+            <Stack spacing={0.5}>
+              {transfers.slice(0, 5).map((t) => (
+                <Stack
+                  key={t.slug}
+                  direction="row"
+                  spacing={1}
+                  sx={{ alignItems: 'center' }}
+                >
+                  <Typography
+                    variant="body2"
+                    sx={{ flex: 1, fontWeight: 500 }}
+                    noWrap
+                  >
+                    {t.title || '(untitled)'}
+                  </Typography>
+                  <IconButton
+                    size="small"
+                    href={`/transfer/${t.slug}`}
+                    component="a"
+                    target="_blank"
+                  >
+                    <OpenInNewIcon fontSize="small" />
+                  </IconButton>
+                </Stack>
+              ))}
+              {transfers.length > 5 && (
+                <Typography variant="caption" color="text.secondary">
+                  +{transfers.length - 5} more — filter by this workspace in My
+                  Transfers.
+                </Typography>
+              )}
+            </Stack>
+          )}
+        </CardContent>
+      )}
 
       <CardActions sx={{ px: 2, pb: 2, gap: 1 }}>
         {isAdmin && (

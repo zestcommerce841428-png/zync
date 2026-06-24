@@ -3,6 +3,8 @@ import { z } from 'zod'
 import { getTransfer, recordReview } from '../../../../../lib/transfer'
 import { rateLimit, getClientIp } from '../../../../../rateLimit'
 import { err, ok } from '../../../../../lib/apiResponse'
+import { sendMail } from '../../../../../email'
+import { tplRecipientReview } from '../../../../../emailTemplates'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,6 +39,19 @@ export async function POST(
     at: new Date().toISOString(),
     country,
   })
+
+  if (transfer.notifyEmail) {
+    const url = `${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/transfer/${slug}`
+    void sendMail({
+      to: transfer.notifyEmail,
+      ...tplRecipientReview({
+        transferTitle: transfer.title ?? '',
+        rating: body.data.rating,
+        comment: body.data.comment,
+        transferUrl: url,
+      }),
+    })
+  }
 
   return ok({ ok: true })
 }

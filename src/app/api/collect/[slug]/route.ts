@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import {
   getCollect,
   updateCollect,
+  deleteCollect,
   listUserCollects,
 } from '../../../../lib/collect'
 import { getSupabaseServerClient } from '../../../../supabase/server'
@@ -80,5 +81,24 @@ export async function PATCH(
     patch.description = body.description.slice(0, 1000)
 
   await updateCollect(slug, patch)
+  return NextResponse.json({ ok: true })
+}
+
+// DELETE /api/collect/[slug] — owner: permanently delete a collect request
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ slug: string }> },
+): Promise<NextResponse> {
+  const { slug } = await params
+  const collect = await getCollect(slug)
+  if (!collect)
+    return NextResponse.json({ error: 'Not found.' }, { status: 404 })
+
+  const supabase = await getSupabaseServerClient()
+  const user = supabase ? (await supabase.auth.getUser()).data.user : null
+  if (!user || user.id !== collect.ownerId)
+    return NextResponse.json({ error: 'Forbidden.' }, { status: 403 })
+
+  await deleteCollect(slug, collect.ownerId)
   return NextResponse.json({ ok: true })
 }

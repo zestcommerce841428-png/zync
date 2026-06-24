@@ -27,6 +27,8 @@ export async function GET(): Promise<NextResponse> {
         notifyEmail,
         notifyEveryDownload,
         webhookUrl,
+        workspaceId,
+        boardIds,
         ...rest
       }) => ({
         ...rest,
@@ -36,6 +38,8 @@ export async function GET(): Promise<NextResponse> {
         webhookUrl: webhookUrl ?? null,
         fileCount: files.length,
         files: files.map(({ name, size, type }) => ({ name, size, type })),
+        workspaceId: workspaceId ?? null,
+        boardIds: boardIds ?? [],
       }),
     ),
   )

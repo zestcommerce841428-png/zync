@@ -30,6 +30,7 @@ import CloseIcon from '@mui/icons-material/Close'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew'
 import PauseCircleIcon from '@mui/icons-material/PauseCircle'
 import PlayCircleIcon from '@mui/icons-material/PlayCircle'
+import DeleteIcon from '@mui/icons-material/Delete'
 import QRCode from 'react-qr-code'
 
 type Stage = 'idle' | 'creating' | 'done' | 'error'
@@ -73,6 +74,7 @@ function CollectList({
   const [error, setError] = React.useState<string | null>(null)
   const [copiedSlug, setCopiedSlug] = React.useState<string | null>(null)
   const [togglingSlug, setTogglingSlug] = React.useState<string | null>(null)
+  const [deletingSlug, setDeletingSlug] = React.useState<string | null>(null)
   const [origin, setOrigin] = React.useState('')
   React.useEffect(() => {
     setOrigin(window.location.origin)
@@ -96,6 +98,20 @@ function CollectList({
     } catch (_e) {
       /* clipboard unavailable */
     }
+  }
+
+  const handleDelete = async (slug: string) => {
+    if (!confirm('Delete this file request? This cannot be undone.')) return
+    setDeletingSlug(slug)
+    try {
+      const res = await fetch(`/api/collect/${slug}`, { method: 'DELETE' })
+      if (res.ok) {
+        setCollects((prev) => prev?.filter((c) => c.slug !== slug) ?? prev)
+      }
+    } catch (_e) {
+      /* fetch failed */
+    }
+    setDeletingSlug(null)
   }
 
   const toggleActive = async (slug: string, current: boolean) => {
@@ -218,6 +234,22 @@ function CollectList({
                             <PauseCircleIcon fontSize="small" color="primary" />
                           ) : (
                             <PlayCircleIcon fontSize="small" color="disabled" />
+                          )}
+                        </IconButton>
+                      </span>
+                    </Tooltip>
+                    <Tooltip title="Delete request">
+                      <span>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          disabled={deletingSlug === c.slug}
+                          onClick={() => handleDelete(c.slug)}
+                        >
+                          {deletingSlug === c.slug ? (
+                            <CircularProgress size={16} />
+                          ) : (
+                            <DeleteIcon fontSize="small" />
                           )}
                         </IconButton>
                       </span>

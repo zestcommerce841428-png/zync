@@ -58,6 +58,8 @@ type TransferSummary = {
   notifyEveryDownload?: boolean
   webhookUrl?: string | null
   createdAt: string
+  workspaceId?: string | null
+  boardIds?: string[]
 }
 
 type DownloadEvent = { at: string; ipHash: string; country: string }
@@ -451,6 +453,10 @@ export default function HistoryList(): React.ReactElement {
   const [statusFilter, setStatusFilter] = React.useState<
     'all' | 'active' | 'expiring'
   >('all')
+  const [workspaceFilter, setWorkspaceFilter] = React.useState<string>('all')
+  const [workspaces, setWorkspaces] = React.useState<
+    Array<{ id: string; name: string }>
+  >([])
   const [storage, setStorage] = React.useState<{
     totalBytes: number
     fileCount: number
@@ -469,6 +475,12 @@ export default function HistoryList(): React.ReactElement {
       .then((r) => (r.ok ? r.json() : null))
       .then((j) => {
         if (j && !j.error) setStorage(j)
+      })
+      .catch(() => {})
+    fetch('/api/workspaces')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => {
+        if (j?.workspaces) setWorkspaces(j.workspaces)
       })
       .catch(() => {})
   }, [])
@@ -584,8 +596,11 @@ export default function HistoryList(): React.ReactElement {
           ) <= 2,
       )
     }
+    if (workspaceFilter !== 'all') {
+      list = list.filter((t) => t.workspaceId === workspaceFilter)
+    }
     return list
-  }, [transfers, search, statusFilter])
+  }, [transfers, search, statusFilter, workspaceFilter])
 
   const MAX_STORAGE_BYTES = 200 * 1024 * 1024 * 1024 // 200 GB display cap
 
@@ -680,6 +695,23 @@ export default function HistoryList(): React.ReactElement {
               <MenuItem value="expiring">Expiring soon</MenuItem>
             </Select>
           </FormControl>
+          {workspaces.length > 0 && (
+            <FormControl size="small" sx={{ minWidth: 140 }}>
+              <InputLabel>Workspace</InputLabel>
+              <Select
+                label="Workspace"
+                value={workspaceFilter}
+                onChange={(e) => setWorkspaceFilter(e.target.value)}
+              >
+                <MenuItem value="all">All workspaces</MenuItem>
+                {workspaces.map((w) => (
+                  <MenuItem key={w.id} value={w.id}>
+                    {w.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
         </Stack>
       )}
 

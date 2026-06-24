@@ -74,6 +74,15 @@ export async function updateCollect(
   await redis.set(KEY(slug), JSON.stringify(updated), 'EX', ttl)
 }
 
+export async function deleteCollect(
+  slug: string,
+  ownerId: string,
+): Promise<void> {
+  const redis = getRedisClient()
+  await redis.del(KEY(slug))
+  await redis.zrem(USER_KEY(ownerId), slug)
+}
+
 export async function listUserCollects(
   ownerId: string,
 ): Promise<CollectRecord[]> {

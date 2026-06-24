@@ -452,6 +452,49 @@ export function tplWorkspaceInvite(d: {
   }
 }
 
+export function tplRecipientComment(d: {
+  transferTitle: string
+  commentText: string
+  transferUrl: string
+}): { subject: string; html: string; text: string } {
+  return {
+    subject: `New comment on your transfer — ${brand.name}`,
+    text: `A recipient left a comment on your transfer${d.transferTitle ? ` "${d.transferTitle}"` : ''}:\n\n"${d.commentText}"\n\nView: ${d.transferUrl}`,
+    html: baseLayout({
+      preheader: `A recipient commented on your transfer.`,
+      heading: `New comment`,
+      intro: `A recipient left a comment on your transfer${d.transferTitle ? ` "${d.transferTitle}"` : ''}.`,
+      bodyHtml: kv([['Comment', d.commentText]]),
+      button: { label: 'View transfer', url: d.transferUrl },
+      footerNote: `You received this because you created this transfer.`,
+    }),
+  }
+}
+
+export function tplRecipientReview(d: {
+  transferTitle: string
+  rating: number
+  comment: string
+  transferUrl: string
+}): { subject: string; html: string; text: string } {
+  const stars = '★'.repeat(d.rating) + '☆'.repeat(5 - d.rating)
+  return {
+    subject: `New review on your transfer — ${brand.name}`,
+    text: `A recipient reviewed your transfer${d.transferTitle ? ` "${d.transferTitle}"` : ''}: ${stars}${d.comment ? `\n\n"${d.comment}"` : ''}\n\nView: ${d.transferUrl}`,
+    html: baseLayout({
+      preheader: `A recipient reviewed your transfer.`,
+      heading: `New review`,
+      intro: `A recipient rated your transfer${d.transferTitle ? ` "${d.transferTitle}"` : ''}.`,
+      bodyHtml: kv([
+        ['Rating', `${stars} (${d.rating}/5)`],
+        ...(d.comment ? [['Comment', d.comment] as [string, string]] : []),
+      ]),
+      button: { label: 'View transfer', url: d.transferUrl },
+      footerNote: `You received this because you created this transfer.`,
+    }),
+  }
+}
+
 export function tplCriticalAlert(d: { event: string; detail: string }): {
   subject: string
   html: string
