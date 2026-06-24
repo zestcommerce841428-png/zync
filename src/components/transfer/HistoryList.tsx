@@ -60,6 +60,7 @@ type TransferSummary = {
   createdAt: string
   workspaceId?: string | null
   boardIds?: string[]
+  passwordHint?: string | null
 }
 
 type DownloadEvent = { at: string; ipHash: string; country: string }
@@ -108,6 +109,9 @@ function EditDialog({
   )
   const [extendDays, setExtendDays] = React.useState('')
   const [password, setPassword] = React.useState('')
+  const [passwordHint, setPasswordHint] = React.useState(
+    transfer.passwordHint ?? '',
+  )
   const [clearPassword, setClearPassword] = React.useState(false)
   const [notifyEmail, setNotifyEmail] = React.useState(
     transfer.notifyEmail ?? '',
@@ -132,6 +136,8 @@ function EditDialog({
         body.maxDownloads = null
       if (extendDays) body.extendDays = Number(extendDays)
       if (password) body.password = password
+      if (passwordHint !== (transfer.passwordHint ?? ''))
+        body.passwordHint = passwordHint
       if (clearPassword) body.clearPassword = true
       if (notifyEmail !== (transfer.notifyEmail ?? ''))
         body.notifyEmail = notifyEmail
@@ -245,6 +251,17 @@ function EditDialog({
             >
               {clearPassword ? 'Will remove password' : 'Remove password'}
             </Button>
+          )}
+          {(transfer.passwordProtected || password) && !clearPassword && (
+            <TextField
+              label="Password hint (blank = none)"
+              value={passwordHint}
+              onChange={(e) => setPasswordHint(e.target.value.slice(0, 100))}
+              size="small"
+              fullWidth
+              placeholder="e.g. your favourite colour"
+              slotProps={{ htmlInput: { maxLength: 100 } }}
+            />
           )}
           <TextField
             label="Notify email (blank = disabled)"

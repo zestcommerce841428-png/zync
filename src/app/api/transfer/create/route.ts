@@ -74,6 +74,7 @@ const BodySchema = z.object({
     .optional(),
   replyTo: z.string().email().max(200).optional().or(z.literal('')),
   workspaceId: z.string().max(64).optional().or(z.literal('')),
+  passwordHint: z.string().max(100).optional().or(z.literal('')),
 })
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
@@ -216,6 +217,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       title,
       message,
       passwordHash: password ? hashPassword(password) : null,
+      passwordHint: body.data.passwordHint || null,
       notifyEmail: notifyEmail || null,
       notifyEveryDownload,
       webhookUrl: webhookUrl || null,

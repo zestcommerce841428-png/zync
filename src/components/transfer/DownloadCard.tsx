@@ -51,6 +51,8 @@ type Props = {
   autoDownload?: boolean
   encrypted?: boolean
   scanStatus?: string | null
+  passwordHint?: string | null
+  senderEmail?: string | null
 }
 
 function formatBytes(n: number): string {
@@ -76,6 +78,7 @@ function isPreviewable(type: string): boolean {
   return (
     type.startsWith('image/') ||
     type.startsWith('video/') ||
+    type.startsWith('audio/') ||
     type === 'application/pdf'
   )
 }
@@ -112,6 +115,8 @@ export default function DownloadCard({
   autoDownload,
   encrypted,
   scanStatus,
+  passwordHint,
+  senderEmail,
 }: Props): React.ReactElement {
   const [now, setNow] = React.useState<number | null>(null)
   React.useEffect(() => {
@@ -136,9 +141,19 @@ export default function DownloadCard({
   }, [encrypted])
 
   const expiry = new Date(expiresAt)
-  const daysLeft =
-    now !== null ? Math.ceil((expiry.getTime() - now) / 86400000) : null
-  const expired = daysLeft !== null && daysLeft <= 0
+  const msLeft = now !== null ? expiry.getTime() - now : null
+  const daysLeft = msLeft !== null ? Math.ceil(msLeft / 86400000) : null
+  const hoursLeft =
+    msLeft !== null && msLeft > 0 ? Math.ceil(msLeft / 3600000) : null
+  const expired = msLeft !== null && msLeft <= 0
+  const expiryLabel =
+    msLeft === null
+      ? 'Checking expiry…'
+      : msLeft <= 0
+        ? 'Expired'
+        : hoursLeft !== null && hoursLeft <= 24
+          ? `Expires in ${hoursLeft}h`
+          : `Expires in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`
 
   // Password gate
   const [unlocked, setUnlocked] = React.useState(!passwordProtected)
@@ -225,6 +240,28 @@ export default function DownloadCard({
   const [zipping, setZipping] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [hasDownloaded, setHasDownloaded] = React.useState(false)
+
+  // Request re-send (expired) state
+  const [reqEmail, setReqEmail] = React.useState('')
+  const [reqSending, setReqSending] = React.useState(false)
+  const [reqSent, setReqSent] = React.useState(false)
+
+  const requestReSend = async () => {
+    if (!reqEmail.trim()) return
+    setReqSending(true)
+    try {
+      await fetch(`/api/transfer/${slug}/request-resend`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: reqEmail.trim() }),
+      })
+      setReqSent(true)
+    } catch {
+      setReqSent(true)
+    } finally {
+      setReqSending(false)
+    }
+  }
 
   // Review state
   const [reviewRating, setReviewRating] = React.useState<number | null>(null)
@@ -423,9 +460,40 @@ export default function DownloadCard({
 
   if (expired) {
     return (
-      <Alert severity="warning">
-        This transfer has expired. The files have been deleted.
-      </Alert>
+      <Stack spacing={2}>
+        <Alert severity="warning">
+          This transfer has expired and the files have been deleted.
+        </Alert>
+        {reqSent ? (
+          <Alert severity="success">
+            Request sent! The sender has been notified.
+          </Alert>
+        ) : (
+          <Stack spacing={1}>
+            <Typography variant="body2" color="text.secondary">
+              Ask the sender to re-send the files:
+            </Typography>
+            <Stack direction="row" spacing={1}>
+              <TextField
+                size="small"
+                placeholder="your@email.com"
+                type="email"
+                value={reqEmail}
+                onChange={(e) => setReqEmail(e.target.value)}
+                sx={{ flex: 1 }}
+              />
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={requestReSend}
+                disabled={!reqEmail.trim() || reqSending}
+              >
+                {reqSending ? 'Sending…' : 'Request re-send'}
+              </Button>
+            </Stack>
+          </Stack>
+        )}
+      </Stack>
     )
   }
 
@@ -441,6 +509,11 @@ export default function DownloadCard({
           <Typography variant="body2" color="text.secondary">
             This transfer is password protected.
           </Typography>
+          {passwordHint && (
+            <Typography variant="caption" color="text.secondary">
+              Hint: {passwordHint}
+            </Typography>
+          )}
         </Stack>
         <TextField
           label="Password"
@@ -540,13 +613,15 @@ export default function DownloadCard({
       <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
         <Chip
           icon={<AccessTimeIcon />}
-          label={
-            daysLeft === null
-              ? 'Checking expiry…'
-              : `Expires in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`
-          }
+          label={expiryLabel}
           size="small"
-          color={daysLeft !== null && daysLeft <= 2 ? 'warning' : 'default'}
+          color={
+            hoursLeft !== null && hoursLeft <= 24
+              ? 'error'
+              : daysLeft !== null && daysLeft <= 2
+                ? 'warning'
+                : 'default'
+          }
         />
         <Chip
           label={`${files.length} file${files.length !== 1 ? 's' : ''}`}
@@ -827,6 +902,14 @@ export default function DownloadCard({
               src={previewUrl}
               controls
               sx={{ maxWidth: '100%', maxHeight: '80vh' }}
+            />
+          )}
+          {previewUrl && previewType.startsWith('audio/') && (
+            <Box
+              component="audio"
+              src={previewUrl}
+              controls
+              sx={{ width: '100%' }}
             />
           )}
           {previewUrl && previewType === 'application/pdf' && (

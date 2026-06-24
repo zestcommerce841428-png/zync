@@ -49,6 +49,7 @@ export type TransferRecord = {
   title: string
   message: string
   passwordHash: string | null
+  passwordHint: string | null
   notifyEmail: string | null
   notifyEveryDownload: boolean
   notifiedAt: string | null
@@ -156,6 +157,7 @@ export async function getTransfer(
     r.workspaceId ??= null
     r.scanStatus ??= null
     r.scanAnalysisId ??= null
+    r.passwordHint ??= null
     return r
   } catch {
     return null

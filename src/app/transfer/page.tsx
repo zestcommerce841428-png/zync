@@ -77,6 +77,7 @@ export default function TransferPage(): React.ReactElement {
   const [message, setMessage] = React.useState('')
   const [password, setPassword] = React.useState('')
   const [showPassword, setShowPassword] = React.useState(false)
+  const [passwordHint, setPasswordHint] = React.useState('')
   const [expiryDays, setExpiryDays] = React.useState(7)
   const [limitDownloads, setLimitDownloads] = React.useState(false)
   const [maxDownloads, setMaxDownloads] = React.useState(5)
@@ -365,6 +366,7 @@ export default function TransferPage(): React.ReactElement {
           title,
           message,
           password: password || undefined,
+          passwordHint: password && passwordHint ? passwordHint : undefined,
           expiryDays,
           maxDownloads: limitDownloads ? maxDownloads : null,
           notifyEmail: notifyMe && notifyEmail ? notifyEmail : undefined,
@@ -474,6 +476,7 @@ export default function TransferPage(): React.ReactElement {
     setTitle('')
     setMessage('')
     setPassword('')
+    setPasswordHint('')
     setExpiryDays(7)
     setLimitDownloads(false)
     setMaxDownloads(5)
@@ -727,6 +730,19 @@ export default function TransferPage(): React.ReactElement {
                           }}
                           helperText="Recipients must enter this password to download"
                         />
+                        {password && (
+                          <TextField
+                            label="Password hint (optional)"
+                            value={passwordHint}
+                            onChange={(e) =>
+                              setPasswordHint(e.target.value.slice(0, 100))
+                            }
+                            size="small"
+                            fullWidth
+                            slotProps={{ htmlInput: { maxLength: 100 } }}
+                            helperText="Shown to recipients on the password screen"
+                          />
+                        )}
 
                         {/* Download limit */}
                         <Stack spacing={1}>

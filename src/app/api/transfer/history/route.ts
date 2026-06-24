@@ -21,6 +21,7 @@ export async function GET(): Promise<NextResponse> {
     transfers.map(
       ({
         passwordHash,
+        passwordHint,
         notifiedAt,
         recipientEmails,
         files,
@@ -33,6 +34,7 @@ export async function GET(): Promise<NextResponse> {
       }) => ({
         ...rest,
         passwordProtected: !!passwordHash,
+        passwordHint: passwordHint ?? null,
         notifyEmail: notifyEmail ?? null,
         notifyEveryDownload: notifyEveryDownload ?? false,
         webhookUrl: webhookUrl ?? null,

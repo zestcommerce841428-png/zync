@@ -105,6 +105,8 @@ const PatchSchema = z.object({
   notifyEmail: z.string().email().optional().or(z.literal('')),
   notifyEveryDownload: z.boolean().optional(),
   webhookUrl: z.string().url().max(500).optional().or(z.literal('')),
+  passwordHint: z.string().max(100).optional().or(z.literal('')),
+  recipientEmails: z.array(z.string().email()).max(50).optional(),
 })
 
 export async function PATCH(
@@ -135,6 +137,8 @@ export async function PATCH(
     notifyEmail,
     notifyEveryDownload,
     webhookUrl,
+    passwordHint,
+    recipientEmails,
   } = body.data
   const patch: Partial<Parameters<typeof updateTransfer>[1]> = {}
 
@@ -148,9 +152,12 @@ export async function PATCH(
 
   if (clearPassword) {
     patch.passwordHash = null
+    patch.passwordHint = null
   } else if (password) {
     patch.passwordHash = hashPassword(password)
   }
+  if (passwordHint !== undefined) patch.passwordHint = passwordHint || null
+  if (recipientEmails !== undefined) patch.recipientEmails = recipientEmails
 
   if (extendDays !== undefined) {
     const current = new Date(transfer.expiresAt)

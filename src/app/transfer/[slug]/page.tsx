@@ -184,6 +184,7 @@ export default async function TransferDownloadPage({
                     autoDownload={autoDownload}
                     encrypted={!!transfer.encrypted}
                     scanStatus={transfer.scanStatus}
+                    passwordHint={transfer.passwordHint ?? null}
                   />
 
                   {/* Transfer tracking — only visible to the owner */}
