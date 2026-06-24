@@ -15,6 +15,11 @@ import Box from '@mui/material/Box'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import PendingIcon from '@mui/icons-material/Pending'
+import Stepper from '@mui/material/Stepper'
+import Step from '@mui/material/Step'
+import StepLabel from '@mui/material/StepLabel'
+import StepContent from '@mui/material/StepContent'
+import Divider from '@mui/material/Divider'
 
 type DomainRecord = {
   userId: string
@@ -23,6 +28,61 @@ type DomainRecord = {
   verified: boolean
   verifiedAt: string | null
   createdAt: string
+}
+
+function DnsRecord({
+  rows,
+  copyValue,
+  onCopy,
+}: {
+  rows: { label: string; value: string; mono?: boolean }[]
+  copyValue: string
+  onCopy: (v: string) => void
+}): React.ReactElement {
+  return (
+    <Card variant="outlined" sx={{ bgcolor: 'action.hover' }}>
+      <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
+        <Stack spacing={0.75}>
+          {rows.map(({ label, value, mono }) => (
+            <Stack
+              key={label}
+              direction="row"
+              spacing={1}
+              sx={{ alignItems: 'center' }}
+            >
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ width: 110, flexShrink: 0 }}
+              >
+                {label}
+              </Typography>
+              <Typography
+                variant="caption"
+                sx={{
+                  fontFamily: mono ? 'monospace' : 'inherit',
+                  flex: 1,
+                  wordBreak: 'break-all',
+                }}
+              >
+                {value}
+              </Typography>
+              {label === 'Value' && (
+                <Button
+                  size="small"
+                  startIcon={<ContentCopyIcon sx={{ fontSize: 13 }} />}
+                  onClick={() => onCopy(copyValue)}
+                  sx={{ flexShrink: 0 }}
+                >
+                  Copy
+                </Button>
+              )}
+            </Stack>
+          ))}
+        </Stack>
+      </CardContent>
+    </Card>
+  )
 }
 
 export default function CustomDomainManager(): React.ReactElement {
@@ -182,137 +242,196 @@ export default function CustomDomainManager(): React.ReactElement {
         </Button>
       </Stack>
 
-      {/* Verification steps */}
+      {/* Setup guide + verification */}
       {record && (
         <Card variant="outlined">
           <CardContent>
             <Stack spacing={2}>
+              {/* Domain + status header */}
               <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                <Typography
+                  variant="subtitle2"
+                  sx={{ fontWeight: 700, fontFamily: 'monospace' }}
+                >
                   {record.domain}
                 </Typography>
                 {record.verified ? (
                   <Chip
                     icon={<CheckCircleIcon />}
-                    label="Verified"
+                    label="Active"
                     size="small"
                     color="success"
                   />
                 ) : (
                   <Chip
                     icon={<PendingIcon />}
-                    label="Pending verification"
+                    label="Pending"
                     size="small"
                     color="warning"
                   />
                 )}
               </Stack>
 
-              {!record.verified && (
-                <>
-                  <Typography variant="body2" color="text.secondary">
-                    Add this TXT record to your DNS to verify ownership:
-                  </Typography>
-                  <Card variant="outlined" sx={{ bgcolor: 'action.hover' }}>
-                    <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
-                      <Stack spacing={0.75}>
-                        {[
-                          { label: 'Type', value: 'TXT' },
-                          { label: 'Host / Name', value: record.domain },
-                          { label: 'Value', value: record.verificationToken },
-                          { label: 'TTL', value: '3600 (or auto)' },
-                        ].map(({ label, value }) => (
-                          <Stack
-                            key={label}
-                            direction="row"
-                            spacing={1}
-                            sx={{ alignItems: 'center' }}
-                          >
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              sx={{ width: 100, flexShrink: 0 }}
-                            >
-                              {label}
-                            </Typography>
-                            <Typography
-                              variant="caption"
-                              sx={{
-                                fontFamily: 'monospace',
-                                flex: 1,
-                                wordBreak: 'break-all',
-                              }}
-                            >
-                              {value}
-                            </Typography>
-                            {label === 'Value' && (
-                              <Button
-                                size="small"
-                                startIcon={
-                                  <ContentCopyIcon sx={{ fontSize: 14 }} />
-                                }
-                                onClick={() => copy(value)}
-                                sx={{ flexShrink: 0 }}
-                              >
-                                Copy
-                              </Button>
-                            )}
-                          </Stack>
-                        ))}
-                      </Stack>
-                    </CardContent>
-                  </Card>
-
-                  <Alert severity="info" sx={{ py: 0.5 }}>
-                    After adding the TXT record, click Verify. DNS changes can
-                    take up to 24 hours to propagate.
-                  </Alert>
-
-                  <Button
-                    variant="outlined"
-                    onClick={verify}
-                    disabled={verifying}
-                    sx={{ alignSelf: 'flex-start' }}
-                  >
-                    {verifying ? (
-                      <CircularProgress size={18} sx={{ mr: 1 }} />
-                    ) : null}
-                    Verify DNS
-                  </Button>
-                </>
-              )}
-
               {record.verified && (
-                <>
-                  <Alert severity="success" sx={{ py: 0.5 }}>
-                    Domain verified on{' '}
-                    {new Date(record.verifiedAt!).toLocaleDateString('en-US', {
-                      month: 'long',
-                      day: 'numeric',
-                      year: 'numeric',
-                    })}
-                    .
-                  </Alert>
-                  <Alert severity="info" sx={{ py: 0.5 }}>
-                    To serve transfers from this domain, add a CNAME record
-                    pointing{' '}
-                    <Box
-                      component="code"
-                      sx={{ fontFamily: 'monospace', fontSize: '0.85em' }}
-                    >
-                      {record.domain}
-                    </Box>{' '}
-                    to{' '}
-                    <Box
-                      component="code"
-                      sx={{ fontFamily: 'monospace', fontSize: '0.85em' }}
-                    >
-                      videodownloaders.cloud
-                    </Box>{' '}
-                    and contact support to complete the SSL setup.
-                  </Alert>
-                </>
+                <Alert severity="success" sx={{ py: 0.5 }}>
+                  Your domain is live. Transfer links are now served from{' '}
+                  <Box
+                    component="code"
+                    sx={{ fontFamily: 'monospace', fontSize: '0.85em' }}
+                  >
+                    {record.domain}
+                  </Box>
+                  . SSL is handled automatically.
+                </Alert>
               )}
+
+              <Divider />
+
+              {/* Step-by-step guide — always visible so users know what to do */}
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                Setup guide
+              </Typography>
+
+              <Stepper
+                orientation="vertical"
+                activeStep={record.verified ? 3 : -1}
+                nonLinear
+              >
+                {/* Step 1 — A record */}
+                <Step completed={record.verified} expanded={!record.verified}>
+                  <StepLabel>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      Point your domain to Zync
+                    </Typography>
+                  </StepLabel>
+                  <StepContent>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ mb: 1, display: 'block' }}
+                    >
+                      Log in to your domain registrar (Hostinger, GoDaddy,
+                      Namecheap, Cloudflare…) and add this DNS record:
+                    </Typography>
+                    <DnsRecord
+                      rows={[
+                        { label: 'Type', value: 'A' },
+                        {
+                          label: 'Name / Host',
+                          value: '@  (or your subdomain)',
+                        },
+                        { label: 'Value', value: '187.127.182.5' },
+                        { label: 'TTL', value: '3600' },
+                      ]}
+                      copyValue="187.127.182.5"
+                      onCopy={copy}
+                    />
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ mt: 1, display: 'block' }}
+                    >
+                      Using a subdomain like{' '}
+                      <Box
+                        component="code"
+                        sx={{ fontFamily: 'monospace', fontSize: '0.85em' }}
+                      >
+                        files.yourdomain.com
+                      </Box>
+                      ? Set Name to{' '}
+                      <Box
+                        component="code"
+                        sx={{ fontFamily: 'monospace', fontSize: '0.85em' }}
+                      >
+                        files
+                      </Box>{' '}
+                      instead of{' '}
+                      <Box
+                        component="code"
+                        sx={{ fontFamily: 'monospace', fontSize: '0.85em' }}
+                      >
+                        @
+                      </Box>
+                      .
+                    </Typography>
+                  </StepContent>
+                </Step>
+
+                {/* Step 2 — TXT record */}
+                <Step completed={record.verified} expanded={!record.verified}>
+                  <StepLabel>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      Verify domain ownership
+                    </Typography>
+                  </StepLabel>
+                  <StepContent>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ mb: 1, display: 'block' }}
+                    >
+                      In the same DNS panel, add a second record:
+                    </Typography>
+                    <DnsRecord
+                      rows={[
+                        { label: 'Type', value: 'TXT' },
+                        { label: 'Name / Host', value: '@  (same as above)' },
+                        {
+                          label: 'Value',
+                          value: record.verificationToken,
+                          mono: true,
+                        },
+                        { label: 'TTL', value: '3600' },
+                      ]}
+                      copyValue={record.verificationToken}
+                      onCopy={copy}
+                    />
+                    <Alert severity="info" sx={{ mt: 1.5, py: 0.5 }}>
+                      DNS changes can take up to 24 hours to propagate. Usually
+                      it&apos;s under 10 minutes.
+                    </Alert>
+                  </StepContent>
+                </Step>
+
+                {/* Step 3 — Verify */}
+                <Step completed={record.verified} expanded={!record.verified}>
+                  <StepLabel>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      Click Verify
+                    </Typography>
+                  </StepLabel>
+                  <StepContent>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ mb: 1.5, display: 'block' }}
+                    >
+                      Once both DNS records are saved, click the button below.
+                      Zync will check for the TXT record and activate your
+                      domain. SSL is provisioned automatically — no extra steps.
+                    </Typography>
+                    {!record.verified && (
+                      <Button
+                        variant="contained"
+                        size="small"
+                        onClick={verify}
+                        disabled={verifying}
+                        startIcon={
+                          verifying ? (
+                            <CircularProgress size={14} color="inherit" />
+                          ) : (
+                            <CheckCircleIcon fontSize="small" />
+                          )
+                        }
+                      >
+                        {verifying ? 'Checking DNS…' : 'Verify domain'}
+                      </Button>
+                    )}
+                  </StepContent>
+                </Step>
+              </Stepper>
+
+              <Divider />
 
               <Button
                 size="small"
@@ -321,9 +440,13 @@ export default function CustomDomainManager(): React.ReactElement {
                 disabled={removing}
                 sx={{ alignSelf: 'flex-start' }}
               >
-                {removing ? (
-                  <CircularProgress size={16} sx={{ mr: 0.5 }} />
-                ) : null}
+                {removing && (
+                  <CircularProgress
+                    size={14}
+                    sx={{ mr: 0.5 }}
+                    color="inherit"
+                  />
+                )}
                 Remove domain
               </Button>
             </Stack>
