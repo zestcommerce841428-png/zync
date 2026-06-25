@@ -875,6 +875,15 @@ export default function TransferPage(): React.ReactElement {
                           )}
                         </Stack>
 
+                        {/* E2E + recipient email incompatibility warning */}
+                        {encryptFiles && recipientEmails.length > 0 && (
+                          <Alert severity="warning" sx={{ py: 0.5 }}>
+                            E2E encrypted transfers can&apos;t be sent via
+                            recipient email — email clients strip the key from
+                            the link. Share the link manually after uploading.
+                          </Alert>
+                        )}
+
                         {/* End-to-end encryption */}
                         <FormControlLabel
                           control={

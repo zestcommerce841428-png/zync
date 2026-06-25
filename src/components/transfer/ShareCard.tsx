@@ -40,11 +40,25 @@ export default function ShareCard({
 }: Props): React.ReactElement {
   const [origin, setOrigin] = React.useState('')
   const [canShare, setCanShare] = React.useState(false)
+  const [customDomain, setCustomDomain] = React.useState<string | null>(null)
+  const [useCustomDomain, setUseCustomDomain] = React.useState(false)
   React.useEffect(() => {
     setOrigin(window.location.origin)
     setCanShare(typeof navigator.share === 'function')
+    // Load user's verified custom domain (signed-in only; silently empty for guests)
+    fetch('/api/custom-domain')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => {
+        if (j?.domain?.verified && j.domain.domain) {
+          setCustomDomain(j.domain.domain)
+          setUseCustomDomain(true)
+        }
+      })
+      .catch(() => {})
   }, [])
-  const baseUrl = `${origin}/transfer/${slug}`
+  const activeOrigin =
+    useCustomDomain && customDomain ? `https://${customDomain}` : origin
+  const baseUrl = `${activeOrigin}/transfer/${slug}`
   const url = encryptionKey ? `${baseUrl}#k=${encryptionKey}` : baseUrl
   const shareText = title
     ? `"${title}" — download via Zync`
@@ -90,24 +104,32 @@ export default function ShareCard({
       icon: <WhatsAppIcon fontSize="small" />,
       href: `https://wa.me/?text=${encodedText}%20${encoded}`,
       color: '#25D366',
+      disabledWhenEncrypted: false,
     },
     {
       label: 'X / Twitter',
       icon: <TwitterIcon fontSize="small" />,
       href: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encoded}`,
       color: '#000',
+      disabledWhenEncrypted: false,
     },
     {
       label: 'Telegram',
       icon: <TelegramIcon fontSize="small" />,
       href: `https://t.me/share/url?url=${encoded}&text=${encodedText}`,
       color: '#229ED9',
+      disabledWhenEncrypted: false,
     },
     {
-      label: 'Email',
+      label: encryptionKey
+        ? 'Email clients strip the key from the link — copy the link instead'
+        : 'Email',
       icon: <EmailIcon fontSize="small" />,
-      href: `mailto:?subject=${encodedText}&body=${encoded}`,
+      href: encryptionKey
+        ? '#'
+        : `mailto:?subject=${encodedText}&body=${encoded}`,
       color: undefined,
+      disabledWhenEncrypted: true,
     },
   ]
 
@@ -137,6 +159,33 @@ export default function ShareCard({
           {origin && <QRCode value={url} size={112} />}
         </Box>
         <Stack spacing={1} sx={{ flex: 1, width: '100%' }}>
+          {customDomain && (
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{ alignItems: 'center', flexWrap: 'wrap' }}
+            >
+              <Typography variant="caption" color="text.secondary">
+                Share via:
+              </Typography>
+              <Button
+                size="small"
+                variant={!useCustomDomain ? 'contained' : 'outlined'}
+                onClick={() => setUseCustomDomain(false)}
+                sx={{ textTransform: 'none', minWidth: 0, px: 1.5 }}
+              >
+                {origin.replace(/^https?:\/\//, '')}
+              </Button>
+              <Button
+                size="small"
+                variant={useCustomDomain ? 'contained' : 'outlined'}
+                onClick={() => setUseCustomDomain(true)}
+                sx={{ textTransform: 'none', minWidth: 0, px: 1.5 }}
+              >
+                {customDomain}
+              </Button>
+            </Stack>
+          )}
           <TextField
             value={url}
             size="small"
@@ -174,30 +223,42 @@ export default function ShareCard({
       </Divider>
 
       <Stack direction="row" spacing={1} sx={{ justifyContent: 'center' }}>
-        {socialLinks.map(({ label, icon, href, color }) => (
-          <Tooltip key={label} title={label}>
-            <IconButton
-              component="a"
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              size="small"
-              sx={{
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: 1.5,
-                p: 1,
-                color: color ?? 'text.primary',
-                '&:hover': {
-                  borderColor: color ?? 'primary.main',
-                  bgcolor: 'action.hover',
-                },
-              }}
-            >
-              {icon}
-            </IconButton>
-          </Tooltip>
-        ))}
+        {socialLinks.map(
+          ({ label, icon, href, color, disabledWhenEncrypted }) => {
+            const isDisabled = !!(encryptionKey && disabledWhenEncrypted)
+            return (
+              <Tooltip key={href} title={label}>
+                <span>
+                  <IconButton
+                    component={isDisabled ? 'button' : 'a'}
+                    {...(!isDisabled
+                      ? { href, target: '_blank', rel: 'noopener noreferrer' }
+                      : {})}
+                    size="small"
+                    disabled={isDisabled}
+                    sx={{
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      borderRadius: 1.5,
+                      p: 1,
+                      color: isDisabled
+                        ? 'text.disabled'
+                        : (color ?? 'text.primary'),
+                      '&:hover': isDisabled
+                        ? {}
+                        : {
+                            borderColor: color ?? 'primary.main',
+                            bgcolor: 'action.hover',
+                          },
+                    }}
+                  >
+                    {icon}
+                  </IconButton>
+                </span>
+              </Tooltip>
+            )
+          },
+        )}
       </Stack>
 
       <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
