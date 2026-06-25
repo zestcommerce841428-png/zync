@@ -108,6 +108,8 @@ export default function TransferPage(): React.ReactElement {
   const [resultExpiry, setResultExpiry] = React.useState('')
   const [resultTitle, setResultTitle] = React.useState('')
   const [resultBurn, setResultBurn] = React.useState(false)
+  const [resultPasswordProtected, setResultPasswordProtected] =
+    React.useState(false)
   const [cloudTransfersEnabled, setCloudTransfersEnabled] = React.useState<
     boolean | null
   >(null)
@@ -452,6 +454,7 @@ export default function TransferPage(): React.ReactElement {
       setResultExpiry(expiresAt)
       setResultTitle(title)
       setResultBurn(burnAfterRead)
+      setResultPasswordProtected(!!password)
       setEncryptionKey(exportedKeyHex)
       setStage('done')
     } catch (err) {
@@ -571,6 +574,7 @@ export default function TransferPage(): React.ReactElement {
                 expiresAt={resultExpiry}
                 title={resultTitle}
                 burnAfterRead={resultBurn}
+                passwordProtected={resultPasswordProtected}
                 encryptionKey={encryptionKey ?? undefined}
               />
               <Button variant="outlined" onClick={reset}>
